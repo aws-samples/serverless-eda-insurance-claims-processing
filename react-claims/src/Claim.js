@@ -1,0 +1,279 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
+import React from "react";
+import {
+  Flex,
+  Divider,
+  TextField,
+  CheckboxField,
+  Button,
+} from "@aws-amplify/ui-react";
+import { API } from "aws-amplify";
+import UploadFile from "./UploadFile";
+
+import damaged_car_1 from "./Vehicles/damaged_car_1.jpeg";
+import damaged_car_2 from "./Vehicles/damaged_car_2.jpeg";
+
+import red_car from "./Vehicles/red_car.jpg";
+
+class TF extends React.Component {
+  onChange;
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.onChange = props.onChange;
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    return {
+      type: props.type,
+      name: props.name,
+      input: props.input,
+    };
+  }
+
+  render() {
+    return (
+      <TextField
+        label={this.state.name}
+        value={this.state.input.value}
+        name={this.state.name}
+        type={this.state.type}
+        onChange={this.onChange}
+        hasError={this.state.input.hasError}
+        errorMessage={this.state.input.errorMessage}
+      />
+    );
+  }
+}
+
+class ClaimForm extends React.Component {
+  // updateParent;
+  initial_value = { value: "", hasError: false, errorMessage: "" };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      display: props.display,
+      occurrenceDateTime: this.initial_value,
+      country: this.initial_value,
+      state: this.initial_value,
+      city: this.initial_value,
+      zip: this.initial_value,
+      road: this.initial_value,
+      description: this.initial_value,
+      numberOfPassengers: this.initial_value,
+      policeReport_isFiled: this.initial_value,
+      reportOrReceiptAvailable: this.initial_value,
+      other_insuranceId: this.initial_value,
+      other_insuranceCompany: this.initial_value,
+      driversLicenseNumber: this.initial_value,
+      other_firstName: this.initial_value,
+      other_lastName: this.initial_value,
+    };
+
+    this.submitClaim = this.submitClaim.bind(this);
+    // this.componentDidMount = this.componentDidMount.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.type === "checkbox" ? target.checked : target.value;
+    const name = target.name;
+    this.setState({
+      [name]: { value: value },
+    });
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    return {
+      display: props.display,
+      customer: props.customer,
+      uploadCarDamageUrl: props.uploadCarDamageUrl,
+    };
+  }
+
+  submitClaim() {
+    const today = new Date();
+    const body = {
+      incident: {
+        occurrenceDateTime: this.state.occurrenceDateTime.value,
+        fnolDateTime: `${today.getFullYear()}-${
+          today.getMonth() + 1
+        }-${today.getDate()}`,
+        location: {
+          country: this.state.country.value,
+          state: this.state.state.value,
+          city: this.state.city.value,
+          zip: this.state.zip.value,
+          road: this.state.road.value,
+        },
+        description: this.state.description.value,
+      },
+      policy: {
+        id:
+          this.state.customer && this.state.customer.policies
+            ? this.state.customer.policies[0].PK.S
+            : "",
+      },
+      personalInformation: {
+        customerId: this.state.customer ? this.state.customer.PK : "",
+        driversLicenseNumber: this.state.driversLicenseNumber.value, //"D08954142", //Where to get this value from?
+        isInsurerDriver: true,
+        licensePlateNumber: "",
+        numberOfPassengers: this.state.numberOfPassengers.value,
+      },
+      policeReport: {
+        isFiled: this.state.policeReport_isFiled.value ?? false,
+        reportOrReceiptAvailable:
+          this.state.reportOrReceiptAvailable.value ?? false,
+      },
+      otherParty: {
+        insuranceId: this.state.other_insuranceId.value,
+        insuranceCompany: this.state.other_insuranceCompany.value,
+        firstName: this.state.other_firstName.value,
+        lastName: this.state.other_lastName.value,
+      },
+    };
+
+    const apiName = "FnolApi";
+    const path = "fnol";
+    const myInit = {
+      body: body, // replace this with attributes you need
+      headers: {}, // OPTIONAL
+    };
+
+    API.post(apiName, path, myInit);
+  }
+
+  render() {
+    return (
+      <Flex
+        direction="column"
+        justifyContent="flex-start"
+        alignItems="flex-start"
+        alignContent="flex-start"
+        wrap="nowrap"
+        gap="1rem"
+        display={this.state.display}
+      >
+        <TF
+          name="occurrenceDateTime"
+          type="date"
+          input={this.state.occurrenceDateTime}
+          onChange={this.handleInputChange}
+        />
+        <Flex direction="row">
+          <TF
+            name="country"
+            type="text"
+            input={this.state.country}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="state"
+            type="text"
+            input={this.state.state}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="city"
+            type="text"
+            input={this.state.city}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="zip"
+            type="text"
+            input={this.state.zip}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="road"
+            type="text"
+            input={this.state.road}
+            onChange={this.handleInputChange}
+          />
+        </Flex>
+        <Flex direction="row">
+          <TF
+            name="description"
+            type="text"
+            input={this.state.description}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="numberOfPassengers"
+            type="number"
+            input={this.state.numberOfPassengers}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="driversLicenseNumber"
+            type="text"
+            input={this.state.driversLicenseNumber}
+            onChange={this.handleInputChange}
+          />
+          <CheckboxField
+            name="policeReport_isFiled"
+            label="policeReport_isFiled"
+            onChange={this.handleInputChange}
+            checked={this.state.policeReport_isFiled.value}
+          />
+          <CheckboxField
+            name="reportOrReceiptAvailable"
+            label="reportOrReceiptAvailable"
+            onChange={this.handleInputChange}
+            checked={this.state.reportOrReceiptAvailable.value}
+          />
+        </Flex>
+        <Flex direction="row">
+          <TF
+            name="other_insuranceId"
+            type="text"
+            input={this.state.other_insuranceId}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="other_insuranceCompany"
+            type="text"
+            input={this.state.other_insuranceCompany}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="other_firstName"
+            type="text"
+            input={this.state.other_firstName}
+            onChange={this.handleInputChange}
+          />
+          <TF
+            name="other_lastName"
+            type="text"
+            input={this.state.other_lastName}
+            onChange={this.handleInputChange}
+          />
+        </Flex>
+        <Button variation="primary" onClick={this.submitClaim}>
+          Submit Claim
+        </Button>
+
+        <Divider size="large" orientation="horizontal" />
+
+        <UploadFile
+          s3URL={this.state.uploadCarDamageUrl}
+          images={[
+            { path: damaged_car_1 },
+            { path: damaged_car_2 },
+            { path: red_car },
+          ]}
+          title="Upload Vehicle Image"
+          display={this.state.uploadCarDamageUrl ? "" : "none"}
+        />
+      </Flex>
+    );
+  }
+}
+
+export default ClaimForm;

@@ -1,0 +1,9 @@
+{
+  "version": "0.1.0",
+  "name": "monolith",
+  "dependencies": {
+    "aws-cdk-lib": { "version": "2.32.1" },
+    "constructs": { "version": "10.1.49" },
+    "source-map-support": { "version": "0.5.21" }
+  }
+}
