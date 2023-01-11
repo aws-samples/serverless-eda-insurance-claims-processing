@@ -5,11 +5,11 @@ const config = {
 
   // Green Color Car
   // Return: { "Predictions": [{ "Name": "green", "Confidence": 95.76799774169922 }] }
-  // COLOR_DETECT_API: "https://webhook.site/0055038f-a393-4f81-b149-4376ebe4bf93/",
+  COLOR_DETECT_API: "https://webhook.site/0055038f-a393-4f81-b149-4376ebe4bf93/",
 
   // Red Color Car
   // Return: { "Predictions": [{ "Name": "red", "Confidence": 97.56799774169922 }] }
-  COLOR_DETECT_API: "https://webhook.site/fb720eb9-e701-4376-9ffc-3f30f7691632/",  
+  // COLOR_DETECT_API: "https://webhook.site/fb720eb9-e701-4376-9ffc-3f30f7691632/",  
 
   // No Damage
   // Return: { "Predictions": [{ "Name": "unknown", "Confidence": 99.98300170898438 }] }
