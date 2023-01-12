@@ -269,7 +269,7 @@ If you notice closely, that you have provided in the form earlier (Connor) does 
 
 In order to fix the above discrepancy, choose the second DL and upload. Now you should not see any more event related to fraud.
 
-A similar fraud detection logic is application for car images. If you have provided color `Green` in the form but upload a Red car image then it is identifies as a document fraud:
+A similar fraud detection logic is application for car images. If you have provided color `Green` in the form but COLOR_DETECT_API is set to return the car color as Red, then it is identifies as a document fraud:
 
 ```json
 {
@@ -324,7 +324,7 @@ Fraud detection is possible because, document processing service has processed t
 }
 ```
 
-In order to complete the process of signup successfully, next, select the Green car image and click on `Upload`. 
+In order to complete the process of signup successfully, make sure that COLOR_DETECT_API returns same color of the car as mentioned in the form and click on `Upload`. 
 
 ### File a Claim (First Notice of Loss or FNOL)
 Now that the customer has been on-boarded, we need to replicate a scenario of an incident/accident where customer met an accident and is about to file a claim.
@@ -386,7 +386,7 @@ Now you can see `claimsId` in addition to `customerId`.
 There should be an option to upload car image with damage. 
 ![damage](/images/damage.png)
 
-At this point if you upload image of a red car that has been damaged then you will again see a fraud detection event as your policy has registered a green car:
+At this point if you COLOR_DETECT_API returns red color, then you will again see a fraud detection event as your policy has registered a green car:
 
 ```json
 {
@@ -407,7 +407,7 @@ At this point if you upload image of a red car that has been damaged then you wi
 }
 ```
 
-Upload the damaged green car image to complete the FNOL process.
+If COLOR_DETECT_API returns green color and DAMAGE_DETECT_API returns any kind of damage, you can upload the damaged green car image to complete the FNOL process.
 
 ## Cleanup
 In order to cleanup the infrastructure follow below sections:
