@@ -411,9 +411,11 @@ If COLOR_DETECT_API returns green color and DAMAGE_DETECT_API returns any kind o
 
 ## Observability
 
-There's an Event Bridge rule - `allEventLogsRule` which invokes its targets for all of the key events sent to Event Bus. The rule has two targets - (1) A CloudWatch log group to capture all events in CloudWatch, and (2) A Lambda Function `CreateMetricsFunction` which creates a cloudwatch meteric to indicate occurance of the individual events. 
+There's an EventBridge rule - `allEventLogsRule` which invokes its targets for all of the key events sent to Event Bus. The rule has two targets 
+- A CloudWatch log group to capture all events in CloudWatch.
+- A Lambda Function `CreateMetricsFunction` which creates a CloudWatch meteric to indicate occurance of the individual events. 
 
-These metrics are are used to create a CloudWatch dashboard to present key performance indicators and metrics for Lambda function, API Gateway APIs, event rules, and state machines. 
+These metrics are  used to create a CloudWatch dashboard to present business KPIs and metrics for Lambda function, API Gateway APIs, event rules, and state machines. 
 
 In AWS Console, navigate to CloudWatch > Dashboards > Claims-Processing-Dashboard to review this dashboard.
 
