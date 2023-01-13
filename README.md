@@ -415,6 +415,30 @@ There's an EventBridge rule - `allEventLogsRule` which invokes its targets for a
 - A CloudWatch log group to capture all events in CloudWatch.
 - A Lambda Function `CreateMetricsFunction` which creates a CloudWatch meteric to indicate occurance of the individual events. 
 
+Here's the code snippet from claims-processing-stack.ts
+
+```
+ new Rule(this, "AllEventLogsRule", {
+      eventBus: bus,
+      ruleName: "allEventLogsRule",
+      eventPattern: {
+        source: [
+          "signup.service",
+          "customer.service",
+          "fnol.service",
+          "claims.service",
+          "document.service",
+          "fraud.service",
+          "aws.s3",
+        ],
+      },
+      targets: [
+        new CloudWatchLogGroup(allEventsLogGroup),
+        new LambdaFunction(createMetricsLambdaFunction),
+      ],
+    });
+    ```
+
 These metrics are  used to create a CloudWatch dashboard to present business KPIs and metrics for Lambda function, API Gateway APIs, event rules, and state machines. 
 
 In AWS Console, navigate to CloudWatch > Dashboards > Claims-Processing-Dashboard to review this dashboard.
