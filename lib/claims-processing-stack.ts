@@ -238,24 +238,16 @@ export class ClaimsProcessingStack extends Stack {
       exportName: "signup-api-endpoint",
     });
 
-    // Create SQS for Customer Service
-    const customerQueue = new Queue(this, "CustomerQueue", {
-      enforceSSL: true,
-    });
-
     // Create SQS for Claims Service
     const claimsQueue = new Queue(this, "ClaimsQueue", { enforceSSL: true });
 
     // Create Create Customer Lambda reading from SQS
     const customerLambdaRole = new Role(
       this,
-      "CustomerQueueConsumerFunctionRole",
+      "CustomerServiceFunctionRole",
       {
         assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
         managedPolicies: [
-          ManagedPolicy.fromAwsManagedPolicyName(
-            "service-role/AWSLambdaSQSQueueExecutionRole"
-          ),
           ManagedPolicy.fromAwsManagedPolicyName(
             "service-role/AWSLambdaBasicExecutionRole"
           ),
@@ -307,12 +299,6 @@ export class ClaimsProcessingStack extends Stack {
 
     customerUpdateLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
     customerTable.grantWriteData(customerUpdateLambdaFunction);
-
-    new EventSourceMapping(this, "CustomerQueueFunctionESM", {
-      target: customerCreateLambdaFunction,
-      batchSize: 1,
-      eventSourceArn: customerQueue.queueArn,
-    });
 
     const docProcessingLambdaRole = new Role(
       this,
@@ -434,7 +420,8 @@ export class ClaimsProcessingStack extends Stack {
       exportName: "fnol-api-endpoint",
     });
 
-    // Create Claims Lambda function polling from Claims queue, accept FNOL, puts event (Claims.FNOL.Accepted) (should return a pre-signed url to upload photos of car damage)
+    // Create Claims Lambda function polling from Claims queue, accept FNOL, puts event (Claims.FNOL.Accepted) 
+    // (should return a pre-signed url to upload photos of car damage)
     const claimsLambdaRole = new Role(this, "ClaimsQueueConsumerFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: [
@@ -530,7 +517,6 @@ export class ClaimsProcessingStack extends Stack {
         detailType: ["Customer.Submitted"],
       },
       targets: [
-        // new SqsQueue(customerQueue),
         new LambdaFunction(notificationLambdaFunction),
         new SfnStateMachine(createCustomerStepFunction),
       ],
