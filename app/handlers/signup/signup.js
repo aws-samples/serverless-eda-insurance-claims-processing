@@ -7,7 +7,7 @@ const {
 } = require("@aws-sdk/client-eventbridge");
 const ebClient = new EventBridgeClient({ region: process.env.AWS_REGION });
 
-exports.handler = async function (event, context) {
+exports.handler = async function (event) {
   console.log("event --> ", event);
 
   const message = {
