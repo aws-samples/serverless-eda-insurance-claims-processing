@@ -509,7 +509,7 @@ export class ClaimsProcessingStack extends Stack {
      ******************* EB RULES ****************************
      *********************************************************/
 
-    // Custom Event Bus Rule with SQS as Target (Event Type: Customer.Submitted)
+    // Custom Event Bus Rule for customer signup (Event Type: Customer.Submitted)
     new Rule(this, "CustomerEventsRule", {
       eventBus: bus,
       ruleName: "CustomerEventsRule",
