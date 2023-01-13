@@ -417,7 +417,7 @@ There's an EventBridge rule - `allEventLogsRule` which invokes its targets for a
 
 Here's the code snippet from claims-processing-stack.ts
 
-```
+```code
  new Rule(this, "AllEventLogsRule", {
       eventBus: bus,
       ruleName: "allEventLogsRule",
