@@ -436,7 +436,7 @@ Here's the code snippet from claims-processing-stack.ts
         new CloudWatchLogGroup(allEventsLogGroup),
         new LambdaFunction(createMetricsLambdaFunction),
       ],
-    });
+    })
     ```
 
 These metrics are  used to create a CloudWatch dashboard to present business KPIs and metrics for Lambda function, API Gateway APIs, event rules, and state machines. 
