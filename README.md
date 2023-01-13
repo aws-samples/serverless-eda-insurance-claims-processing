@@ -417,8 +417,7 @@ There's an EventBridge rule - `allEventLogsRule` which invokes its targets for a
 
 Here's the code snippet from claims-processing-stack.ts
 
-```code
- new Rule(this, "AllEventLogsRule", {
+` new Rule(this, "AllEventLogsRule", {
       eventBus: bus,
       ruleName: "allEventLogsRule",
       eventPattern: {
@@ -437,7 +436,7 @@ Here's the code snippet from claims-processing-stack.ts
         new LambdaFunction(createMetricsLambdaFunction),
       ],
     })
-    ```
+`   
 
 These metrics are  used to create a CloudWatch dashboard to present business KPIs and metrics for Lambda function, API Gateway APIs, event rules, and state machines. 
 
