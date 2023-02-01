@@ -23,6 +23,7 @@ Different services in backend architecture interact with Amazon EventBridge Even
 - [Set up AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
 - [Set up AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)
+- [Install Amplify CLI](https://docs.amplify.aws/cli/start/install/)
 - Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ### Fake Image Recognition APIs
@@ -126,7 +127,7 @@ To publish front end changes in future, call `npm run amplify publish` from <roo
 ## How to use the application
 Now that you have the backend and frontend deployed, let's walk through on how to use the sample application:
 
-### Customer On-boarding (Signup)
+### Customer On-boarding (Sign up)
 
 Go to front end url (if published) or if you are running the front end in local, access it at http://localhost:3000/
 
