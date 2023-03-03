@@ -1,47 +1,31 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import {
-  RemovalPolicy,
-  Stack,
-  StackProps
-} from "aws-cdk-lib";
-import {
-  LogGroupLogDestination, RestApi
-} from "aws-cdk-lib/aws-apigateway";
+import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import {
-  CloudWatchLogGroup,
-  LambdaFunction
-} from "aws-cdk-lib/aws-events-targets";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { Construct } from "constructs";
 import { ClaimsProcessingCWDashboard } from "./observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
-import createMetricsFunction from "./observability/cw-dashboard/infra/createMetric";
+import createMetricsQueueWithLambdaSubscription from "./observability/cw-dashboard/infra/createMetric";
+import { ClaimsEvents } from "./services/claims/infra/claims-events";
 import { ClaimsService } from "./services/claims/infra/claims-service";
+import { CustomerEvents } from "./services/customer/infra/customer-events";
 import { CustomerService } from "./services/customer/infra/customer-service";
+import { DocumentsEvents } from "./services/documents/infra/documents-events";
 import { DocumentService } from "./services/documents/infra/documents-service";
+import { FraudEvents } from "./services/fraud/infra/fraud-events";
 import { FraudService } from "./services/fraud/infra/fraud-service";
 import { NotificationsService } from "./services/notifications/infra/notifications-service";
 
 export class ClaimsProcessingStack extends Stack {
-  lambdaFunctions: NodejsFunction[] = [];
-  apis: RestApi[] = [];
-  rules: string[] = [];
-  stateMachines: StateMachine[] = [];
-
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Create Custom Event Bus
     const bus = new EventBus(this, "CustomBus", {
       eventBusName: "ClaimsProcessingBus",
     });
 
-    // Create S3 bucket for DL, Car photos, Car damage photos
-    // EventBridge Rule to trigger a Step Functions on Object Created event
     const documentService = new DocumentService(this, "DocumentService", {
       bus,
     });
@@ -53,113 +37,75 @@ export class ClaimsProcessingStack extends Stack {
     });
 
     const customerService = new CustomerService(this, "CustomerService", {
-      allEventsLogGroup,
       bus,
       documentsBucket: documentService.documentsBucket,
-      lambdaFunctions: this.lambdaFunctions,
-      apis: this.apis,
-      rules: this.rules,
-      stateMachines: this.stateMachines
     });
     const customerTable = customerService.customerTable;
     const policyTable = customerService.policyTable;
 
     const claimsService = new ClaimsService(this, "ClaimsService", {
-      allEventsLogGroup,
       bus,
       customerTable,
       policyTable,
       documentsBucket: documentService.documentsBucket,
-      lambdaFunctions: this.lambdaFunctions,
-      apis: this.apis,
-      rules: this.rules,
-      stateMachines: this.stateMachines
     });
     const claimsTable = claimsService.claimsTable;
-    const claimsLambdaFunction = claimsService.claimsLambdaFunction;
 
-    const apiGWLogGroupDest = new LogGroupLogDestination(
-      new LogGroup(this, "APIGWLogGroup", {
-        retention: RetentionDays.ONE_WEEK,
-        logGroupName: "/aws/events/claimsProcessingAPIGateway",
-        removalPolicy: RemovalPolicy.DESTROY,
-      })
-    );
-
-    const notificationsService = new NotificationsService(this, "NotificationsService", {
-      allEventsLogGroup,
-      apiGWLogGroupDest,
+    new NotificationsService(this, "NotificationsService", {
       bus,
       customerTable,
       eventPattern: {
-        source: [
-          "signup.service",
-          "customer.service",
-          "fnol.service",
-          "claims.service",
-          "document.service",
-          "fraud.service",
-        ],
         detailType: [
-          "Customer.Submitted",
-          "Customer.Accepted",
-          "Customer.Rejected",
-          "Claim.Requested",
-          "Claim.Accepted",
-          "Claim.Rejected",
-          "Document.Processed",
-          "Fraud.Detected"
-        ]
-      }
+          CustomerEvents.CUSTOMER_SUBMITTED,
+          CustomerEvents.CUSTOMER_ACCEPTED,
+          CustomerEvents.CUSTOMER_REJECTED,
+          ClaimsEvents.CLAIM_REQUESTED,
+          ClaimsEvents.CLAIM_ACCEPTED,
+          ClaimsEvents.CLAIM_REJECTED,
+          DocumentsEvents.DOCUMENT_PROCESSED,
+          FraudEvents.FRAUD_DETECTED,
+        ],
+      },
     });
 
     const fraudService = new FraudService(this, "FraudService", {
       bus,
       customerTable,
       policyTable,
-      claimsTable
+      claimsTable,
     });
 
-    const createMetricsLambdaFunction = createMetricsFunction(this);
+    const metricsQueueWithLambdaSubscription =
+      createMetricsQueueWithLambdaSubscription(this);
 
-    // Capture all events in CW LogGroup
-    new Rule(this, "AllEventLogsRule", {
+    new Rule(this, "WildcardCaptureAllEventsRule", {
       eventBus: bus,
-      ruleName: "allEventLogsRule",
+      ruleName: "WildcardCaptureAllEventsRule",
       eventPattern: {
         source: [
-          "signup.service",
-          "customer.service",
-          "fnol.service",
-          "claims.service",
-          "document.service",
-          "fraud.service",
+          CustomerEvents.CUSTOMER_SOURCE,
+          CustomerEvents.SIGNUP_SOURCE,
+          ClaimsEvents.FNOL_SOURCE,
+          ClaimsEvents.CLAIMS_SOURCE,
+          DocumentsEvents.SOURCE,
+          FraudEvents.SOURCE,
           "aws.s3",
         ],
       },
       targets: [
         new CloudWatchLogGroup(allEventsLogGroup),
-        new LambdaFunction(createMetricsLambdaFunction),
+        new SqsQueue(metricsQueueWithLambdaSubscription),
       ],
     });
 
-    this.rules.push("FraudRule");
-    this.rules.push("FnolEventsRule");
-    this.rules.push("ClaimsAcceptedRule");
-    this.rules.push("ClaimsRejectedRule");
-    this.rules.push("DocumentsAcceptedRule");
-    this.rules.push("FraudDetectedRule");
-    this.rules.push("FraudNotDetectedRule");
-    this.rules.push("AllEventLogsRule");
-
-    this.stateMachines.push(documentService.documentProcessingSM);
-
-    new ClaimsProcessingCWDashboard(this, "Claims Processing Dashboard", {
+    new ClaimsProcessingCWDashboard(this, "ClaimsProcessingCWDashboard", {
       dashboardName: "Claims-Processing-Dashboard",
-      lambdaFunctions: this.lambdaFunctions,
-      apis: this.apis,
-      rules: this.rules,
-      stateMachines: this.stateMachines,
+      graphWidgets: [
+        customerService.customerMetricsWidget,
+        claimsService.claimsMetricsWidget,
+        fraudService.fraudMetricsWidget,
+        documentService.documentsMetricsWidget,
+      ],
     });
   }
 }

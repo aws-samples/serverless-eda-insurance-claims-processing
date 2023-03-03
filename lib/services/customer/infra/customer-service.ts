@@ -1,10 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import {
-  CfnOutput,
-  RemovalPolicy,
-} from "aws-cdk-lib";
+import { CfnOutput, RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
   LambdaIntegration,
@@ -13,12 +10,10 @@ import {
   ResponseType,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
+import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import {
-  CloudWatchLogGroup,
-  SfnStateMachine,
-} from "aws-cdk-lib/aws-events-targets";
+import { SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
 import {
   Effect,
   ManagedPolicy,
@@ -29,12 +24,16 @@ import {
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { Construct } from "constructs";
-import { CreateCustomerStepFunction } from "./step-functions/createCustomer";
-import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
-import { UpdatePolicyStepFunction } from "./step-functions/updatePolicy";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-
+import { Construct } from "constructs";
+import {
+  createGraphWidget,
+  createMetric,
+} from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
+import { FraudEvents } from "../../fraud/infra/fraud-events";
+import { CustomerEvents } from "./customer-events";
+import { CreateCustomerStepFunction } from "./step-functions/createCustomer";
+import { UpdatePolicyStepFunction } from "./step-functions/updatePolicy";
 
 function addDefaultGatewayResponse(api: RestApi) {
   api.addGatewayResponse("default-4xx-response", {
@@ -46,23 +45,17 @@ function addDefaultGatewayResponse(api: RestApi) {
       "application/json": '{"message":$context.error.messageString}',
     },
   });
-};
+}
 
 interface CustomerServiceProps {
-  allEventsLogGroup: LogGroup;
   bus: EventBus;
   documentsBucket: Bucket;
-
-  lambdaFunctions: NodejsFunction[];
-  apis: RestApi[];
-  rules: string[];
-  stateMachines: StateMachine[];
 }
 
 export class CustomerService extends Construct {
   public customerTable: Table;
   public policyTable: Table;
-  public customerUpdateLambdaFunction: NodejsFunction;
+  public readonly customerMetricsWidget: GraphWidget;
 
   constructor(scope: Construct, id: string, props: CustomerServiceProps) {
     super(scope, id);
@@ -106,16 +99,20 @@ export class CustomerService extends Construct {
     });
 
     // Create Signup Lambda function
-    const signupLambdaFunction = new NodejsFunction(this, "SignupLambdaFunction", {
-      runtime: Runtime.NODEJS_18_X,
-      memorySize: 512,
-      logRetention: RetentionDays.ONE_WEEK,
-      handler: "handler",
-      entry: `${__dirname}/../app/handlers/signup.js`,
-      environment: {
-        BUS_NAME: bus.eventBusName,
-      },
-    });
+    const signupLambdaFunction = new NodejsFunction(
+      this,
+      "SignupLambdaFunction",
+      {
+        runtime: Runtime.NODEJS_18_X,
+        memorySize: 512,
+        logRetention: RetentionDays.ONE_WEEK,
+        handler: "handler",
+        entry: `${__dirname}/../app/handlers/signup.js`,
+        environment: {
+          BUS_NAME: bus.eventBusName,
+        },
+      }
+    );
 
     signupLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
 
@@ -143,45 +140,16 @@ export class CustomerService extends Construct {
     });
 
     // Create Create Customer Lambda reading from SQS
-    const customerLambdaRole = new Role(
-      this,
-      "CustomerServiceFunctionRole",
-      {
-        assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
-        managedPolicies: [
-          ManagedPolicy.fromAwsManagedPolicyName(
-            "service-role/AWSLambdaBasicExecutionRole"
-          ),
-        ],
-      }
-    );
+    const customerLambdaRole = new Role(this, "CustomerServiceFunctionRole", {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaBasicExecutionRole"
+        ),
+      ],
+    });
 
-    const customerCreateLambdaFunction = new NodejsFunction(
-      this,
-      "CustomerCreateLambdaFunction",
-      {
-        runtime: Runtime.NODEJS_18_X,
-        memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
-        handler: "handler",
-        entry: `${__dirname}/../app/handlers/create.js`,
-        role: customerLambdaRole,
-        environment: {
-          BUS_NAME: bus.eventBusName,
-          CUSTOMER_TABLE_NAME: this.customerTable.tableName,
-          POLICY_TABLE_NAME: this.policyTable.tableName,
-          BUCKET_NAME: props.documentsBucket.bucketName,
-        },
-      }
-    );
-
-    // Give Lambda permission to upload documents to bucket. Same permission will be used on pre-signed URL
-    props.documentsBucket.grantWrite(customerCreateLambdaFunction);
-    customerCreateLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
-    this.customerTable.grantWriteData(customerCreateLambdaFunction);
-    this.policyTable.grantWriteData(customerCreateLambdaFunction);
-
-    this.customerUpdateLambdaFunction = new NodejsFunction(
+    const customerUpdateLambdaFunction = new NodejsFunction(
       this,
       "CustomerUpdateLambdaFunction",
       {
@@ -198,8 +166,8 @@ export class CustomerService extends Construct {
       }
     );
 
-    this.customerUpdateLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
-    this.customerTable.grantWriteData(this.customerUpdateLambdaFunction);
+    customerUpdateLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
+    this.customerTable.grantWriteData(customerUpdateLambdaFunction);
 
     const validatorFunction = new NodejsFunction(scope, "ValidatorFunction", {
       runtime: Runtime.NODEJS_18_X,
@@ -209,21 +177,29 @@ export class CustomerService extends Construct {
       entry: `${__dirname}/../app/handlers/validator.js`,
     });
 
-    const putPolicyRequestsFunction = new NodejsFunction(scope, "PutPolicyRequestsFunction", {
-      runtime: Runtime.NODEJS_18_X,
-      memorySize: 512,
-      logRetention: RetentionDays.ONE_WEEK,
-      handler: "handler",
-      entry: `${__dirname}/../app/handlers/putPolicyRequests.js`,
-    });
+    const putPolicyRequestsFunction = new NodejsFunction(
+      scope,
+      "PutPolicyRequestsFunction",
+      {
+        runtime: Runtime.NODEJS_18_X,
+        memorySize: 512,
+        logRetention: RetentionDays.ONE_WEEK,
+        handler: "handler",
+        entry: `${__dirname}/../app/handlers/putPolicyRequests.js`,
+      }
+    );
 
-    const preSignedURLGeneratorFunction = new NodejsFunction(scope, "PreSignedURLGenerator", {
-      runtime: Runtime.NODEJS_18_X,
-      memorySize: 512,
-      logRetention: RetentionDays.ONE_WEEK,
-      handler: "handler",
-      entry: `${__dirname}/../app/handlers/preSignedURLGenerator.js`,
-    });
+    const preSignedURLGeneratorFunction = new NodejsFunction(
+      scope,
+      "PreSignedURLGenerator",
+      {
+        runtime: Runtime.NODEJS_18_X,
+        memorySize: 512,
+        logRetention: RetentionDays.ONE_WEEK,
+        handler: "handler",
+        entry: `${__dirname}/../app/handlers/preSignedURLGenerator.js`,
+      }
+    );
 
     props.documentsBucket.grantWrite(preSignedURLGeneratorFunction);
 
@@ -250,97 +226,54 @@ export class CustomerService extends Construct {
       }
     );
 
-    // const createMetricsLambdaFunction = createMetricsFunction(this);
-
-    /********************************************************
-     ******************* EB RULES ****************************
-     *********************************************************/
-
     // Custom Event Bus Rule for customer signup (Event Type: Customer.Submitted)
     new Rule(this, "CustomerEventsRule", {
       eventBus: bus,
       ruleName: "CustomerEventsRule",
       eventPattern: {
-        detailType: ["Customer.Submitted"],
+        detailType: [CustomerEvents.CUSTOMER_SUBMITTED],
       },
-      targets: [
-        new SfnStateMachine(createCustomerStepFunction),
-      ],
-    });
-
-    // Custom Event Bus Rule (Event Type: Customer.Accepted)
-    new Rule(this, "CustomerAcceptedEventsRule", {
-      eventBus: bus,
-      ruleName: "CustomerAcceptedEventsRule",
-      eventPattern: {
-        detailType: ["Customer.Accepted"],
-      },
-      targets: [
-        //new LambdaFunction(notificationLambdaFunction)
-      ],
-    });
-
-    // Custom Event Bus Rule (Event Type: Customer.Rejected)
-    new Rule(this, "CustomerRejectedEventsRule", {
-      eventBus: bus,
-      ruleName: "CustomerRejectedEventsRule",
-      eventPattern: {
-        detailType: ["Customer.Rejected"],
-      },
-      targets: [
-        //new LambdaFunction(notificationLambdaFunction)
-      ],
+      targets: [new SfnStateMachine(createCustomerStepFunction)],
     });
 
     new Rule(this, "UpdateCustomerPolicyOnFraudNotDetectedRule", {
       eventBus: bus,
       ruleName: "UpdateCustomerPolicyOnFraudNotDetectedRule",
       eventPattern: {
-        source: ["fraud.service"],
-        detailType: ["Fraud.Not.Detected"],
+        source: [FraudEvents.SOURCE],
+        detailType: [FraudEvents.FRAUD_NOT_DETECTED],
         detail: {
           documentType: ["CAR"],
           fraudType: ["SIGNUP.CAR"],
         },
       },
-      targets: [
-        new SfnStateMachine(updatePolicyStepFunction),
-      ],
+      targets: [new SfnStateMachine(updatePolicyStepFunction)],
     });
 
-    // Capture all events in CW LogGroup
-    new Rule(this, "AllEventLogsRule", {
-      eventBus: bus,
-      ruleName: "allEventLogsRule",
-      eventPattern: {
-        source: [
-          "signup.service",
-          "customer.service",
-        ],
-      },
-      targets: [
-        new CloudWatchLogGroup(props.allEventsLogGroup),
-        // new LambdaFunction(createMetricsLambdaFunction),
-      ],
-    });
-
-    const getCustomerFunction = new NodejsFunction(scope, "GetCustomerFunction", {
-      runtime: Runtime.NODEJS_18_X,
-      memorySize: 512,
-      logRetention: RetentionDays.ONE_WEEK,
-      handler: "handler",
-      entry: `${__dirname}/../app/handlers/get.js`,
-      environment: {
-        CUSTOMER_TABLE_NAME: this.customerTable.tableName,
-        POLICY_TABLE_NAME: this.policyTable.tableName,
-      },
-    });
+    const getCustomerFunction = new NodejsFunction(
+      scope,
+      "GetCustomerFunction",
+      {
+        runtime: Runtime.NODEJS_18_X,
+        memorySize: 512,
+        logRetention: RetentionDays.ONE_WEEK,
+        handler: "handler",
+        entry: `${__dirname}/../app/handlers/get.js`,
+        environment: {
+          CUSTOMER_TABLE_NAME: this.customerTable.tableName,
+          POLICY_TABLE_NAME: this.policyTable.tableName,
+        },
+      }
+    );
 
     this.customerTable.grantReadData(getCustomerFunction);
     this.policyTable.grantReadData(getCustomerFunction);
 
     const customerApi = new RestApi(scope, "CustomerApi", {
-      defaultCorsPreflightOptions: { allowOrigins: ["*"], allowMethods: ["GET"] },
+      defaultCorsPreflightOptions: {
+        allowOrigins: ["*"],
+        allowMethods: ["GET"],
+      },
       deployOptions: {
         loggingLevel: MethodLoggingLevel.INFO,
         accessLogDestination: apiGWLogGroupDest,
@@ -359,32 +292,22 @@ export class CustomerService extends Construct {
 
     addDefaultGatewayResponse(customerApi);
 
-    props.lambdaFunctions.push(preSignedURLGeneratorFunction);
-    props.lambdaFunctions.push(putPolicyRequestsFunction);
-    props.lambdaFunctions.push(getCustomerFunction);
-    props.lambdaFunctions.push(this.customerUpdateLambdaFunction);
-    props.lambdaFunctions.push(customerCreateLambdaFunction);
-    props.lambdaFunctions.push(signupLambdaFunction);
-
-    props.apis.push(signupApi);
-    props.apis.push(customerApi);
-
-    props.rules.push("CustomerAcceptedEventsRule");
-    props.rules.push("CustomerEventsRule");
-    props.rules.push("CustomerRejectedEventsRule");
-    props.rules.push("AllEventLogsRule");
-
-    props.stateMachines.push(createCustomerStepFunction);
-    props.stateMachines.push(updatePolicyStepFunction);
-
-    // TODO: Create Customer Service specific Business and Operational Metrics
-
-    // new ClaimsProcessingCWDashboard(this, "Claims Processing Dashboard", {
-    //   dashboardName: "Claims-Processing-Dashboard",
-    //   lambdaFunctions: this.lambdaFunctions,
-    //   apis: this.apis,
-    //   rules: this.rules,
-    //   stateMachines: this.stateMachines,
-    // });
+    this.customerMetricsWidget = createGraphWidget("Customer Summary", [
+      createMetric(
+        CustomerEvents.CUSTOMER_ACCEPTED,
+        CustomerEvents.CUSTOMER_SOURCE,
+        "Customers Accepted"
+      ),
+      createMetric(
+        CustomerEvents.CUSTOMER_REJECTED,
+        CustomerEvents.CUSTOMER_SOURCE,
+        "Customers Rejected"
+      ),
+      createMetric(
+        CustomerEvents.CUSTOMER_SUBMITTED,
+        CustomerEvents.SIGNUP_SOURCE,
+        "Customers Submitted"
+      ),
+    ]);
   }
 }

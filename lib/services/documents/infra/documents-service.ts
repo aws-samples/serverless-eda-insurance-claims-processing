@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -11,7 +12,7 @@ import {
   BlockPublicAccess,
   Bucket,
   BucketEncryption,
-  HttpMethods,
+  HttpMethods
 } from "aws-cdk-lib/aws-s3";
 import {
   Choice,
@@ -22,32 +23,36 @@ import {
   LogLevel,
   StateMachine,
   StateMachineType,
-  TaskInput,
+  TaskInput
 } from "aws-cdk-lib/aws-stepfunctions";
 import {
   CallAwsService,
   EvaluateExpression,
   EventBridgePutEvents,
-  LambdaInvoke,
+  LambdaInvoke
 } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { Construct } from "constructs";
 import config from "../../../config";
+import {
+  createGraphWidget,
+  createMetric
+} from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
+import { DocumentsEvents } from "./documents-events";
 
 export interface DocumentServiceProps {
   readonly bus: EventBus;
 }
 
 export class DocumentService extends Construct {
-  readonly documentsBucket: Bucket;
-  documentProcessingSM: StateMachine;
-  analyzeCarImageFunction: NodejsFunction;
+  public readonly documentsBucket: Bucket;
+  public readonly documentsMetricsWidget: GraphWidget;
 
   constructor(scope: Construct, id: string, props?: DocumentServiceProps) {
     super(scope, id);
 
     this.documentsBucket = this.createDocumentsBucket();
 
-    this.documentProcessingSM =
+    const documentProcessingSM =
       this.createDocumentProcessingStateMachine(props);
 
     const s3rule = new Rule(this, "signupDocumentsRule", {
@@ -61,10 +66,18 @@ export class DocumentService extends Construct {
           },
         },
       },
-      targets: [new SfnStateMachine(this.documentProcessingSM)],
+      targets: [new SfnStateMachine(documentProcessingSM)],
     });
 
-    this.documentsBucket.grantRead(this.documentProcessingSM);
+    this.documentsBucket.grantRead(documentProcessingSM);
+
+    this.documentsMetricsWidget = createGraphWidget("Documents Summary", [
+      createMetric(
+        DocumentsEvents.DOCUMENT_PROCESSED,
+        DocumentsEvents.SOURCE,
+        "Documents Processed"
+      ),
+    ]);
   }
 
   private createDocumentProcessingStateMachine(
@@ -190,7 +203,10 @@ export class DocumentService extends Construct {
       }
     );
 
-    this.analyzeCarImageFunction = new NodejsFunction(this, "analyzeCarImageFunction", {
+    const analyzeCarImageFunction = new NodejsFunction(
+      this,
+      "analyzeCarImageFunction",
+      {
         runtime: Runtime.NODEJS_18_X,
         logRetention: RetentionDays.ONE_WEEK,
         handler: "handler",
@@ -200,12 +216,13 @@ export class DocumentService extends Construct {
           DAMAGE_DETECT_API: config.DAMAGE_DETECT_API,
         },
         timeout: Duration.seconds(30),
-      });
-  
-    this.documentsBucket.grantRead(this.analyzeCarImageFunction);
+      }
+    );
+
+    this.documentsBucket.grantRead(analyzeCarImageFunction);
 
     const analyzeCarImage = new LambdaInvoke(this, "Analyze Car Image", {
-      lambdaFunction: this.analyzeCarImageFunction,
+      lambdaFunction: analyzeCarImageFunction,
       resultPath: JsonPath.stringAt("$.analyzedFieldAndValues"),
       resultSelector: {
         "color.$": "$.Payload.analyzedFieldAndValues.color",

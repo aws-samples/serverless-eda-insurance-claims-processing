@@ -1,45 +1,38 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import {
-  CfnOutput
-} from "aws-cdk-lib";
+import { CfnOutput, RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
   LambdaIntegration,
-  LogGroupLogDestination, MethodLoggingLevel, ResponseType,
-  RestApi
+  LogGroupLogDestination,
+  MethodLoggingLevel,
+  ResponseType,
+  RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, EventPattern, Rule } from "aws-cdk-lib/aws-events";
-import {
-  LambdaFunction
-} from "aws-cdk-lib/aws-events-targets";
-import {
-  Effect, PolicyStatement
-} from "aws-cdk-lib/aws-iam";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { CfnPolicy } from "aws-cdk-lib/aws-iot";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import {
   AwsCustomResource,
   AwsCustomResourcePolicy,
-  PhysicalResourceId
+  PhysicalResourceId,
 } from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
 
 interface NotificationsServiceProps {
-  allEventsLogGroup: LogGroup;
-  apiGWLogGroupDest: LogGroupLogDestination;
   bus: EventBus;
   eventPattern: EventPattern;
 
   // No other domain's information should leak into notifications domain.
   // These properties should not be required by Notifications Service in future refactors.
   // Initial iteration is to make modular constructs work. Will define context boundaries in subsequent iterations
-  customerTable: Table
+  customerTable: Table;
 }
 
 function create_iot_policy(scope: Construct): CfnPolicy {
@@ -94,11 +87,6 @@ function create_iot_policy(scope: Construct): CfnPolicy {
 }
 
 export class NotificationsService extends Construct {
-  lambdaFunctions: NodejsFunction[] = [];
-  apis: RestApi[] = [];
-  rules: string[] = [];
-  stateMachines: StateMachine[] = [];
-
   constructor(scope: Construct, id: string, props: NotificationsServiceProps) {
     super(scope, id);
 
@@ -154,7 +142,7 @@ export class NotificationsService extends Construct {
       resources: ["*"],
       effect: Effect.ALLOW,
     });
-  
+
     const updateIOTPolicyFunction = new NodejsFunction(
       scope,
       "UpdateIOTPolicyFunction",
@@ -166,14 +154,25 @@ export class NotificationsService extends Construct {
         entry: `${__dirname}/../app/handlers/iot.index.js`,
       }
     );
-  
-    updateIOTPolicyFunction.addToRolePolicy(attachPolicyStatement);;
+
+    updateIOTPolicyFunction.addToRolePolicy(attachPolicyStatement);
+
+    const iotApiGWLogGroupDest = new LogGroupLogDestination(
+      new LogGroup(this, "IoTAPIGWAccessLogGroup", {
+        retention: RetentionDays.ONE_WEEK,
+        logGroupName: "/aws/iot/claimsProcessingIoTApiAccessLogGroup",
+        removalPolicy: RemovalPolicy.DESTROY,
+      })
+    );
 
     const iotAPI = new RestApi(scope, "IOTApi", {
-      defaultCorsPreflightOptions: { allowOrigins: ["*"], allowMethods: ["PUT"] },
+      defaultCorsPreflightOptions: {
+        allowOrigins: ["*"],
+        allowMethods: ["PUT"],
+      },
       deployOptions: {
         loggingLevel: MethodLoggingLevel.INFO,
-        accessLogDestination: props.apiGWLogGroupDest,
+        accessLogDestination: iotApiGWLogGroupDest,
       },
     });
     const iotPolicyResource = iotAPI.root.addResource("iotPolicy");
@@ -186,7 +185,7 @@ export class NotificationsService extends Construct {
       value: iotAPI.url,
       exportName: "iot-api-endpoint",
     });
-  
+
     addDefaultGatewayResponse(iotAPI);
     create_iot_policy(this);
 
@@ -210,28 +209,11 @@ export class NotificationsService extends Construct {
       exportName: "iot-endpoint-address",
     });
 
-    // const createMetricsLambdaFunction = createMetricsFunction(this);
-
     new Rule(this, "NotificationsRule", {
       eventBus: bus,
       ruleName: "NotificationsRule",
       eventPattern: props.eventPattern,
-      targets: [
-        new LambdaFunction(notificationLambdaFunction),
-      ],
+      targets: [new LambdaFunction(notificationLambdaFunction)],
     });
-
-    this.lambdaFunctions.push(updateIOTPolicyFunction);
-    this.lambdaFunctions.push(notificationLambdaFunction);
-
-    this.apis.push(iotAPI);
-
-    // new ClaimsProcessingCWDashboard(this, "Claims Processing Dashboard", {
-    //   dashboardName: "Claims-Processing-Dashboard",
-    //   lambdaFunctions: this.lambdaFunctions,
-    //   apis: this.apis,
-    //   rules: this.rules,
-    //   stateMachines: this.stateMachines,
-    // });
   }
 }

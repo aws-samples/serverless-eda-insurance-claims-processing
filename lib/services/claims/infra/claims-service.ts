@@ -1,41 +1,45 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import {
-  CfnOutput,
-  RemovalPolicy
-} from "aws-cdk-lib";
+import { CfnOutput, RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
   LambdaIntegration,
   LogGroupLogDestination,
   MethodLoggingLevel,
   ResponseType,
-  RestApi
+  RestApi,
 } from "aws-cdk-lib/aws-apigateway";
+import { GraphWidget, Metric } from "aws-cdk-lib/aws-cloudwatch";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import {
-  CloudWatchLogGroup, SfnStateMachine, SqsQueue
+  CloudWatchLogGroup,
+  SfnStateMachine,
+  SqsQueue,
 } from "aws-cdk-lib/aws-events-targets";
 import {
   Effect,
   ManagedPolicy,
   PolicyStatement,
   Role,
-  ServicePrincipal
+  ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
 import { EventSourceMapping, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Queue } from "aws-cdk-lib/aws-sqs";
-import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { Construct } from "constructs";
+import {
+  createGraphWidget,
+  createMetric,
+} from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
+import { FraudEvents } from "../../fraud/infra/fraud-events";
+import { ClaimsEvents } from "./claims-events";
 import { UpdateClaimsStepFunction } from "./step-functions/updateClaims";
 
 interface ClaimsServiceProps {
-  allEventsLogGroup: LogGroup;
   bus: EventBus;
   documentsBucket: Bucket;
 
@@ -44,21 +48,16 @@ interface ClaimsServiceProps {
   // Initial iteration is to make modular constructs work. Will define context boundaries in subsequent iterations
   policyTable: Table;
   customerTable: Table;
-
-  lambdaFunctions: NodejsFunction[];
-  apis: RestApi[];
-  rules: string[];
-  stateMachines: StateMachine[];
 }
 
 export class ClaimsService extends Construct {
   public readonly claimsTable: Table;
-  public readonly claimsLambdaFunction: NodejsFunction;
+  public readonly claimsMetricsWidget: GraphWidget;
 
   constructor(scope: Construct, id: string, props: ClaimsServiceProps) {
     super(scope, id);
 
-    const bus = props.bus
+    const bus = props.bus;
 
     const apiGWLogGroupDest = new LogGroupLogDestination(
       new LogGroup(this, "APIGWLogGroup", {
@@ -133,8 +132,6 @@ export class ClaimsService extends Construct {
       exportName: "fnol-api-endpoint",
     });
 
-    // Create Claims Lambda function polling from Claims queue, accept FNOL, puts event (Claims.FNOL.Accepted) 
-    // (should return a pre-signed url to upload photos of car damage)
     const claimsLambdaRole = new Role(this, "ClaimsQueueConsumerFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: [
@@ -147,7 +144,7 @@ export class ClaimsService extends Construct {
       ],
     });
 
-    this.claimsLambdaFunction = new NodejsFunction(
+    const claimsLambdaFunction = new NodejsFunction(
       this,
       "ClaimsLambdaFunction",
       {
@@ -167,14 +164,14 @@ export class ClaimsService extends Construct {
       }
     );
 
-    props.documentsBucket.grantWrite(this.claimsLambdaFunction);
-    this.claimsTable.grantWriteData(this.claimsLambdaFunction);
-    props.policyTable.grantReadData(this.claimsLambdaFunction);
-    props.customerTable.grantReadData(this.claimsLambdaFunction);
-    this.claimsLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
+    props.documentsBucket.grantWrite(claimsLambdaFunction);
+    this.claimsTable.grantWriteData(claimsLambdaFunction);
+    props.policyTable.grantReadData(claimsLambdaFunction);
+    props.customerTable.grantReadData(claimsLambdaFunction);
+    claimsLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
 
     new EventSourceMapping(this, "ClaimsQueueFunctionESM", {
-      target: this.claimsLambdaFunction,
+      target: claimsLambdaFunction,
       batchSize: 1,
       eventSourceArn: claimsQueue.queueArn,
     });
@@ -187,97 +184,45 @@ export class ClaimsService extends Construct {
       }
     );
 
-    // const createMetricsLambdaFunction = createMetricsFunction(this);
-
-    /********************************************************
-     ******************* EB RULES ****************************
-     *********************************************************/
-
-    // Create Event Bus Rule (Event Type: Claims.FNOL.Requested) to trigger message to SQS (Claims Queue)
     new Rule(this, "FNOLEventsRule", {
       eventBus: bus,
       ruleName: "FNOLEventsRule",
       eventPattern: {
-        detailType: ["Claim.Requested"],
+        detailType: [ClaimsEvents.CLAIM_REQUESTED],
       },
       targets: [new SqsQueue(claimsQueue)],
-    });
-
-    // Create Rule for Claims.Accepted
-    new Rule(this, "ClaimsAcceptedRule", {
-      eventBus: bus,
-      ruleName: "ClaimsAcceptedRule",
-      eventPattern: {
-        detailType: ["Claim.Accepted"],
-      },
-      targets: [
-        // new LambdaFunction(notificationLambdaFunction)
-      ],
-    });
-
-    // Claims Rejected Rule
-    new Rule(this, "ClaimsRejectedRule", {
-      eventBus: bus,
-      ruleName: "ClaimsRejectedRule",
-      eventPattern: {
-        detailType: ["Claim.Rejected"],
-      },
-      targets: [
-        // new LambdaFunction(notificationLambdaFunction)
-      ],
     });
 
     new Rule(this, "UpdateClaimOnFraudNotDetectedRule", {
       eventBus: bus,
       ruleName: "UpdateClaimOnFraudNotDetectedRule",
       eventPattern: {
-        source: ["fraud.service"],
-        detailType: ["Fraud.Not.Detected"],
+        source: [FraudEvents.SOURCE],
+        detailType: [FraudEvents.FRAUD_NOT_DETECTED],
         detail: {
           documentType: ["CAR"],
           fraudType: ["CLAIMS"],
         },
       },
-      targets: [
-        new SfnStateMachine(updateClaimsStepFunction),
-      ],
+      targets: [new SfnStateMachine(updateClaimsStepFunction)],
     });
 
-
-    // Capture all events in CW LogGroup
-    new Rule(this, "AllEventLogsRule", {
-      eventBus: bus,
-      ruleName: "allEventLogsRule",
-      eventPattern: {
-        source: [
-          "fnol.service",
-          "claims.service",
-        ],
-      },
-      targets: [
-        new CloudWatchLogGroup(props.allEventsLogGroup),
-        // new LambdaFunction(createMetricsLambdaFunction),
-      ],
-    });
-
-    props.lambdaFunctions.push(this.claimsLambdaFunction);
-    props.lambdaFunctions.push(firstNoticeOfLossLambda);
-
-    props.apis.push(fnolApi);
-
-    props.rules.push("FnolEventsRule");
-    props.rules.push("ClaimsAcceptedRule");
-    props.rules.push("ClaimsRejectedRule");
-    props.rules.push("AllEventLogsRule");
-
-    props.stateMachines.push(updateClaimsStepFunction);
-
-    // new ClaimsProcessingCWDashboard(this, "Claims Processing Dashboard", {
-    //   dashboardName: "Claims-Processing-Dashboard",
-    //   lambdaFunctions: props.lambdaFunctions,
-    //   apis: props.apis,
-    //   rules: props.rules,
-    //   stateMachines: props.stateMachines,
-    // });
+    this.claimsMetricsWidget = createGraphWidget("Claims Summary", [
+      createMetric(
+        ClaimsEvents.CLAIM_REQUESTED,
+        ClaimsEvents.FNOL_SOURCE,
+        "Claims Requested"
+      ),
+      createMetric(
+        ClaimsEvents.CLAIM_ACCEPTED,
+        ClaimsEvents.CLAIMS_SOURCE,
+        "Claims Accepted"
+      ),
+      createMetric(
+        ClaimsEvents.CLAIM_REJECTED,
+        ClaimsEvents.CLAIMS_SOURCE,
+        "Claims Rejected"
+      ),
+    ]);
   }
 }

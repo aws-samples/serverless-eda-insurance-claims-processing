@@ -2,19 +2,21 @@
 // SPDX-License-Identifier: MIT-0
 
 import { RestApi } from "aws-cdk-lib/aws-apigateway";
+import { GraphWidget, Metric } from "aws-cdk-lib/aws-cloudwatch";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import {
-  LambdaFunction
-} from "aws-cdk-lib/aws-events-targets";
-import {
-  Effect, PolicyStatement
-} from "aws-cdk-lib/aws-iam";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { Construct } from "constructs";
+import {
+  createGraphWidget,
+  createMetric,
+} from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
+import { FraudEvents } from "./fraud-events";
 
 interface FraudServiceProps {
   bus: EventBus;
@@ -26,10 +28,7 @@ interface FraudServiceProps {
 }
 
 export class FraudService extends Construct {
-  lambdaFunctions: NodejsFunction[] = [];
-  apis: RestApi[] = [];
-  rules: string[] = [];
-  stateMachines: StateMachine[] = [];
+  public readonly fraudMetricsWidget: GraphWidget;
 
   constructor(scope: Construct, id: string, props: FraudServiceProps) {
     super(scope, id);
@@ -78,9 +77,7 @@ export class FraudService extends Construct {
         source: ["document.service"],
         detailType: ["Document.Processed"],
       },
-      targets: [
-        new LambdaFunction(fraudDetectorLambda)
-      ],
+      targets: [new LambdaFunction(fraudDetectorLambda)],
     });
 
     // Custom Event Bus Rule on Claims.Fraud.Detected event should trigger notification Lambda
@@ -118,9 +115,7 @@ export class FraudService extends Construct {
       eventBus: bus,
       ruleName: "allEventLogsRule",
       eventPattern: {
-        source: [
-          "fraud.service",
-        ],
+        source: ["fraud.service"],
       },
       targets: [
         // new CloudWatchLogGroup(allEventsLogGroup),
@@ -128,23 +123,17 @@ export class FraudService extends Construct {
       ],
     });
 
-    this.lambdaFunctions.push(fraudDetectorLambda);
-
-    this.rules.push("FraudRule");
-    this.rules.push("FnolEventsRule");
-    this.rules.push("ClaimsAcceptedRule");
-    this.rules.push("ClaimsRejectedRule");
-    this.rules.push("DocumentsAcceptedRule");
-    this.rules.push("FraudDetectedRule");
-    this.rules.push("FraudNotDetectedRule");
-    this.rules.push("AllEventLogsRule");
-
-    // new ClaimsProcessingCWDashboard(this, "Claims Processing Dashboard", {
-    //   dashboardName: "Claims-Processing-Dashboard",
-    //   lambdaFunctions: this.lambdaFunctions,
-    //   apis: this.apis,
-    //   rules: this.rules,
-    //   stateMachines: this.stateMachines,
-    // });
+    this.fraudMetricsWidget = createGraphWidget("Fraud Summary", [
+      createMetric(
+        FraudEvents.FRAUD_DETECTED,
+        FraudEvents.SOURCE,
+        "Fraud Detected"
+      ),
+      createMetric(
+        FraudEvents.FRAUD_NOT_DETECTED,
+        FraudEvents.SOURCE,
+        "Fraud Not Detected"
+      ),
+    ]);
   }
 }
