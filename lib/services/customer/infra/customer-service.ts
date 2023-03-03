@@ -13,7 +13,7 @@ import {
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import { SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
+import { LambdaFunction, SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
 import {
   Effect,
   ManagedPolicy,
@@ -226,30 +226,6 @@ export class CustomerService extends Construct {
       }
     );
 
-    // Custom Event Bus Rule for customer signup (Event Type: Customer.Submitted)
-    new Rule(this, "CustomerEventsRule", {
-      eventBus: bus,
-      ruleName: "CustomerEventsRule",
-      eventPattern: {
-        detailType: [CustomerEvents.CUSTOMER_SUBMITTED],
-      },
-      targets: [new SfnStateMachine(createCustomerStepFunction)],
-    });
-
-    new Rule(this, "UpdateCustomerPolicyOnFraudNotDetectedRule", {
-      eventBus: bus,
-      ruleName: "UpdateCustomerPolicyOnFraudNotDetectedRule",
-      eventPattern: {
-        source: [FraudEvents.SOURCE],
-        detailType: [FraudEvents.FRAUD_NOT_DETECTED],
-        detail: {
-          documentType: ["CAR"],
-          fraudType: ["SIGNUP.CAR"],
-        },
-      },
-      targets: [new SfnStateMachine(updatePolicyStepFunction)],
-    });
-
     const getCustomerFunction = new NodejsFunction(
       scope,
       "GetCustomerFunction",
@@ -291,6 +267,45 @@ export class CustomerService extends Construct {
     });
 
     addDefaultGatewayResponse(customerApi);
+
+    new Rule(this, "CreateCustomerEventsRule", {
+      eventBus: bus,
+      ruleName: "CreateCustomerEventsRule",
+      eventPattern: {
+        detailType: [CustomerEvents.CUSTOMER_SUBMITTED],
+      },
+      targets: [new SfnStateMachine(createCustomerStepFunction)],
+    });
+
+    new Rule(this, "UpdateDLonFraudNotDetectedRule", {
+      eventBus: bus,
+      ruleName: "UpdateDLonFraudNotDetectedRule",
+      eventPattern: {
+        source: [FraudEvents.SOURCE],
+        detailType: [FraudEvents.FRAUD_NOT_DETECTED],
+        detail: {
+          documentType: ["DRIVERS_LICENSE"],
+          fraudType: ["DOCUMENT"],
+        },
+      },
+      targets: [
+        new LambdaFunction(customerUpdateLambdaFunction),
+      ],
+    });
+
+    new Rule(this, "UpdateCustomerPolicyOnFraudNotDetectedRule", {
+      eventBus: bus,
+      ruleName: "UpdateCustomerPolicyOnFraudNotDetectedRule",
+      eventPattern: {
+        source: [FraudEvents.SOURCE],
+        detailType: [FraudEvents.FRAUD_NOT_DETECTED],
+        detail: {
+          documentType: ["CAR"],
+          fraudType: ["SIGNUP.CAR"],
+        },
+      },
+      targets: [new SfnStateMachine(updatePolicyStepFunction)],
+    });
 
     this.customerMetricsWidget = createGraphWidget("Customer Summary", [
       createMetric(

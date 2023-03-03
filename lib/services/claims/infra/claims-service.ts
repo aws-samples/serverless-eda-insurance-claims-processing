@@ -10,11 +10,10 @@ import {
   ResponseType,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
-import { GraphWidget, Metric } from "aws-cdk-lib/aws-cloudwatch";
+import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import {
-  CloudWatchLogGroup,
   SfnStateMachine,
   SqsQueue,
 } from "aws-cdk-lib/aws-events-targets";

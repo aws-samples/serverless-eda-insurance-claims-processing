@@ -1,8 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { RestApi } from "aws-cdk-lib/aws-apigateway";
-import { GraphWidget, Metric } from "aws-cdk-lib/aws-cloudwatch";
+import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
@@ -10,12 +9,12 @@ import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { Construct } from "constructs";
 import {
   createGraphWidget,
   createMetric,
 } from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
+import { DocumentsEvents } from "../../documents/infra/documents-events";
 import { FraudEvents } from "./fraud-events";
 
 interface FraudServiceProps {
@@ -32,8 +31,6 @@ export class FraudService extends Construct {
 
   constructor(scope: Construct, id: string, props: FraudServiceProps) {
     super(scope, id);
-
-    // Create Custom Event Bus
     const bus = props.bus;
 
     const lambdaToPutEventsPolicy = new PolicyStatement({
@@ -67,60 +64,14 @@ export class FraudService extends Construct {
 
     fraudDetectorLambda.addToRolePolicy(lambdaToPutEventsPolicy);
 
-    // const createMetricsLambdaFunction = createMetricsFunction(this);
-
-    // Custom Event Bus Rule on *.Document.Processed event should trigger fraudDetection Lambda handler and notification handler
     const fraudRule = new Rule(this, "FraudRule", {
       eventBus: bus,
       ruleName: "FraudRule",
       eventPattern: {
-        source: ["document.service"],
-        detailType: ["Document.Processed"],
+        source: [DocumentsEvents.SOURCE],
+        detailType: [DocumentsEvents.DOCUMENT_PROCESSED],
       },
       targets: [new LambdaFunction(fraudDetectorLambda)],
-    });
-
-    // Custom Event Bus Rule on Claims.Fraud.Detected event should trigger notification Lambda
-    // new Rule(this, "FraudDetectedRule", {
-    //   eventBus: bus,
-    //   ruleName: "FraudDetectedRule",
-    //   eventPattern: {
-    //     source: ["fraud.service"],
-    //     detailType: ["Fraud.Detected"],
-    //   },
-    //   targets: [
-    //     new LambdaFunction(claimsLambdaFunction), // Call this target if document fraud is related to claims
-    //   ],
-    // });
-
-    // Custom Event Bus Rule on Claims.Fraud.Not.Detected event should trigger claims Lambda
-    // new Rule(this, "FraudNotDetectedRule", {
-    //   eventBus: bus,
-    //   ruleName: "FraudNotDetectedRule",
-    //   eventPattern: {
-    //     source: ["fraud.service"],
-    //     detailType: ["Fraud.Not.Detected"],
-    //     detail: {
-    //       documentType: ["DRIVERS_LICENSE"],
-    //       fraudType: ["DOCUMENT"],
-    //     },
-    //   },
-    //   targets: [
-    //     new LambdaFunction(customerUpdateLambdaFunction), // Call this target to update customer item with latest document information
-    //   ],
-    // });
-
-    // Capture all events in CW LogGroup
-    new Rule(this, "AllEventLogsRule", {
-      eventBus: bus,
-      ruleName: "allEventLogsRule",
-      eventPattern: {
-        source: ["fraud.service"],
-      },
-      targets: [
-        // new CloudWatchLogGroup(allEventsLogGroup),
-        // new LambdaFunction(createMetricsLambdaFunction),
-      ],
     });
 
     this.fraudMetricsWidget = createGraphWidget("Fraud Summary", [
