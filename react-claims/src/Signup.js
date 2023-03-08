@@ -65,16 +65,16 @@ class SignupForm extends React.Component {
     this.showClaimsForm = this.showClaimsForm.bind(this);
   }
 
-  getValue(customer, field) {
+  getValue(customer, field, defVal) {
     return {
       value:
         customer && customer[field]
           ? customer[field]
-          : this.initial_value.value,
+          : defVal,
     };
   }
 
-  getPolicyValue(customer, field) {
+  getPolicyValue(customer, field, defVal) {
     return {
       value:
         customer &&
@@ -82,7 +82,7 @@ class SignupForm extends React.Component {
         customer.policies[0] &&
         customer.policies[0][field]
           ? customer.policies[0][field].S
-          : this.initial_value.value,
+          : defVal,
     };
   }
 
@@ -94,21 +94,21 @@ class SignupForm extends React.Component {
 
     this.setState({
       email: { value: user.attributes.email },
-      first_name: this.getValue(customer, "firstname"),
-      last_name: this.getValue(customer, "lastname"),
-      ssn: this.getValue(customer, "ssn"),
-      address_street: this.getValue(customer, "street"),
-      address_city: this.getValue(customer, "city"),
-      address_state: this.getValue(customer, "state"),
-      address_zip: this.getValue(customer, "zip"),
+      first_name: this.getValue(customer, "firstname", "Connor"),
+      last_name: this.getValue(customer, "lastname", "Sample"),
+      ssn: this.getValue(customer, "ssn", "000000000"),
+      address_street: this.getValue(customer, "street", "124 Main St"),
+      address_city: this.getValue(customer, "city", "Phoenix"),
+      address_state: this.getValue(customer, "state", "AZ"),
+      address_zip: this.getValue(customer, "zip", "85007"),
 
-      vehicle_make: this.getPolicyValue(customer, "make"),
-      vehicle_color: this.getPolicyValue(customer, "color"),
-      vehicle_milage: this.getPolicyValue(customer, "mileage"),
-      vehicle_model: this.getPolicyValue(customer, "model"),
-      vehicle_type: this.getPolicyValue(customer, "type"),
-      vehicle_vin: this.getPolicyValue(customer, "vin"),
-      vehicle_year: this.getPolicyValue(customer, "year"),
+      vehicle_make: this.getPolicyValue(customer, "make", "Honda"),
+      vehicle_color: this.getPolicyValue(customer, "color", "Green"),
+      vehicle_milage: this.getPolicyValue(customer, "mileage", "200000"),
+      vehicle_model: this.getPolicyValue(customer, "model", "Accord"),
+      vehicle_type: this.getPolicyValue(customer, "type", "Sedan"),
+      vehicle_vin: this.getPolicyValue(customer, "vin", "1HGCF86461A130849"),
+      vehicle_year: this.getPolicyValue(customer, "year", "2001"),
 
       signedUp: customer && customer.policies,
     });
