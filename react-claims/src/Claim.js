@@ -49,28 +49,27 @@ class TF extends React.Component {
 }
 
 class ClaimForm extends React.Component {
-  // updateParent;
-  initial_value = { value: "", hasError: false, errorMessage: "" };
 
   constructor(props) {
     super(props);
+
     this.state = {
       display: props.display,
-      occurrenceDateTime: this.initial_value,
-      country: this.initial_value,
-      state: this.initial_value,
-      city: this.initial_value,
-      zip: this.initial_value,
-      road: this.initial_value,
-      description: this.initial_value,
-      numberOfPassengers: this.initial_value,
-      policeReport_isFiled: this.initial_value,
-      reportOrReceiptAvailable: this.initial_value,
-      other_insuranceId: this.initial_value,
-      other_insuranceCompany: this.initial_value,
-      driversLicenseNumber: this.initial_value,
-      other_firstName: this.initial_value,
-      other_lastName: this.initial_value,
+      occurrenceDateTime: { value: "", hasError: false, errorMessage: "" },
+      country: { value: "US", hasError: false, errorMessage: "" },
+      state: { value: "AZ", hasError: false, errorMessage: "" },
+      city: { value: "Phoenix", hasError: false, errorMessage: "" },
+      zip: { value: "85007", hasError: false, errorMessage: "" },
+      road: { value: "124 Main St", hasError: false, errorMessage: "" },
+      description: { value: "Rear-End Collision", hasError: false, errorMessage: "" },
+      numberOfPassengers: { value: "1", hasError: false, errorMessage: "" },
+      policeReport_isFiled: { value: true, hasError: false, errorMessage: "" },
+      reportOrReceiptAvailable: { value: true, hasError: false, errorMessage: "" },
+      other_insuranceId: { value: "111111111111", hasError: false, errorMessage: "" },
+      other_insuranceCompany: { value: "Other Insurance Co.", hasError: false, errorMessage: "" },
+      driversLicenseNumber: { value: "S99988801", hasError: false, errorMessage: "" },
+      other_firstName: { value: "John", hasError: false, errorMessage: "" },
+      other_lastName: { value: "Doe", hasError: false, errorMessage: "" },
     };
 
     this.submitClaim = this.submitClaim.bind(this);
