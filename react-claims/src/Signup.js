@@ -193,6 +193,10 @@ class SignupForm extends React.Component {
     };
   }
 
+  async clearAllData() {
+    console.log("Clear Data")
+  }
+
   render() {
     return (
       <div>
@@ -358,6 +362,7 @@ class SignupForm extends React.Component {
             <Button variation="primary" onClick={this.signOut}>
               Sign Out
             </Button>
+            <Button variation="destructive" onClick={this.clearAllData}>Destructive</Button>
           </Flex>
           <Divider size="large" orientation="horizontal" />
 
