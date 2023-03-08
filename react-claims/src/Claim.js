@@ -49,8 +49,6 @@ class TF extends React.Component {
 }
 
 class ClaimForm extends React.Component {
-  // updateParent;
-  initial_value = { value: "", hasError: false, errorMessage: "" };
 
   constructor(props) {
     super(props);
@@ -63,7 +61,7 @@ class ClaimForm extends React.Component {
       city: { value: "Phoenix", hasError: false, errorMessage: "" },
       zip: { value: "85007", hasError: false, errorMessage: "" },
       road: { value: "124 Main St", hasError: false, errorMessage: "" },
-      description: { value: "Read-End Collision", hasError: false, errorMessage: "" },
+      description: { value: "Rear-End Collision", hasError: false, errorMessage: "" },
       numberOfPassengers: { value: "1", hasError: false, errorMessage: "" },
       policeReport_isFiled: { value: true, hasError: false, errorMessage: "" },
       reportOrReceiptAvailable: { value: true, hasError: false, errorMessage: "" },
