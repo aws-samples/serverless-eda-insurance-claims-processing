@@ -15,6 +15,7 @@ import { Construct } from "constructs";
 export interface CustomerAPIProps {
   getCustomerFunction: NodejsFunction;
   accessLogDestination: LogGroupLogDestination;
+  deleteCustomerFunction: NodejsFunction;
 }
 
 export default function createCustomerAPI(
@@ -29,11 +30,19 @@ export default function createCustomerAPI(
     },
   });
   const customerResource = customerAPI.root.addResource("customer");
+
   customerResource.addMethod(
     "GET",
     new LambdaIntegration(props.getCustomerFunction),
     { authorizationType: AuthorizationType.IAM }
   );
+
+  customerResource.addMethod(
+    "DELETE",
+    new LambdaIntegration(props.deleteCustomerFunction),
+    { authorizationType: AuthorizationType.IAM }
+  );
+
   new CfnOutput(scope, "customer-api-endpoint", {
     value: customerAPI.url,
     exportName: "customer-api-endpoint",
