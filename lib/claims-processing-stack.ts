@@ -57,6 +57,7 @@ import { ClaimsProcessingCWDashboard } from "./cloudwatchDashboard/claimsProcess
 import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { UpdatePolicyStepFunction } from "./stepFunctions/updatePolicy";
 import { UpdateClaimsStepFunction } from "./stepFunctions/updateClaims";
+import createDeleteCustomerFunction from "./lambda/deleteCustomer";
 
 export class ClaimsProcessingStack extends Stack {
   lambdaFunctions: NodejsFunction[] = [];
@@ -686,9 +687,17 @@ export class ClaimsProcessingStack extends Stack {
       customerTable: customerTable,
       policyTable: policyTable,
     });
+
+
+    const deleteCustomerFunction = createDeleteCustomerFunction(this, {
+      customerTable: customerTable,
+      policyTable: policyTable,
+    });
+
     const customerApi = createCustomerAPI(this, {
       getCustomerFunction: getCustomerFunction,
       accessLogDestination: apiGWLogGroupDest,
+      deleteCustomerFunction: deleteCustomerFunction
     });
     addDefaultGatewayResponse(customerApi);
 
