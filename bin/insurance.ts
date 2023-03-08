@@ -52,7 +52,8 @@ NagSuppressions.addStackSuppressions(mStack, [
     reason: "DLQ not required as of now.",
   },
   {
-    id:"AwsSolutions-L1",
-    reason: "Only functions that are left are AwsCustomResource related functions, and there's no way to specify runtime for them. These should be fixed in time automatically.  "
-  }
+    id: "AwsSolutions-L1",
+    reason:
+      "Only functions that are left are AwsCustomResource related functions, and there's no way to specify runtime for them. These should be fixed in time automatically.  ",
+  },
 ]);
