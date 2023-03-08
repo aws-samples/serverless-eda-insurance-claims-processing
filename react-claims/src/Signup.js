@@ -67,10 +67,7 @@ class SignupForm extends React.Component {
 
   getValue(customer, field, defVal) {
     return {
-      value:
-        customer && customer[field]
-          ? customer[field]
-          : defVal,
+      value: customer && customer[field] ? customer[field] : defVal,
     };
   }
 
@@ -194,7 +191,7 @@ class SignupForm extends React.Component {
   }
 
   async clearAllData() {
-    console.log("Clear Data")
+    console.log("Clear Data");
   }
 
   render() {
@@ -362,7 +359,9 @@ class SignupForm extends React.Component {
             <Button variation="primary" onClick={this.signOut}>
               Sign Out
             </Button>
-            <Button variation="destructive" onClick={this.clearAllData}>Destructive</Button>
+            <Button variation="destructive" onClick={this.clearAllData}>
+              Destructive
+            </Button>
           </Flex>
           <Divider size="large" orientation="horizontal" />
 
