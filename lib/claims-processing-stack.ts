@@ -688,7 +688,6 @@ export class ClaimsProcessingStack extends Stack {
       policyTable: policyTable,
     });
 
-
     const deleteCustomerFunction = createDeleteCustomerFunction(this, {
       customerTable: customerTable,
       policyTable: policyTable,
@@ -697,7 +696,7 @@ export class ClaimsProcessingStack extends Stack {
     const customerApi = createCustomerAPI(this, {
       getCustomerFunction: getCustomerFunction,
       accessLogDestination: apiGWLogGroupDest,
-      deleteCustomerFunction: deleteCustomerFunction
+      deleteCustomerFunction: deleteCustomerFunction,
     });
     addDefaultGatewayResponse(customerApi);
 

@@ -191,7 +191,21 @@ class SignupForm extends React.Component {
   }
 
   async clearAllData() {
-    console.log("Clear Data");
+    return new Promise((resolve, reject) => {
+      const apiName = "CustomerApi";
+      const path = "customer";
+      const myInit = {
+        headers: {},
+      };
+
+      API.del(apiName, path, myInit)
+        .then((response) => {
+          resolve(response);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
   }
 
   render() {
@@ -360,7 +374,7 @@ class SignupForm extends React.Component {
               Sign Out
             </Button>
             <Button variation="destructive" onClick={this.clearAllData}>
-              Destructive
+              CLEAR ALL DATA
             </Button>
           </Flex>
           <Divider size="large" orientation="horizontal" />
