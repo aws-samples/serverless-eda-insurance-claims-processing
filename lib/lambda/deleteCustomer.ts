@@ -16,17 +16,21 @@ export default function createDeleteCustomerFunction(
   scope: Construct,
   props: DeleteCustomerFunctionProps
 ): NodejsFunction {
-  const DeleteCustomerFunction = new NodejsFunction(scope, "DeleteCustomerFunction", {
-    runtime: Runtime.NODEJS_18_X,
-    memorySize: 512,
-    logRetention: RetentionDays.ONE_WEEK,
-    handler: "handler",
-    entry: "app/handlers/customer/get.js",
-    environment: {
-      CUSTOMER_TABLE_NAME: props.customerTable.tableName,
-      POLICY_TABLE_NAME: props.policyTable.tableName,
-    },
-  });
+  const DeleteCustomerFunction = new NodejsFunction(
+    scope,
+    "DeleteCustomerFunction",
+    {
+      runtime: Runtime.NODEJS_18_X,
+      memorySize: 512,
+      logRetention: RetentionDays.ONE_WEEK,
+      handler: "handler",
+      entry: "app/handlers/customer/delete.js",
+      environment: {
+        CUSTOMER_TABLE_NAME: props.customerTable.tableName,
+        POLICY_TABLE_NAME: props.policyTable.tableName,
+      },
+    }
+  );
 
   props.customerTable.grantReadWriteData(DeleteCustomerFunction);
   props.policyTable.grantReadWriteData(DeleteCustomerFunction);

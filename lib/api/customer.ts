@@ -23,7 +23,10 @@ export default function createCustomerAPI(
   props: CustomerAPIProps
 ): RestApi {
   const customerAPI = new RestApi(scope, "CustomerApi", {
-    defaultCorsPreflightOptions: { allowOrigins: ["*"], allowMethods: ["GET"] },
+    defaultCorsPreflightOptions: {
+      allowOrigins: ["*"],
+      allowMethods: ["GET", "DELETE"],
+    },
     deployOptions: {
       loggingLevel: MethodLoggingLevel.INFO,
       accessLogDestination: props.accessLogDestination,
