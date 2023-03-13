@@ -10,7 +10,7 @@ import { Table } from "aws-cdk-lib/aws-dynamodb";
 interface DeleteCustomerFunctionProps {
   customerTable: Table;
   policyTable: Table;
-  claimsTable: Table
+  claimsTable: Table;
 }
 
 export default function createDeleteCustomerFunction(
@@ -36,7 +36,7 @@ export default function createDeleteCustomerFunction(
 
   props.customerTable.grantReadWriteData(DeleteCustomerFunction);
   props.policyTable.grantReadWriteData(DeleteCustomerFunction);
-  props.claimsTable.grantReadWriteData(DeleteCustomerFunction)
+  props.claimsTable.grantReadWriteData(DeleteCustomerFunction);
 
   return DeleteCustomerFunction;
 }
