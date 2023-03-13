@@ -691,6 +691,7 @@ export class ClaimsProcessingStack extends Stack {
     const deleteCustomerFunction = createDeleteCustomerFunction(this, {
       customerTable: customerTable,
       policyTable: policyTable,
+      claimsTable: claimsTable,
     });
 
     const customerApi = createCustomerAPI(this, {

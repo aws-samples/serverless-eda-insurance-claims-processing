@@ -10,6 +10,7 @@ import { Table } from "aws-cdk-lib/aws-dynamodb";
 interface DeleteCustomerFunctionProps {
   customerTable: Table;
   policyTable: Table;
+  claimsTable: Table
 }
 
 export default function createDeleteCustomerFunction(
@@ -28,12 +29,14 @@ export default function createDeleteCustomerFunction(
       environment: {
         CUSTOMER_TABLE_NAME: props.customerTable.tableName,
         POLICY_TABLE_NAME: props.policyTable.tableName,
+        CLAIMS_TABLE_NAME: props.claimsTable.tableName,
       },
     }
   );
 
   props.customerTable.grantReadWriteData(DeleteCustomerFunction);
   props.policyTable.grantReadWriteData(DeleteCustomerFunction);
+  props.claimsTable.grantReadWriteData(DeleteCustomerFunction)
 
   return DeleteCustomerFunction;
 }
