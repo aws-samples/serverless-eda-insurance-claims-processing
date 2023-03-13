@@ -47,7 +47,6 @@ exports.handler = async function (event, context) {
     const deletePolicyReqs = [];
     const deleteClaimReqs = [];
 
-
     customerRecords.forEach((customerRecord) => {
       const uCustRecord = unmarshall(customerRecord);
       const delCustReq = {
@@ -123,23 +122,21 @@ exports.handler = async function (event, context) {
       deleteClaimReqs.push(delClaimReq);
     });
 
-    
-
     const batchWriteCmdInput = {
       RequestItems: {
         [process.env.CUSTOMER_TABLE_NAME]: deleteCustReqs,
         [process.env.POLICY_TABLE_NAME]: deletePolicyReqs,
-        [process.env.CLAIMS_TABLE_NAME]: deleteClaimReqs,
       },
     };
 
-    console.log('batchWriteCmdInput = ', batchWriteCmdInput)
+    if (deleteClaimReqs.length > 0) {
+      batchWriteCmdInput.RequestItems[process.env.CLAIMS_TABLE_NAME] =
+        deleteClaimReqs;
+    }
 
     deleteResp = await ddbClient.send(
       new BatchWriteItemCommand(batchWriteCmdInput)
     );
-
-    console.log('deleteResp = ', deleteResp)
   }
   return {
     statusCode: 200,
