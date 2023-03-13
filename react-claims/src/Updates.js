@@ -87,7 +87,7 @@ export default UpdateArea;
 function createSubscription(nextFunc, isRetry) {
   var cdk_outputs_file = require("./cdk-outputs.json");
 
-  Auth.currentCredentials().then((res) => {
+  Auth.currentCredentials().then(async (res) => {
     PubSub.removePluggable("AWSIoTProvider");
     Amplify.addPluggable(
       new AWSIoTProvider({
@@ -98,6 +98,8 @@ function createSubscription(nextFunc, isRetry) {
           "/mqtt",
       })
     );
+
+    await updateCustomer(res.identityId);
 
     PubSub.subscribe(res.identityId).subscribe({
       next: async (data) => {
