@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This code repository contains sample application for Insurance Claims Processing using Serverless and Event Driven Architecture as described in [this](bloglink) blog.
+This code repository contains sample application for Insurance Claims Processing using Serverless and Event Driven Architecture as described in [this blog](https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-2/).
 
 ## Structure
 This sample application is comprised of:
@@ -31,12 +31,27 @@ Different services in backend architecture interact with Amazon EventBridge Even
 
 Ideally, when this application runs in production it depends on inference endpoints to detect car color and car damages. This can be achieved by using Amazon Rekognition Custom Label. You can send a JPEG/PNG image to the endpoint (using API Gateway) and Rekognition Custom Label. The APIs in this sample expects a response as below:
 
+- Car color prediction API response:
+
 ```json
 {
   "Predictions": [
     {
       "Name": "red",
       "Confidence": 97.56799774169922
+    }
+  ]
+}
+```
+
+- Car damage prediction API response:
+
+```json
+{
+  "Predictions": [
+    {
+      "Name": "bumper_dent",
+      "Confidence": 99.53099822998047
     }
   ]
 }
@@ -52,7 +67,7 @@ const config = {
 
   // Green Color Car
   // Return: { "Predictions": [{ "Name": "green", "Confidence": 95.76799774169922 }] }
-  COLOR_DETECT_API: "https://webhook.site/0055038f-a393-4f81-b149-4376ebe4bf93/",
+  COLOR_DETECT_API: "https://webhook.site/6960db83-563e-4ca7-a604-78e93acf1f39/",
 
   // Red Color Car
   // Return: { "Predictions": [{ "Name": "red", "Confidence": 97.56799774169922 }] }
@@ -60,7 +75,7 @@ const config = {
 
   // No Damage
   // Return: { "Predictions": [{ "Name": "unknown", "Confidence": 99.98300170898438 }] }
-  DAMAGE_DETECT_API: "https://webhook.site/b02ce4de-739a-4cb8-bae1-c904b4516aa5/",
+  DAMAGE_DETECT_API: "https://webhook.site/213114a9-e75f-45ac-a2e2-4327ff1e00c4/",
 
   // Bumper Dent
   // Return: { "Predictions": [{ "Name": "bumper_dent", "Confidence": 84.26200103759766 }] }
