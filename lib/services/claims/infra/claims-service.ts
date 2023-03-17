@@ -1,9 +1,10 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { CfnOutput, RemovalPolicy } from "aws-cdk-lib";
+import { RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
+  EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
   MethodLoggingLevel,
@@ -61,7 +62,6 @@ export class ClaimsService extends Construct {
     const apiGWLogGroupDest = new LogGroupLogDestination(
       new LogGroup(this, "APIGWLogGroup", {
         retention: RetentionDays.ONE_WEEK,
-        logGroupName: "/aws/events/claimsProcessingAPIGateway",
         removalPolicy: RemovalPolicy.DESTROY,
       })
     );
@@ -110,6 +110,9 @@ export class ClaimsService extends Construct {
 
     // Create Claims FNOL POST API
     const fnolApi = new RestApi(this, "FnolApi", {
+      endpointConfiguration: {
+        types: [EndpointType.REGIONAL]
+      },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],
         allowMethods: ["POST"],
@@ -119,17 +122,15 @@ export class ClaimsService extends Construct {
         accessLogDestination: apiGWLogGroupDest,
       },
     });
+
     const fnolResource = fnolApi.root.addResource("fnol");
     fnolResource.addMethod(
       "POST",
       new LambdaIntegration(firstNoticeOfLossLambda),
       { authorizationType: AuthorizationType.IAM }
     );
+
     addDefaultGatewayResponse(fnolApi);
-    new CfnOutput(this, "fnol-api-endpoint", {
-      value: fnolApi.url,
-      exportName: "fnol-api-endpoint",
-    });
 
     const claimsLambdaRole = new Role(this, "ClaimsQueueConsumerFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),

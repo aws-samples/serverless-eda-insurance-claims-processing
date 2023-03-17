@@ -4,6 +4,7 @@
 import { CfnOutput, RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
+  EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
   MethodLoggingLevel,
@@ -82,7 +83,6 @@ function create_iot_policy(scope: Construct): CfnPolicy {
         },
       ],
     },
-    policyName: "IOT_POLICY",
   });
 }
 
@@ -90,7 +90,6 @@ export class NotificationsService extends Construct {
   constructor(scope: Construct, id: string, props: NotificationsServiceProps) {
     super(scope, id);
 
-    // Create Custom Event Bus
     const bus = props.bus;
     const customerTable = props.customerTable;
 
@@ -105,6 +104,8 @@ export class NotificationsService extends Construct {
       ],
       effect: Effect.ALLOW,
     });
+
+    const iotPolicy = create_iot_policy(this);
 
     // Create Notifications Lambda function (needs IoT support)
     const notificationLambdaFunction = new NodejsFunction(
@@ -152,6 +153,9 @@ export class NotificationsService extends Construct {
         logRetention: RetentionDays.ONE_WEEK,
         handler: "handler",
         entry: `${__dirname}/../app/handlers/iot.index.js`,
+        environment: {
+          IOT_POLICY_NAME: iotPolicy.policyName as string
+        }
       }
     );
 
@@ -160,12 +164,14 @@ export class NotificationsService extends Construct {
     const iotApiGWLogGroupDest = new LogGroupLogDestination(
       new LogGroup(this, "IoTAPIGWAccessLogGroup", {
         retention: RetentionDays.ONE_WEEK,
-        logGroupName: "/aws/iot/claimsProcessingIoTApiAccessLogGroup",
         removalPolicy: RemovalPolicy.DESTROY,
       })
     );
 
     const iotAPI = new RestApi(scope, "IOTApi", {
+      endpointConfiguration: {
+        types: [EndpointType.REGIONAL]
+      },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],
         allowMethods: ["PUT"],
@@ -181,13 +187,8 @@ export class NotificationsService extends Construct {
       new LambdaIntegration(updateIOTPolicyFunction),
       { authorizationType: AuthorizationType.IAM }
     );
-    new CfnOutput(scope, "iot-api-endpoint", {
-      value: iotAPI.url,
-      exportName: "iot-api-endpoint",
-    });
 
     addDefaultGatewayResponse(iotAPI);
-    create_iot_policy(this);
 
     const getIoTEndpoint = new AwsCustomResource(this, "IoTEndpoint", {
       onCreate: {
@@ -204,9 +205,9 @@ export class NotificationsService extends Construct {
     });
     const iot_endpoint_address =
       getIoTEndpoint.getResponseField("endpointAddress");
+
     new CfnOutput(this, "iot-endpoint-address", {
       value: iot_endpoint_address,
-      exportName: "iot-endpoint-address",
     });
 
     new Rule(this, "NotificationsRule", {

@@ -8,6 +8,7 @@ import { AWSIoTProvider } from "@aws-amplify/pubsub";
 import awsmobile from "./aws-exports";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { getEndpointUrl } from "./utils";
 
 class UpdateArea extends React.Component {
   updateParent;
@@ -85,17 +86,14 @@ class UpdateArea extends React.Component {
 export default UpdateArea;
 
 function createSubscription(nextFunc, isRetry) {
-  var cdk_outputs_file = require("./cdk-outputs.json");
+  var pubSubEndpoint = getEndpointUrl("iotendpointaddress");
 
   Auth.currentCredentials().then((res) => {
     PubSub.removePluggable("AWSIoTProvider");
     Amplify.addPluggable(
       new AWSIoTProvider({
         aws_pubsub_region: awsmobile.aws_project_region,
-        aws_pubsub_endpoint:
-          "wss://" +
-          cdk_outputs_file.ClaimsProcessingStack.iotendpointaddress +
-          "/mqtt",
+        aws_pubsub_endpoint: `wss://${pubSubEndpoint}/mqtt`,
       })
     );
 

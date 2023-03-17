@@ -22,8 +22,10 @@ export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const stackName = Stack.of(this).stackName;
+
     const bus = new EventBus(this, "CustomBus", {
-      eventBusName: "ClaimsProcessingBus",
+      eventBusName: `${stackName}-ClaimsProcessingBus`,
     });
 
     const documentService = new DocumentService(this, "DocumentService", {
@@ -32,7 +34,6 @@ export class ClaimsProcessingStack extends Stack {
 
     const allEventsLogGroup = new LogGroup(this, "AllEventsLogGroup", {
       retention: RetentionDays.ONE_WEEK,
-      logGroupName: "/aws/events/claimsProcessingEvents",
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
@@ -99,7 +100,7 @@ export class ClaimsProcessingStack extends Stack {
     });
 
     new ClaimsProcessingCWDashboard(this, "ClaimsProcessingCWDashboard", {
-      dashboardName: "Claims-Processing-Dashboard",
+      dashboardName: `${stackName}-Claims-Processing-Dashboard`,
       graphWidgets: [
         customerService.customerMetricsWidget,
         claimsService.claimsMetricsWidget,

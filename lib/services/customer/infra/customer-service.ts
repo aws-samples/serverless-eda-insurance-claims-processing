@@ -1,9 +1,10 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { CfnOutput, RemovalPolicy } from "aws-cdk-lib";
+import { RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
+  EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
   MethodLoggingLevel,
@@ -66,7 +67,6 @@ export class CustomerService extends Construct {
     const apiGWLogGroupDest = new LogGroupLogDestination(
       new LogGroup(this, "SignupAPIGWLogGroup", {
         retention: RetentionDays.ONE_WEEK,
-        logGroupName: "/aws/events/customerSignupAPIGateway",
         removalPolicy: RemovalPolicy.DESTROY,
       })
     );
@@ -116,28 +116,7 @@ export class CustomerService extends Construct {
 
     signupLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
 
-    // Create Signup POST API
-    const signupApi = new RestApi(this, "SignupApi", {
-      defaultCorsPreflightOptions: {
-        allowOrigins: ["*"],
-        allowMethods: ["POST"],
-      },
-      deployOptions: {
-        loggingLevel: MethodLoggingLevel.INFO,
-        accessLogDestination: apiGWLogGroupDest,
-      },
-    });
-    const signupResource = signupApi.root.addResource("signup");
-    signupResource.addMethod(
-      "POST",
-      new LambdaIntegration(signupLambdaFunction),
-      { authorizationType: AuthorizationType.IAM }
-    );
-    addDefaultGatewayResponse(signupApi);
-    new CfnOutput(this, "signup-api-endpoint", {
-      value: signupApi.url,
-      exportName: "signup-api-endpoint",
-    });
+    
 
     // Create Create Customer Lambda reading from SQS
     const customerLambdaRole = new Role(this, "CustomerServiceFunctionRole", {
@@ -245,7 +224,31 @@ export class CustomerService extends Construct {
     this.customerTable.grantReadData(getCustomerFunction);
     this.policyTable.grantReadData(getCustomerFunction);
 
+    const signupApi = new RestApi(this, "SignupApi", {
+      endpointConfiguration: {
+        types: [EndpointType.REGIONAL]
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: ["*"],
+        allowMethods: ["POST"],
+      },
+      deployOptions: {
+        loggingLevel: MethodLoggingLevel.INFO,
+        accessLogDestination: apiGWLogGroupDest,
+      },
+    });
+    const signupResource = signupApi.root.addResource("signup");
+    signupResource.addMethod(
+      "POST",
+      new LambdaIntegration(signupLambdaFunction),
+      { authorizationType: AuthorizationType.IAM }
+    );
+    addDefaultGatewayResponse(signupApi);
+
     const customerApi = new RestApi(scope, "CustomerApi", {
+      endpointConfiguration: {
+        types: [EndpointType.REGIONAL]
+      },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],
         allowMethods: ["GET"],
@@ -261,10 +264,6 @@ export class CustomerService extends Construct {
       new LambdaIntegration(getCustomerFunction),
       { authorizationType: AuthorizationType.IAM }
     );
-    new CfnOutput(scope, "customer-api-endpoint", {
-      value: customerApi.url,
-      exportName: "customer-api-endpoint",
-    });
 
     addDefaultGatewayResponse(customerApi);
 

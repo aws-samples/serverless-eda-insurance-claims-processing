@@ -260,7 +260,6 @@ export class DocumentService extends Construct {
       "DocumentProcessingLogs",
       {
         retention: RetentionDays.FIVE_DAYS,
-        logGroupName: "/aws/stepfunctions/documentProcessingLogs",
         removalPolicy: RemovalPolicy.DESTROY,
       }
     );

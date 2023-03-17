@@ -8,8 +8,7 @@ import reportWebVitals from "./reportWebVitals";
 import { Amplify } from "aws-amplify";
 import awsExports from "./aws-exports";
 import "@aws-amplify/ui-react/styles.css";
-
-var cdk_outputs_file = require("./cdk-outputs.json");
+import { getEndpointUrl } from "./utils";
 
 Amplify.configure(awsExports);
 Amplify.configure({
@@ -17,22 +16,19 @@ Amplify.configure({
     endpoints: [
       {
         name: "SignupAPI",
-        endpoint:
-          cdk_outputs_file.ClaimsProcessingStack.signupapiendpoint,
+        endpoint: getEndpointUrl("SignupApiEndpoint"),
       },
       {
         name: "IOTApi",
-        endpoint: cdk_outputs_file.ClaimsProcessingStack.iotapiendpoint,
+        endpoint: getEndpointUrl("IOTApiEndpoint"),
       },
       {
         name: "CustomerApi",
-        endpoint:
-          cdk_outputs_file.ClaimsProcessingStack.customerapiendpoint,
+        endpoint: getEndpointUrl("CustomerApiEndpoint"),
       },
       {
         name: "FnolApi",
-        endpoint:
-          cdk_outputs_file.ClaimsProcessingStack.fnolapiendpoint,
+        endpoint: getEndpointUrl("FnolApiEndpoint"),
       },
     ],
   },
