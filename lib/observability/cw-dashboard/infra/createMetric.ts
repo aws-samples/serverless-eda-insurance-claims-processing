@@ -2,15 +2,29 @@
 // SPDX-License-Identifier: MIT-0
 
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { EventSourceMapping, Runtime } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
-import { SqsToLambda } from "@aws-solutions-constructs/aws-sqs-lambda";
 import { Queue } from "aws-cdk-lib/aws-sqs";
+import { ManagedPolicy, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 
 export default function createMetricsQueueWithLambdaSubscription(
   scope: Construct
 ): Queue {
+  const metricsQueue = new Queue(scope, "MetricsQueue", { enforceSSL: true });
+
+  const metricsLambdaRole = new Role(scope, "MetricsQueueConsumerFunctionRole", {
+    assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+    managedPolicies: [
+      ManagedPolicy.fromAwsManagedPolicyName(
+        "service-role/AWSLambdaSQSQueueExecutionRole"
+      ),
+      ManagedPolicy.fromAwsManagedPolicyName(
+        "service-role/AWSLambdaBasicExecutionRole"
+      ),
+    ],
+  });
+
   const createMetricsFunction = new NodejsFunction(
     scope,
     "CreateMetricsFunction",
@@ -19,12 +33,15 @@ export default function createMetricsQueueWithLambdaSubscription(
       logRetention: RetentionDays.ONE_WEEK,
       handler: "handler",
       entry: `${__dirname}/../app/handlers/create.js`,
+      role: metricsLambdaRole,
     }
   );
 
-  const sqsToLambda = new SqsToLambda(scope, "MetricsQueueToLambdaFunction", {
-    existingLambdaObj: createMetricsFunction,
+  new EventSourceMapping(scope, "MetricsQueueFunctionESM", {
+    target: createMetricsFunction,
+    batchSize: 10,
+    eventSourceArn: metricsQueue.queueArn,
   });
 
-  return sqsToLambda.sqsQueue;
+  return metricsQueue;
 }
