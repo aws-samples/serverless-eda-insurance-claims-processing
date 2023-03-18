@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { CfnOutput, RemovalPolicy } from "aws-cdk-lib";
+import { CfnOutput, RemovalPolicy, Stack } from "aws-cdk-lib";
 import {
   AuthorizationType,
   EndpointType,
@@ -38,6 +38,7 @@ interface NotificationsServiceProps {
 
 function create_iot_policy(scope: Construct): CfnPolicy {
   return new CfnPolicy(scope, "IOT_POLICY", {
+    policyName: `${Stack.of(scope).stackName}_IOT_POLICY`,
     policyDocument: {
       Version: "2012-10-17",
       Statement: [
