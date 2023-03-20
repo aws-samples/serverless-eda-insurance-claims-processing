@@ -12,7 +12,7 @@ import { API } from "aws-amplify";
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { uploadDL: false, displayClaimForm: false };
+    this.state = { uploadDL: false, displayClaimForm: false, key: 1 };
     this.updateState = this.updateState.bind(this);
   }
 
@@ -50,7 +50,7 @@ class App extends React.Component {
           templateColumns="60% 0% 40%"
           templateRows="1fr"
         >
-          <Card columnStart="1" columnEnd="2">
+          <Card columnStart="1" columnEnd="2" key={this.state.key}>
             <SignupForm
               updateState={this.updateState}
               driversLicenseImageUrl={this.state.driversLicenseImageUrl}

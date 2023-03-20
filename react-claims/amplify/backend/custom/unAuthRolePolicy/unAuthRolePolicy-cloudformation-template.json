@@ -149,9 +149,7 @@
           "Statement": [
             {
               "Effect": "Allow",
-              "Action": [
-                "execute-api:Invoke"
-              ],
+              "Action": ["execute-api:Invoke"],
               "Resource": [
                 {
                   "Fn::Sub": [
@@ -182,6 +180,19 @@
                 {
                   "Fn::Sub": [
                     "arn:aws:execute-api:${region}:${account}:*/prod/GET/customer",
+                    {
+                      "region": {
+                        "Ref": "AWS::Region"
+                      },
+                      "account": {
+                        "Ref": "AWS::AccountId"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "Fn::Sub": [
+                    "arn:aws:execute-api:${region}:${account}:*/prod/DELETE/customer",
                     {
                       "region": {
                         "Ref": "AWS::Region"

@@ -53,10 +53,11 @@ import createValidatorFunction from "./lambda/validator";
 import createPutPolicyReqsFunction from "./lambda/putPolicyReqs";
 import createPSURLGeneratorFunction from "./lambda/psURLGenerator";
 import createMetricsFunction from "./lambda/createMetric";
-import { ClaimsProcessingCWDashboard } from "./cloudwatchDashboard/claimsProcessingCWDashboard";
+import { ClaimsProcessingCWDashboard } from "./CloudwatchDashboard/ClaimsProcessingCWDashboard";
 import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { UpdatePolicyStepFunction } from "./stepFunctions/updatePolicy";
 import { UpdateClaimsStepFunction } from "./stepFunctions/updateClaims";
+import createDeleteCustomerFunction from "./lambda/deleteCustomer";
 
 export class ClaimsProcessingStack extends Stack {
   lambdaFunctions: NodejsFunction[] = [];
@@ -242,18 +243,14 @@ export class ClaimsProcessingStack extends Stack {
     const claimsQueue = new Queue(this, "ClaimsQueue", { enforceSSL: true });
 
     // Create Create Customer Lambda reading from SQS
-    const customerLambdaRole = new Role(
-      this,
-      "CustomerServiceFunctionRole",
-      {
-        assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
-        managedPolicies: [
-          ManagedPolicy.fromAwsManagedPolicyName(
-            "service-role/AWSLambdaBasicExecutionRole"
-          ),
-        ],
-      }
-    );
+    const customerLambdaRole = new Role(this, "CustomerServiceFunctionRole", {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaBasicExecutionRole"
+        ),
+      ],
+    });
 
     const customerCreateLambdaFunction = new NodejsFunction(
       this,
@@ -420,7 +417,7 @@ export class ClaimsProcessingStack extends Stack {
       exportName: "fnol-api-endpoint",
     });
 
-    // Create Claims Lambda function polling from Claims queue, accept FNOL, puts event (Claims.FNOL.Accepted) 
+    // Create Claims Lambda function polling from Claims queue, accept FNOL, puts event (Claims.FNOL.Accepted)
     // (should return a pre-signed url to upload photos of car damage)
     const claimsLambdaRole = new Role(this, "ClaimsQueueConsumerFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
@@ -690,9 +687,20 @@ export class ClaimsProcessingStack extends Stack {
       customerTable: customerTable,
       policyTable: policyTable,
     });
+
+    const deleteCustomerFunction = createDeleteCustomerFunction(this, {
+      customerTable: customerTable,
+      policyTable: policyTable,
+      claimsTable: claimsTable,
+      documentBucketName: documentService.documentsBucket.bucketName,
+    });
+
+    documentService.documentsBucket.grantReadWrite(deleteCustomerFunction);
+
     const customerApi = createCustomerAPI(this, {
       getCustomerFunction: getCustomerFunction,
       accessLogDestination: apiGWLogGroupDest,
+      deleteCustomerFunction: deleteCustomerFunction,
     });
     addDefaultGatewayResponse(customerApi);
 

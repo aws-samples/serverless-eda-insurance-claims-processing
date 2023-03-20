@@ -15,6 +15,7 @@ import { Construct } from "constructs";
 export interface CustomerAPIProps {
   getCustomerFunction: NodejsFunction;
   accessLogDestination: LogGroupLogDestination;
+  deleteCustomerFunction: NodejsFunction;
 }
 
 export default function createCustomerAPI(
@@ -22,18 +23,29 @@ export default function createCustomerAPI(
   props: CustomerAPIProps
 ): RestApi {
   const customerAPI = new RestApi(scope, "CustomerApi", {
-    defaultCorsPreflightOptions: { allowOrigins: ["*"], allowMethods: ["GET"] },
+    defaultCorsPreflightOptions: {
+      allowOrigins: ["*"],
+      allowMethods: ["GET", "DELETE"],
+    },
     deployOptions: {
       loggingLevel: MethodLoggingLevel.INFO,
       accessLogDestination: props.accessLogDestination,
     },
   });
   const customerResource = customerAPI.root.addResource("customer");
+
   customerResource.addMethod(
     "GET",
     new LambdaIntegration(props.getCustomerFunction),
     { authorizationType: AuthorizationType.IAM }
   );
+
+  customerResource.addMethod(
+    "DELETE",
+    new LambdaIntegration(props.deleteCustomerFunction),
+    { authorizationType: AuthorizationType.IAM }
+  );
+
   new CfnOutput(scope, "customer-api-endpoint", {
     value: customerAPI.url,
     exportName: "customer-api-endpoint",
