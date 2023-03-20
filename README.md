@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This code repository contains sample application for Insurance Claims Processing using Serverless and Event Driven Architecture as described in [this](bloglink) blog.
+This code repository contains sample application for Insurance Claims Processing using Serverless and Event Driven Architecture as described in [this blog](https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-2/).
 
 ## Structure
 
@@ -36,12 +36,27 @@ Different services in backend architecture interact with Amazon EventBridge Even
 
 Ideally, when this application runs in production it depends on inference endpoints to detect car color and car damages. This can be achieved by using Amazon Rekognition Custom Label. You can send a JPEG/PNG image to the endpoint (using API Gateway) and Rekognition Custom Label. The APIs in this sample expects a response as below:
 
+- Car color prediction API response:
+
 ```json
 {
   "Predictions": [
     {
       "Name": "red",
       "Confidence": 97.56799774169922
+    }
+  ]
+}
+```
+
+- Car damage prediction API response:
+
+```json
+{
+  "Predictions": [
+    {
+      "Name": "bumper_dent",
+      "Confidence": 99.53099822998047
     }
   ]
 }
