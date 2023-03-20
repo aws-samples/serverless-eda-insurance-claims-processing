@@ -97,7 +97,11 @@ function createSubscription(nextFunc, isRetry) {
       })
     );
 
+<<<<<<< HEAD
     await updateCustomer();
+=======
+    await updateCustomer(res.identityId);
+>>>>>>> main
 
     PubSub.subscribe(res.identityId).subscribe({
       next: async (data) => {

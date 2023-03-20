@@ -3,7 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+<<<<<<< HEAD
     "@aws-amplify/ui-react": "^4.3.9",
+=======
+    "@aws-amplify/core": "^5.1.1",
+    "@aws-amplify/geo": "^2.0.18",
+    "@aws-amplify/ui-react": "^4.3.9",
+    "@aws-sdk/client-dynamodb": "^3.284.0",
+>>>>>>> main
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",

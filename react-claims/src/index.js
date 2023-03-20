@@ -16,7 +16,11 @@ Amplify.configure({
     endpoints: [
       {
         name: "SignupAPI",
+<<<<<<< HEAD
         endpoint: getEndpointUrl("SignupApiEndpoint"),
+=======
+        endpoint: cdk_outputs_file.ClaimsProcessingStack.signupapiendpoint,
+>>>>>>> main
       },
       {
         name: "IOTApi",
@@ -24,6 +28,7 @@ Amplify.configure({
       },
       {
         name: "CustomerApi",
+<<<<<<< HEAD
         endpoint: getEndpointUrl("CustomerApiEndpoint"),
       },
       {
@@ -33,6 +38,13 @@ Amplify.configure({
       {
         name: "CleanupApi",
         endpoint: getEndpointUrl("CleanupApiEndpoint"),
+=======
+        endpoint: cdk_outputs_file.ClaimsProcessingStack.customerapiendpoint,
+      },
+      {
+        name: "FnolApi",
+        endpoint: cdk_outputs_file.ClaimsProcessingStack.fnolapiendpoint,
+>>>>>>> main
       },
     ],
   },

@@ -192,6 +192,19 @@
                 },
                 {
                   "Fn::Sub": [
+                    "arn:aws:execute-api:${region}:${account}:*/prod/DELETE/customer",
+                    {
+                      "region": {
+                        "Ref": "AWS::Region"
+                      },
+                      "account": {
+                        "Ref": "AWS::AccountId"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "Fn::Sub": [
                     "arn:aws:execute-api:${region}:${account}:*/prod/POST/fnol",
                     {
                       "region": {
