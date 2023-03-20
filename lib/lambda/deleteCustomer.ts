@@ -11,6 +11,7 @@ interface DeleteCustomerFunctionProps {
   customerTable: Table;
   policyTable: Table;
   claimsTable: Table;
+  documentBucketName: string;
 }
 
 export default function createDeleteCustomerFunction(
@@ -30,6 +31,7 @@ export default function createDeleteCustomerFunction(
         CUSTOMER_TABLE_NAME: props.customerTable.tableName,
         POLICY_TABLE_NAME: props.policyTable.tableName,
         CLAIMS_TABLE_NAME: props.claimsTable.tableName,
+        DOCUMENT_BUCKET_NAME: props.documentBucketName,
       },
     }
   );

@@ -53,7 +53,7 @@ import createValidatorFunction from "./lambda/validator";
 import createPutPolicyReqsFunction from "./lambda/putPolicyReqs";
 import createPSURLGeneratorFunction from "./lambda/psURLGenerator";
 import createMetricsFunction from "./lambda/createMetric";
-import { ClaimsProcessingCWDashboard } from "./cloudwatchDashboard/claimsProcessingCWDashboard";
+import { ClaimsProcessingCWDashboard } from "./CloudwatchDashboard/ClaimsProcessingCWDashboard";
 import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { UpdatePolicyStepFunction } from "./stepFunctions/updatePolicy";
 import { UpdateClaimsStepFunction } from "./stepFunctions/updateClaims";
@@ -692,7 +692,10 @@ export class ClaimsProcessingStack extends Stack {
       customerTable: customerTable,
       policyTable: policyTable,
       claimsTable: claimsTable,
+      documentBucketName: documentService.documentsBucket.bucketName,
     });
+
+    documentService.documentsBucket.grantReadWrite(deleteCustomerFunction);
 
     const customerApi = createCustomerAPI(this, {
       getCustomerFunction: getCustomerFunction,
