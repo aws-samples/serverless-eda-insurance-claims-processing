@@ -6,6 +6,7 @@ import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
+import { CleanupService } from "./cleanup/infra/cleanup-service";
 import { ClaimsProcessingCWDashboard } from "./observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
 import createMetricsQueueWithLambdaSubscription from "./observability/cw-dashboard/infra/createMetric";
 import { ClaimsEvents } from "./services/claims/infra/claims-events";
@@ -75,6 +76,18 @@ export class ClaimsProcessingStack extends Stack {
       policyTable,
       claimsTable,
     });
+
+    const cleanupService = new CleanupService(this, "CleanupService", {
+      customerTableName: customerTable.tableName,
+      policyTableName: policyTable.tableName,
+      claimsTableName: claimsTable.tableName,
+      documentsBucketName: documentService.documentsBucket.bucketName
+    });
+
+    customerTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
+    policyTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
+    claimsTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
+    documentService.documentsBucket.grantReadWrite(cleanupService.cleanupLambdaFunction);
 
     const metricsQueueWithLambdaSubscription =
       createMetricsQueueWithLambdaSubscription(this);

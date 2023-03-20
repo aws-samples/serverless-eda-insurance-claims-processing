@@ -116,8 +116,6 @@ export class CustomerService extends Construct {
 
     signupLambdaFunction.addToRolePolicy(lambdaToPutEventsPolicy);
 
-    
-
     // Create Create Customer Lambda reading from SQS
     const customerLambdaRole = new Role(this, "CustomerServiceFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),

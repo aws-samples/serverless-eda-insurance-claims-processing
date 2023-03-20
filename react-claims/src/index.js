@@ -30,6 +30,10 @@ Amplify.configure({
         name: "FnolApi",
         endpoint: getEndpointUrl("FnolApiEndpoint"),
       },
+      {
+        name: "CleanupApi",
+        endpoint: getEndpointUrl("CleanupApiEndpoint"),
+      },
     ],
   },
 });

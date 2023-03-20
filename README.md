@@ -410,6 +410,18 @@ At this point if you COLOR_DETECT_API returns red color, then you will again see
 
 If COLOR_DETECT_API returns green color and DAMAGE_DETECT_API returns any kind of damage, you can upload the damaged green car image to complete the FNOL process.
 
+### Clear Events
+
+To clear events on the web page, click on `Clear` button above the list of events. This will only clear the area on the web page where events log is displayed.
+
+![clear-events](/images/clear_events.png)
+
+### Clear Data
+
+To delete all the data for current logged in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged in user in S3 bucket and DynamoDB tables. 
+
+![clear-all](/images/clear_all.png)
+
 ## Observability
 
 There is an EventBridge rule - `allEventLogsRule` which invokes its targets for all of the key events sent to Event Bus. The rule has two targets:

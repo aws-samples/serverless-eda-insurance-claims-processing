@@ -5,6 +5,7 @@ import React from "react";
 import { Button, TextField, Flex, Divider } from "@aws-amplify/ui-react";
 import { API, Auth } from "aws-amplify";
 import UploadFile from "./UploadFile";
+import ClearData from "./ClearData";
 
 import dl_AZ from "./DL/dl_AZ.jpg";
 import dl_MA from "./DL/dl_MA.jpg";
@@ -63,14 +64,22 @@ class SignupForm extends React.Component {
     this.submitForm = this.submitForm.bind(this);
     this.validateInput = this.validateInput.bind(this);
     this.showClaimsForm = this.showClaimsForm.bind(this);
+    this.reset = this.reset.bind(this);
+  }
+
+  async reset() {
+    this.updateParent("key", new Date().getTime());
+
+    this.updateParent("uploadDL", false);
+    this.updateParent("displayClaimForm", false);
+    this.updateParent("driversLicenseImageUrl", undefined);
+    this.updateParent("carImageUrl", undefined);
+    this.updateParent("completedReg", false);
   }
 
   getValue(customer, field, defVal) {
     return {
-      value:
-        customer && customer[field]
-          ? customer[field]
-          : defVal,
+      value: customer && customer[field] ? customer[field] : defVal,
     };
   }
 
@@ -358,6 +367,7 @@ class SignupForm extends React.Component {
             <Button variation="primary" onClick={this.signOut}>
               Sign Out
             </Button>
+            <ClearData reset={this.reset}> </ClearData>
           </Flex>
           <Divider size="large" orientation="horizontal" />
 

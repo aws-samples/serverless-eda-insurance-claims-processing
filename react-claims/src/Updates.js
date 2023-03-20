@@ -88,7 +88,7 @@ export default UpdateArea;
 function createSubscription(nextFunc, isRetry) {
   var pubSubEndpoint = getEndpointUrl("iotendpointaddress");
 
-  Auth.currentCredentials().then((res) => {
+  Auth.currentCredentials().then(async (res) => {
     PubSub.removePluggable("AWSIoTProvider");
     Amplify.addPluggable(
       new AWSIoTProvider({
@@ -97,13 +97,15 @@ function createSubscription(nextFunc, isRetry) {
       })
     );
 
+    await updateCustomer();
+
     PubSub.subscribe(res.identityId).subscribe({
       next: async (data) => {
         await nextFunc(data);
       },
       error: async (error) => {
         if (error.error.errorCode === 8 && !isRetry) {
-          await updateCustomer(res.identityId);
+          await updateCustomer();
           createSubscription(nextFunc, true);
         } else {
           console.error(error);
