@@ -13,17 +13,21 @@ export default function createMetricsQueueWithLambdaSubscription(
 ): Queue {
   const metricsQueue = new Queue(scope, "MetricsQueue", { enforceSSL: true });
 
-  const metricsLambdaRole = new Role(scope, "MetricsQueueConsumerFunctionRole", {
-    assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
-    managedPolicies: [
-      ManagedPolicy.fromAwsManagedPolicyName(
-        "service-role/AWSLambdaSQSQueueExecutionRole"
-      ),
-      ManagedPolicy.fromAwsManagedPolicyName(
-        "service-role/AWSLambdaBasicExecutionRole"
-      ),
-    ],
-  });
+  const metricsLambdaRole = new Role(
+    scope,
+    "MetricsQueueConsumerFunctionRole",
+    {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaSQSQueueExecutionRole"
+        ),
+        ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaBasicExecutionRole"
+        ),
+      ],
+    }
+  );
 
   const createMetricsFunction = new NodejsFunction(
     scope,

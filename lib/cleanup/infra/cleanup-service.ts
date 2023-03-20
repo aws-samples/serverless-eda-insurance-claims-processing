@@ -9,7 +9,7 @@ import {
   LogGroupLogDestination,
   MethodLoggingLevel,
   ResponseType,
-  RestApi
+  RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import { Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -46,19 +46,23 @@ export class CleanupService extends Construct {
     // the caller construct (in this case `claims-processing-stack.ts` should be the one providing permissions)
     // Until appropriate permissions are provided, this Lambda functions will not work as expected.
     // This is an expected behavior in order to separate the concern.
-    this.cleanupLambdaFunction = new NodejsFunction(scope, "ClearAllDataFunction", {
-      runtime: Runtime.NODEJS_18_X,
-      memorySize: 512,
-      logRetention: RetentionDays.ONE_WEEK,
-      handler: "handler",
-      entry: `${__dirname}/../app/handlers/delete.js`,
-      environment: {
-        CUSTOMER_TABLE_NAME: props.customerTableName,
-        POLICY_TABLE_NAME: props.policyTableName,
-        CLAIMS_TABLE_NAME: props.claimsTableName,
-        DOCUMENT_BUCKET_NAME: props.documentsBucketName,
-      },
-    });
+    this.cleanupLambdaFunction = new NodejsFunction(
+      scope,
+      "ClearAllDataFunction",
+      {
+        runtime: Runtime.NODEJS_18_X,
+        memorySize: 512,
+        logRetention: RetentionDays.ONE_WEEK,
+        handler: "handler",
+        entry: `${__dirname}/../app/handlers/delete.js`,
+        environment: {
+          CUSTOMER_TABLE_NAME: props.customerTableName,
+          POLICY_TABLE_NAME: props.policyTableName,
+          CLAIMS_TABLE_NAME: props.claimsTableName,
+          DOCUMENT_BUCKET_NAME: props.documentsBucketName,
+        },
+      }
+    );
 
     const cleanupApiAccessLogGroupDest = new LogGroupLogDestination(
       new LogGroup(this, "CleanupApiAccessLogGroup", {
@@ -69,7 +73,7 @@ export class CleanupService extends Construct {
 
     const cleanupApi = new RestApi(scope, "CleanupApi", {
       endpointConfiguration: {
-        types: [EndpointType.REGIONAL]
+        types: [EndpointType.REGIONAL],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],
@@ -77,7 +81,7 @@ export class CleanupService extends Construct {
       },
       deployOptions: {
         loggingLevel: MethodLoggingLevel.INFO,
-        accessLogDestination: cleanupApiAccessLogGroupDest
+        accessLogDestination: cleanupApiAccessLogGroupDest,
       },
     });
 

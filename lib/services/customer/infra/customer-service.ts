@@ -14,7 +14,10 @@ import {
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import { LambdaFunction, SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
+import {
+  LambdaFunction,
+  SfnStateMachine,
+} from "aws-cdk-lib/aws-events-targets";
 import {
   Effect,
   ManagedPolicy,
@@ -224,7 +227,7 @@ export class CustomerService extends Construct {
 
     const signupApi = new RestApi(this, "SignupApi", {
       endpointConfiguration: {
-        types: [EndpointType.REGIONAL]
+        types: [EndpointType.REGIONAL],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],
@@ -245,7 +248,7 @@ export class CustomerService extends Construct {
 
     const customerApi = new RestApi(scope, "CustomerApi", {
       endpointConfiguration: {
-        types: [EndpointType.REGIONAL]
+        types: [EndpointType.REGIONAL],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],
@@ -285,9 +288,7 @@ export class CustomerService extends Construct {
           fraudType: ["DOCUMENT"],
         },
       },
-      targets: [
-        new LambdaFunction(customerUpdateLambdaFunction),
-      ],
+      targets: [new LambdaFunction(customerUpdateLambdaFunction)],
     });
 
     new Rule(this, "UpdateCustomerPolicyOnFraudNotDetectedRule", {

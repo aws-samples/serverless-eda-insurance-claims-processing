@@ -12,7 +12,7 @@ import {
   BlockPublicAccess,
   Bucket,
   BucketEncryption,
-  HttpMethods
+  HttpMethods,
 } from "aws-cdk-lib/aws-s3";
 import {
   Choice,
@@ -23,19 +23,19 @@ import {
   LogLevel,
   StateMachine,
   StateMachineType,
-  TaskInput
+  TaskInput,
 } from "aws-cdk-lib/aws-stepfunctions";
 import {
   CallAwsService,
   EvaluateExpression,
   EventBridgePutEvents,
-  LambdaInvoke
+  LambdaInvoke,
 } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { Construct } from "constructs";
 import config from "../../../config";
 import {
   createGraphWidget,
-  createMetric
+  createMetric,
 } from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
 import { DocumentsEvents } from "./documents-events";
 

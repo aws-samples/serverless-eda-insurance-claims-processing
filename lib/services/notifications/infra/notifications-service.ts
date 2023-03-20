@@ -155,8 +155,8 @@ export class NotificationsService extends Construct {
         handler: "handler",
         entry: `${__dirname}/../app/handlers/iot.index.js`,
         environment: {
-          IOT_POLICY_NAME: iotPolicy.policyName as string
-        }
+          IOT_POLICY_NAME: iotPolicy.policyName as string,
+        },
       }
     );
 
@@ -171,7 +171,7 @@ export class NotificationsService extends Construct {
 
     const iotAPI = new RestApi(scope, "IOTApi", {
       endpointConfiguration: {
-        types: [EndpointType.REGIONAL]
+        types: [EndpointType.REGIONAL],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],

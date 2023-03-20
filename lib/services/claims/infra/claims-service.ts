@@ -14,10 +14,7 @@ import {
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import {
-  SfnStateMachine,
-  SqsQueue,
-} from "aws-cdk-lib/aws-events-targets";
+import { SfnStateMachine, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import {
   Effect,
   ManagedPolicy,
@@ -111,7 +108,7 @@ export class ClaimsService extends Construct {
     // Create Claims FNOL POST API
     const fnolApi = new RestApi(this, "FnolApi", {
       endpointConfiguration: {
-        types: [EndpointType.REGIONAL]
+        types: [EndpointType.REGIONAL],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"],

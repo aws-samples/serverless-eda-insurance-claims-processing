@@ -81,13 +81,15 @@ export class ClaimsProcessingStack extends Stack {
       customerTableName: customerTable.tableName,
       policyTableName: policyTable.tableName,
       claimsTableName: claimsTable.tableName,
-      documentsBucketName: documentService.documentsBucket.bucketName
+      documentsBucketName: documentService.documentsBucket.bucketName,
     });
 
     customerTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
     policyTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
     claimsTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
-    documentService.documentsBucket.grantReadWrite(cleanupService.cleanupLambdaFunction);
+    documentService.documentsBucket.grantReadWrite(
+      cleanupService.cleanupLambdaFunction
+    );
 
     const metricsQueueWithLambdaSubscription =
       createMetricsQueueWithLambdaSubscription(this);

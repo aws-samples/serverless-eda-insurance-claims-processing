@@ -12,7 +12,7 @@ import { Aspects } from "aws-cdk-lib";
 const app = new cdk.App();
 // Add the cdk-nag AwsSolutions Pack with extra verbose logging enabled.
 Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
-const mStack = new ClaimsProcessingStack(app, "ClaimsProcessingStack-mahadhir", {});
+const mStack = new ClaimsProcessingStack(app, "ClaimsProcessingStack", {});
 
 NagSuppressions.addStackSuppressions(mStack, [
   {
@@ -52,7 +52,8 @@ NagSuppressions.addStackSuppressions(mStack, [
     reason: "DLQ not required as of now.",
   },
   {
-    id:"AwsSolutions-L1",
-    reason: "Only functions that are left are AwsCustomResource related functions, and there's no way to specify runtime for them. These should be fixed in time automatically.  "
-  }
+    id: "AwsSolutions-L1",
+    reason:
+      "Only functions that are left are AwsCustomResource related functions, and there's no way to specify runtime for them. These should be fixed in time automatically.  ",
+  },
 ]);
