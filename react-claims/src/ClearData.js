@@ -24,8 +24,8 @@ class ClearData extends React.Component {
     this.toggleState();
 
     return new Promise((resolve, reject) => {
-      const apiName = "CustomerApi";
-      const path = "customer";
+      const apiName = "CleanupApi";
+      const path = "clearAllData";
       const myInit = {
         headers: {},
       };

@@ -33,4 +33,4 @@ amplifytools.xcconfig
 react-claims/amplify/team-provider-info.json
 react-claims/.env.local
 cdk-outputs.json
-lib/**/*.js
+# lib/**/*.js

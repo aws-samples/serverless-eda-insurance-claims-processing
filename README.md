@@ -442,7 +442,7 @@ To clear events on the web page, click on `Clear` button above the list of event
 
 ### Clear Data
 
-To delete all the data for current logged in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged in user in S3 bucket and DynamoDB tables. 
+To delete all the data for current logged in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged in user in S3 bucket and DynamoDB tables.
 
 ![clear-all](/images/clear_all.png)
 
@@ -506,7 +506,7 @@ Project deleted locally.
 
 ### Delete principals attached to IOTPOLICY
 
-- Login to AWS Console and go to AWS IoT Core --> Security --> Policies and select IOT_POLICY
+- Login to AWS Console and go to AWS IoT Core --> Security --> Policies and select the policy that starts with your stack name and ends with IOT_POLICY
 - Click on `Targets`
 - Select all the principals listed there and click on `Detach`.
 - Click `Detach` again on next page to confirm.
