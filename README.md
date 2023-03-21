@@ -506,7 +506,7 @@ Project deleted locally.
 
 ### Delete principals attached to IOTPOLICY
 
-- Login to AWS Console and go to AWS IoT Core --> Security --> Policies and select IOT_POLICY
+- Login to AWS Console and go to AWS IoT Core --> Security --> Policies and select the policy that starts with your stack name and ends with IOT_POLICY
 - Click on `Targets`
 - Select all the principals listed there and click on `Detach`.
 - Click `Detach` again on next page to confirm.
