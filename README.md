@@ -442,11 +442,7 @@ To clear events on the web page, click on `Clear` button above the list of event
 
 ### Clear Data
 
-<<<<<<< HEAD
 To delete all the data for current logged in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged in user in S3 bucket and DynamoDB tables.
-=======
-To delete all the data for current logged in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged in user in S3 bucket and DynamoDB tables. 
->>>>>>> main
 
 ![clear-all](/images/clear_all.png)
 
