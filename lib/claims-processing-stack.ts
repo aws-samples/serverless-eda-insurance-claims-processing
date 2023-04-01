@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import { RemovalPolicy, Stack, StackProps, CfnParameter } from "aws-cdk-lib";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -18,10 +18,16 @@ import { DocumentService } from "./services/documents/infra/documents-service";
 import { FraudEvents } from "./services/fraud/infra/fraud-events";
 import { FraudService } from "./services/fraud/infra/fraud-service";
 import { NotificationsService } from "./services/notifications/infra/notifications-service";
+import { SettlementService } from "./services/settlement/infra/settlement-service";
 
 export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+
+    const imageName = new CfnParameter(this, 'imagename', {
+      description: 'Complete name of the container image for the settlement service',
+      type: 'String',
+    }).valueAsString
 
     const stackName = Stack.of(this).stackName;
 
@@ -76,6 +82,14 @@ export class ClaimsProcessingStack extends Stack {
       policyTable,
       claimsTable,
     });
+
+    const image = ""
+
+    const settlementService = new SettlementService(this, "SettlementService", {
+          bus,
+          settlementImageName: imageName,
+          settlementTableName: "${stackName}-settlement"
+        });
 
     const cleanupService = new CleanupService(this, "CleanupService", {
       customerTableName: customerTable.tableName,

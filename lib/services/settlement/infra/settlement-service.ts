@@ -12,7 +12,8 @@ import { EventbridgeToSqsProps, EventbridgeToSqs } from "@aws-solutions-construc
 
 export interface SettlementServiceProps {
     readonly bus: EventBus,
-    readonly image: string;
+    readonly settlementImageName: string;
+    readonly settlementTableName: string;
 }
 export class SettlementService extends Construct {
     constructor(scope: Construct, id: string, props?: SettlementServiceProps) {
@@ -26,8 +27,7 @@ export class SettlementService extends Construct {
             vpc: vpc
         });
 
-        const tableName = "Settlement";
-        const table = new dynamodb.Table(this, tableName, {
+        const table = new dynamodb.Table(this, props?.settlementTableName, {
             partitionKey: { name: "Id", type: dynamodb.AttributeType.STRING, },
             tableName: "Settlement",
             readCapacity: 5,
@@ -59,13 +59,13 @@ export class SettlementService extends Construct {
             memoryLimitMiB: 1024,
             cpu: 512,
             queue: queue,
-            image: ecs.ContainerImage.fromRegistry(props?.image),
+            image: ecs.ContainerImage.fromRegistry(props?.settlementImageName),
             minScalingCapacity: 1,
             maxScalingCapacity: 5,
             environment: {
                 "SQS_ENDPOINT_URL":queueUrl,
                 "EVENTBUS_NAME":props?.bus.eventBusName,
-                "DYNAMODB_TABLE_NAME":tableName
+                "DYNAMODB_TABLE_NAME":props?.settlementTableName
             },
             capacityProviderStrategies: [
                 {
@@ -81,6 +81,5 @@ export class SettlementService extends Construct {
 
         const taskRole = queueProcessingFargateService.taskDefinition.taskRole;
         table.grantReadWriteData(taskRole);
-
     }
 }
