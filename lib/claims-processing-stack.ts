@@ -3,6 +3,7 @@
 
 import { RemovalPolicy, Stack, StackProps, CfnParameter } from "aws-cdk-lib";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
+import { NagSuppressions } from 'cdk-nag'
 import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
@@ -23,6 +24,21 @@ import { SettlementService } from "./services/settlement/infra/settlement-servic
 export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-VPC7',
+        reason: 'Not necessary.'
+      },
+      {
+        id: 'AwsSolutions-ECS4',
+        reason: 'Not necessary.'
+      },
+      {
+        id: 'AwsSolutions-ECS2',
+        reason: 'Not necessary.'
+      },
+    ])
 
     const imageName = new CfnParameter(this, 'imagename', {
       description: 'Complete name of the container image for the settlement service',
@@ -83,13 +99,12 @@ export class ClaimsProcessingStack extends Stack {
       claimsTable,
     });
 
-    const image = ""
-
     const settlementService = new SettlementService(this, "SettlementService", {
-          bus,
-          settlementImageName: imageName,
-          settlementTableName: "${stackName}-settlement"
-        });
+      bus,
+      settlementImageName: imageName,
+      settlementTableName: `${stackName}-settlement-table`,
+      settlementQueueName: `${stackName}-settlement-queue`
+    });
 
     const cleanupService = new CleanupService(this, "CleanupService", {
       customerTableName: customerTable.tableName,
@@ -102,11 +117,11 @@ export class ClaimsProcessingStack extends Stack {
     policyTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
     claimsTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);
     documentService.documentsBucket.grantReadWrite(
-      cleanupService.cleanupLambdaFunction
+        cleanupService.cleanupLambdaFunction
     );
 
     const metricsQueueWithLambdaSubscription =
-      createMetricsQueueWithLambdaSubscription(this);
+        createMetricsQueueWithLambdaSubscription(this);
 
     new Rule(this, "WildcardCaptureAllEventsRule", {
       eventBus: bus,

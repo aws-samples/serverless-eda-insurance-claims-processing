@@ -14,9 +14,10 @@ export interface SettlementServiceProps {
     readonly bus: EventBus,
     readonly settlementImageName: string;
     readonly settlementTableName: string;
+    readonly settlementQueueName: string;
 }
 export class SettlementService extends Construct {
-    constructor(scope: Construct, id: string, props?: SettlementServiceProps) {
+    constructor(scope: Construct, id: string, props: SettlementServiceProps) {
         super(scope, id);
 
         const vpc = new ec2.Vpc(this, "settlement-vpc", {
@@ -27,9 +28,9 @@ export class SettlementService extends Construct {
             vpc: vpc
         });
 
-        const table = new dynamodb.Table(this, props?.settlementTableName, {
+        const table = new dynamodb.Table(this, props.settlementTableName, {
             partitionKey: { name: "Id", type: dynamodb.AttributeType.STRING, },
-            tableName: "Settlement",
+            tableName: props.settlementTableName,
             readCapacity: 5,
             writeCapacity: 5,
             removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
@@ -46,6 +47,9 @@ export class SettlementService extends Construct {
                     },
                     detailType: ['Fraud.Not.Detected'],
                 }
+            },
+            queueProps: {
+                queueName: props.settlementQueueName
             }
         };
 
@@ -59,13 +63,13 @@ export class SettlementService extends Construct {
             memoryLimitMiB: 1024,
             cpu: 512,
             queue: queue,
-            image: ecs.ContainerImage.fromRegistry(props?.settlementImageName),
+            image: ecs.ContainerImage.fromRegistry(props.settlementImageName),
             minScalingCapacity: 1,
             maxScalingCapacity: 5,
             environment: {
                 "SQS_ENDPOINT_URL":queueUrl,
-                "EVENTBUS_NAME":props?.bus.eventBusName,
-                "DYNAMODB_TABLE_NAME":props?.settlementTableName
+                "EVENTBUS_NAME":props.bus.eventBusName,
+                "DYNAMODB_TABLE_NAME":props.settlementTableName
             },
             capacityProviderStrategies: [
                 {

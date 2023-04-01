@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@aws-lambda-powertools/metrics": "^1.5.0",
+    "@aws-solutions-constructs/aws-eventbridge-sqs": "^2.36.0",
     "aws-cdk-lib": "^2.69.0",
     "cdk-nag": "^2.21.58",
     "constructs": "^10.1.216",
