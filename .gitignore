@@ -34,3 +34,4 @@ react-claims/amplify/team-provider-info.json
 react-claims/.env.local
 cdk-outputs.json
 # lib/**/*.js
+/.idea/

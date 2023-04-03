@@ -13,22 +13,24 @@ import {
   StateMachineType,
   TaskInput,
 } from "aws-cdk-lib/aws-stepfunctions";
-import { Construct } from "constructs";
-import { Table } from "aws-cdk-lib/aws-dynamodb";
+import {Construct} from "constructs";
+import {Table} from "aws-cdk-lib/aws-dynamodb";
 import {
+  CallAwsService,
+  DynamoAttributeValue,
+  DynamoDeleteItem,
+  DynamoDeleteItemProps,
   DynamoPutItem,
   DynamoPutItemProps,
-  DynamoAttributeValue,
-  DynamoDeleteItemProps,
-  DynamoDeleteItem,
-  LambdaInvoke,
-  CallAwsService,
   EventBridgePutEvents,
+  LambdaInvoke,
 } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import * as logs from "aws-cdk-lib/aws-logs";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { EventBus } from "aws-cdk-lib/aws-events";
-import { Bucket } from "aws-cdk-lib/aws-s3";
+import {RetentionDays} from "aws-cdk-lib/aws-logs";
+import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
+import {EventBus} from "aws-cdk-lib/aws-events";
+import {Bucket} from "aws-cdk-lib/aws-s3";
+import {RemovalPolicy} from "aws-cdk-lib";
 
 export interface CreateCustomerStepFunctionProps {
   requestTable: Table;
@@ -47,7 +49,11 @@ export class CreateCustomerStepFunction extends StateMachine {
     id: string,
     props: CreateCustomerStepFunctionProps
   ) {
-    const logGroup = new logs.LogGroup(scope, "CreateCustomerSFLogGroup");
+    const logGroup = new logs.LogGroup(scope, "CreateCustomerSFLogGroup", {
+      logGroupName: "/aws/vendedlogs/states/CreateCustomerSFN",
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.FIVE_DAYS
+    });
 
     const parseDataState = createParseDataState(scope);
     const saveReqInDBStep = createSaveReqInDBStep(props, scope);

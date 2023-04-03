@@ -1,39 +1,42 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 package com.amazon.settlement.model.input;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Color {
-    private String name;
-    private float confidence;
+  private String name;
+  private float confidence;
 
 
-    // Getter Methods
+  // Getter Methods
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public float getConfidence() {
-        return confidence;
-    }
+  public float getConfidence() {
+    return confidence;
+  }
 
-    // Setter Methods
+  // Setter Methods
 
-    @JsonProperty("Name")
-    public void setName( String name ) {
-        this.name = name;
-    }
+  @JsonProperty("Name")
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    @JsonProperty("Confidence")
-    public void setConfidence( float confidence ) {
-        this.confidence = confidence;
-    }
+  @JsonProperty("Confidence")
+  public void setConfidence(float confidence) {
+    this.confidence = confidence;
+  }
 
-    @Override
-    public String toString() {
-        return "Color{" +
-                "Name='" + name + '\'' +
-                ", Confidence=" + confidence +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "Color{" +
+      "Name='" + name + '\'' +
+      ", Confidence=" + confidence +
+      '}';
+  }
 }

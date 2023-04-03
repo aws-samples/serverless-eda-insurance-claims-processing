@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy": "cdk deploy --outputs-file react-claims/src/cdk-outputs.json --all",
+    "deploy": "cdk deploy --outputs-file react-claims/src/cdk-outputs.json --parameters imagename=dmahapatro/settlement-insurance-claims:latest --all",
     "format": "npx prettier --write ."
   },
   "devDependencies": {

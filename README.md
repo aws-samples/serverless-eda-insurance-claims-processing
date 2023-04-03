@@ -99,7 +99,7 @@ Once you have updated the `config.ts` file with fake API endpoints, you can save
 
 * Clone the repository
 * Build the containerized Spring Boot-application
-  1)  `cd serverless-eda-insurance-claims-processing/lib/services/settlement/app`
+  1)  `cd lib/services/settlement/app`
   2)  `docker build -f src/main/docker/Dockerfile -t <user-name>/<image-name>:<tag-name>`
   3)  `docker push <user-name>/<image-name>:<tag-name>`
 

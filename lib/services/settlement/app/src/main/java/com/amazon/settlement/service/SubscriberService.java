@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 package com.amazon.settlement.service;
 
 import com.amazon.settlement.model.input.Settlement;
@@ -5,10 +8,8 @@ import com.amazon.settlement.model.output.Detail;
 import com.amazon.settlement.model.output.ReturnValue;
 import com.amazon.settlement.repository.SettlementRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.messaging.listener.SqsMessageDeletionPolicy;
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
@@ -26,59 +27,66 @@ import java.util.List;
 @Component
 public class SubscriberService {
 
-    @Autowired
-    private EventBridgeClient eventBridgeClient;
+  @Value("${eventbus.name}")
+  private String eventBusName;
 
-    @Autowired
-    private SettlementRepository settlementRepository;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${eventbus.name}")
-    private String eventBusName;
-    private ObjectMapper objectMapper = new ObjectMapper();
+  private final EventBridgeClient eventBridgeClient;
 
-    @SqsListener(value = "${sqs.end-point.uri}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
-    public void receiveMessage(String message,
-                               @Header("SenderId") String senderId) {
-        log.info("message received {} {}", senderId, message);
+  private final SettlementRepository settlementRepository;
 
-        try {
-            Settlement settlement = objectMapper.readValue(message, Settlement.class);
+  public SubscriberService(EventBridgeClient eventBridgeClient, SettlementRepository settlementRepository) {
+    this.eventBridgeClient = eventBridgeClient;
+    this.settlementRepository = settlementRepository;
+  }
 
-            Detail detail = new Detail();
-            detail.setCustomerId(settlement.getDetail().getCustomerId());
-            detail.setClaimId(settlement.getDetail().getRecordId());
+  @SqsListener(value = "${sqs.end-point.uri}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+  public void receiveMessage(String message, @Header("SenderId") String senderId) {
+    log.info("message received {} {}", senderId, message);
 
-            com.amazon.settlement.model.output.Settlement outputSettlement = new com.amazon.settlement.model.output.Settlement();
-            outputSettlement.setMessage("Based on our analysis on the damage of your car per ${claimId}, your out of pocket cost will be $100.00.");
+    try {
+      Settlement settlement = objectMapper.readValue(message, Settlement.class);
 
-            detail.setSettlement(outputSettlement);
+      Detail detail = new Detail();
+      detail.setCustomerId(settlement.getDetail().getCustomerId());
+      detail.setClaimId(settlement.getDetail().getRecordId());
 
-            ReturnValue returnValue = new ReturnValue();
-            returnValue.setDetail(detail);
+      com.amazon.settlement.model.output.Settlement outputSettlement = new com.amazon.settlement.model.output.Settlement();
+      outputSettlement.setMessage(
+        String.format(
+          "Based on our analysis on the damage of your car per claim id %s, your out-of-pocket expense will be %s.",
+          settlement.getDetail().getRecordId(),
+          "$100.00"
+        )
+      );
 
-            settlementRepository.storeSettlement(settlement);
+      detail.setSettlement(outputSettlement);
 
-            String detailString = objectMapper.writeValueAsString(detail);
-            PutEventsRequestEntry putEventsRequestEntry = PutEventsRequestEntry.builder()
-                    .detail(detailString)
-                    .detailType("Settlement.Finalized")
-                    .source("settlement.service")
-                    .eventBusName(eventBusName)
-                    .build();
+      ReturnValue returnValue = new ReturnValue();
+      returnValue.setDetail(detail);
 
-            List<PutEventsRequestEntry> requestEntryList = new ArrayList<>();
-            requestEntryList.add(putEventsRequestEntry);
+      settlementRepository.storeSettlement(settlement, outputSettlement.getMessage());
 
-            PutEventsRequest putEventsRequest = PutEventsRequest.builder().entries(requestEntryList).build();
-            PutEventsResponse resp = eventBridgeClient.putEvents(putEventsRequest);
+      String detailString = objectMapper.writeValueAsString(detail);
+      PutEventsRequestEntry putEventsRequestEntry = PutEventsRequestEntry.builder()
+        .detail(detailString)
+        .detailType("Settlement.Finalized")
+        .source("settlement.service")
+        .eventBusName(eventBusName)
+        .build();
 
-            if (resp != null) {
-                log.info("Object sent. Details: " + resp);
-            }
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+      List<PutEventsRequestEntry> requestEntryList = new ArrayList<>();
+      requestEntryList.add(putEventsRequestEntry);
+
+      PutEventsRequest putEventsRequest = PutEventsRequest.builder().entries(requestEntryList).build();
+      PutEventsResponse resp = eventBridgeClient.putEvents(putEventsRequest);
+
+      if (resp != null) {
+        log.info("Object sent. Details: " + resp);
+      }
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
     }
+  }
 }
