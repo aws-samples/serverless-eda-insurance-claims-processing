@@ -6,7 +6,7 @@ This code repository contains sample application for Insurance Claims Processing
 
 ## Structure
 
-This sample application is comprised of:
+This sample application comprises:
 
 - Frontend - using AWS AppSync and ReactJS
 - Backend - using AWS Serverless Cloud Native services with AWS CDK as IaC
@@ -185,7 +185,7 @@ On the next screen, provide following values -
 
 - First Name: Connor
 - Last Name: Sample
-- Email: Should be auto populated
+- Email: Should auto-populate
 - SSN: 000000000
 - Street: 124 Main St
 - City: Phoenix
@@ -196,7 +196,7 @@ On the next screen, provide following values -
 - Color: Green
 - Type: Sedan
 - Year: 2001
-- Milage: 200000
+- Mileage: 200000
 - VIN: 1HGCF86461A130849
 
 ![registration](/images/registration.png)
@@ -322,7 +322,7 @@ A similar fraud detection logic is application for car images. If you have provi
     "customerId": "43fed912-e5af-4c6a-a251-4f3c8195153e",
     "documentType": "CAR",
     "fraudType": "SIGNUP.CAR",
-    "fraudReason": "Color of vehicle doesn't macth the color on the policy."
+    "fraudReason": "Color of vehicle doesn't match the color on the policy."
   }
 }
 ```
@@ -413,7 +413,7 @@ Once claim has been accepted successfully, you should see below event:
   "detail": {
     "customerId": "43fed912-e5af-4c6a-a251-4f3c8195153e",
     "claimId": "7a851dbe-03b1-4c25-a4f3-4ac968d484a5",
-    "uploadCarDamageUrl": "<presigned S3 url>",
+    "uploadCarDamageUrl": "<pre-signed S3 url>",
     "message": "Claim Information has been accepted"
   }
 }
@@ -455,13 +455,13 @@ To clear events on the web page, click on `Clear` button above the list of event
 
 ### Clear Data
 
-To delete all the data for current logged in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged in user in S3 bucket and DynamoDB tables.
+To delete all the data for current logged-in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged-in user in S3 bucket and DynamoDB tables.
 
 ![clear-all](/images/clear_all.png)
 
 ## Observability
 
-There is an EventBridge rule - `allEventLogsRule` which invokes its targets for all of the key events sent to Event Bus. The rule has two targets:
+There is an EventBridge rule - `allEventLogsRule` which invokes its targets for all the key events sent to Event Bus. The rule has two targets:
 
 - A CloudWatch log group to capture all events in CloudWatch.
 - A Lambda Function `CreateMetricsFunction` which creates a CloudWatch metric to indicate occurrence of the individual events.
@@ -496,7 +496,7 @@ In AWS Console, navigate to CloudWatch > Dashboards > Claims-Processing-Dashboar
 
 ## Cleanup
 
-In order to cleanup the infrastructure follow below sections:
+In order to clean up the infrastructure follow below sections:
 
 ### Delete Amplify resources.
 
@@ -515,7 +515,7 @@ After the process completes, you should see following message -
 Project deleted locally.
 ```
 
-> :fire: `amplify delete` also deletes the project from local. This will result in deletion of some of the files that are present in the repository. Do not commit these deletes as you will need these files if you want to deploy the frontend application again.
+> :fire: `amplify delete` also deletes the project from local. This will result in deletion of some of the files that are present in the repository. Do not commit the deletion as you will need these files if you want to deploy the frontend application again.
 
 ### Delete principals attached to IOTPOLICY
 
@@ -534,7 +534,7 @@ run `npm run cdk destroy`
 
 ## Conclusion
 
-In this example we deployed and tested an event based claims processing system. We used CDK to deploy the backend infrastructure and AWS Amplify for frontend. In the frontend application we reviewed the events that were transmitted by different services to event bridge to understand how system is processing the data. At the end, we cleaned up by deleting all the resources deployed as part of this activity.
+In this example we deployed and tested an event based claims processing system. We used CDK to deploy the backend infrastructure and AWS Amplify for frontend. In the frontend application we reviewed the events that were transmitted by different services to EventBridge to understand how system is processing the data. At the end, we cleaned up by deleting all the resources deployed as part of this activity.
 
 ## Security
 
