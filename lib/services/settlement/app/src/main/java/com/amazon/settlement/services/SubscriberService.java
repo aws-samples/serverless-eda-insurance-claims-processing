@@ -1,12 +1,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-package com.amazon.settlement.service;
+package com.amazon.settlement.services;
 
+import com.amazon.settlement.model.SettlementRequest;
+import com.amazon.settlement.model.SettlementResponse;
 import com.amazon.settlement.model.input.Settlement;
-import com.amazon.settlement.model.output.Detail;
-import com.amazon.settlement.model.output.ReturnValue;
-import com.amazon.settlement.repository.SettlementRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +33,11 @@ public class SubscriberService {
 
   private final EventBridgeClient eventBridgeClient;
 
-  private final SettlementRepository settlementRepository;
+  private final SettlementService settlementService;
 
-  public SubscriberService(EventBridgeClient eventBridgeClient, SettlementRepository settlementRepository) {
+  public SubscriberService(EventBridgeClient eventBridgeClient, SettlementService settlementService) {
     this.eventBridgeClient = eventBridgeClient;
-    this.settlementRepository = settlementRepository;
+    this.settlementService = settlementService;
   }
 
   @SqsListener(value = "${sqs.end-point.uri}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
@@ -48,27 +47,16 @@ public class SubscriberService {
     try {
       Settlement settlement = objectMapper.readValue(message, Settlement.class);
 
-      Detail detail = new Detail();
-      detail.setCustomerId(settlement.getDetail().getCustomerId());
-      detail.setClaimId(settlement.getDetail().getRecordId());
+      SettlementRequest request = SettlementRequest.builder()
+        .customerId(settlement.getDetail().getCustomerId())
+        .claimId(settlement.getDetail().getRecordId())
+        .color(settlement.getDetail().getAnalyzedFieldAndValues().getColor().getName())
+        .damage(settlement.getDetail().getAnalyzedFieldAndValues().getDamage().getName())
+        .build();
 
-      com.amazon.settlement.model.output.Settlement outputSettlement = new com.amazon.settlement.model.output.Settlement();
-      outputSettlement.setMessage(
-        String.format(
-          "Based on our analysis on the damage of your car per claim id %s, your out-of-pocket expense will be %s.",
-          settlement.getDetail().getRecordId(),
-          "$100.00"
-        )
-      );
+      SettlementResponse response = settlementService.saveSettlement(request);
 
-      detail.setSettlement(outputSettlement);
-
-      ReturnValue returnValue = new ReturnValue();
-      returnValue.setDetail(detail);
-
-      settlementRepository.storeSettlement(settlement, outputSettlement.getMessage());
-
-      String detailString = objectMapper.writeValueAsString(detail);
+      String detailString = objectMapper.writeValueAsString(response);
       PutEventsRequestEntry putEventsRequestEntry = PutEventsRequestEntry.builder()
         .detail(detailString)
         .detailType("Settlement.Finalized")

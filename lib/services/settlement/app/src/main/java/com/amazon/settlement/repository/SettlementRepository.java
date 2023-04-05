@@ -3,9 +3,8 @@
 
 package com.amazon.settlement.repository;
 
-import com.amazon.settlement.model.input.AnalyzedFieldAndValues;
-import com.amazon.settlement.model.input.Detail;
-import com.amazon.settlement.model.input.Settlement;
+import com.amazon.settlement.model.SettlementRequest;
+import com.amazon.settlement.model.SettlementResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -29,32 +28,21 @@ public class SettlementRepository {
     this.dynamoDbClient = dynamoDbClient;
   }
 
-  public void storeSettlement(final Settlement settlement, final String settlementMessage) {
-    log.info("Storing settlement detail: " + settlement.getDetail());
-    Detail detail = settlement.getDetail();
-    AnalyzedFieldAndValues analyzedFieldAndValues = detail.getAnalyzedFieldAndValues();
+  public SettlementResponse saveSettlement(
+    final SettlementRequest requestCommand,
+    final String settlementMessage
+  ) {
+    log.info("Storing settlement detail: " + requestCommand);
+
+    String uuid = UUID.randomUUID().toString();
 
     Map<String, AttributeValue> attributes = Map.of(
-      "Id", AttributeValue.builder().s(UUID.randomUUID().toString()).build(),
-      "customerId", AttributeValue.builder().s(detail.getCustomerId()).build(),
+      "Id", AttributeValue.builder().s(uuid).build(),
+      "customerId", AttributeValue.builder().s(requestCommand.getCustomerId()).build(),
+      "claimId", AttributeValue.builder().s(requestCommand.getClaimId()).build(),
       "settlementMessage", AttributeValue.builder().s(settlementMessage).build(),
-      "detailType", AttributeValue.builder().s(settlement.getDetailType()).build(),
-      "documentType", AttributeValue.builder().s(detail.getDocumentType()).build(),
-      "recordId", AttributeValue.builder().s(detail.getRecordId()).build(),
-      "fraudType", AttributeValue.builder().s(detail.getFraudType()).build(),
-      "AnalyzedFieldAndValues", AttributeValue.builder().m(Map.of(
-          "type", AttributeValue.builder().s(analyzedFieldAndValues.getType()).build(),
-          "Color", AttributeValue.builder().m(Map.of(
-            "name", AttributeValue.builder().s(analyzedFieldAndValues.getColor().getName()).build(),
-            "confidence", AttributeValue.builder().s(String.valueOf(analyzedFieldAndValues.getColor().getConfidence())).build()
-          )).build(),
-          "Damage", AttributeValue.builder().m(Map.of(
-              "name", AttributeValue.builder().s(analyzedFieldAndValues.getDamage().getName()).build(),
-              "confidence", AttributeValue.builder().s(String.valueOf(analyzedFieldAndValues.getDamage().getConfidence())).build()
-            ))
-            .build()
-        )
-      ).build()
+      "color", AttributeValue.builder().s(requestCommand.getColor()).build(),
+      "damage", AttributeValue.builder().s(requestCommand.getDamage()).build()
     );
 
     PutItemRequest populateDataItemRequest = PutItemRequest.builder()
@@ -63,7 +51,13 @@ public class SettlementRepository {
       .build();
 
     PutItemResponse resp = dynamoDbClient.putItem(populateDataItemRequest);
-
     log.info("Put Item Request status code: " + resp.sdkHttpResponse().statusCode());
+
+    return SettlementResponse.builder()
+      .settlementId(uuid)
+      .settlementMessage(settlementMessage)
+      .customerId(requestCommand.getCustomerId())
+      .claimId(requestCommand.getClaimId())
+      .build();
   }
 }

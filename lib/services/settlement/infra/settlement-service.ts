@@ -91,7 +91,6 @@ export class SettlementService extends Construct {
 
     const taskRole = queueProcessingFargateService.taskDefinition.taskRole;
     table.grantReadWriteData(taskRole);
-
     props.bus.grantPutEventsTo(taskRole);
 
     this.settlementMetricsWidget = createGraphWidget("Settlement Summary", [

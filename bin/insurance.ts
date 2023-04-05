@@ -66,4 +66,12 @@ NagSuppressions.addStackSuppressions(mStack, [
     id: 'AwsSolutions-ECS2',
     reason: 'Not necessary.'
   },
+  {
+    id: 'AwsSolutions-ELB2',
+    reason: 'Will be added after initial testing'
+  },
+  {
+    id: 'AwsSolutions-EC23',
+    reason: 'Will be modified after initial testing'
+  },
 ]);
