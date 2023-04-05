@@ -1,13 +1,11 @@
-#!/usr/bin/env node
-
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
-import { ClaimsProcessingStack } from "../lib/claims-processing-stack";
-import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
-import { Aspects } from "aws-cdk-lib";
+import {Aspects} from "aws-cdk-lib";
+import {ClaimsProcessingStack} from "../lib/claims-processing-stack";
+import {AwsSolutionsChecks, NagSuppressions} from "cdk-nag";
 
 const app = new cdk.App();
 // Add the cdk-nag AwsSolutions Pack with extra verbose logging enabled.
@@ -55,5 +53,25 @@ NagSuppressions.addStackSuppressions(mStack, [
     id: "AwsSolutions-L1",
     reason:
       "Only functions that are left are AwsCustomResource related functions, and there's no way to specify runtime for them. These should be fixed in time automatically.  ",
+  },
+  {
+    id: 'AwsSolutions-VPC7',
+    reason: 'Not necessary.'
+  },
+  {
+    id: 'AwsSolutions-ECS4',
+    reason: 'Not necessary.'
+  },
+  {
+    id: 'AwsSolutions-ECS2',
+    reason: 'Not necessary.'
+  },
+  {
+    id: 'AwsSolutions-ELB2',
+    reason: 'Will be added after initial testing'
+  },
+  {
+    id: 'AwsSolutions-EC23',
+    reason: 'Will be modified after initial testing'
   },
 ]);

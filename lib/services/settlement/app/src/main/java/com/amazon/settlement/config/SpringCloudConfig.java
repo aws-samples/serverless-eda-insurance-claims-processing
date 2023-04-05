@@ -1,7 +1,8 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 package com.amazon.settlement.config;
 
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.springframework.cloud.aws.messaging.config.annotation.EnableSqs;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,28 +13,14 @@ import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
 @EnableSqs
 public class SpringCloudConfig {
 
-    @Bean
-    public EventBridgeClient amazonEventBridgeAsync() {
+  @Bean
+  public EventBridgeClient amazonEventBridgeAsync() {
+    return EventBridgeClient.create();
+  }
 
-        EventBridgeClient amazonEventBridgeClient =
-                EventBridgeClient.create();
-
-        return amazonEventBridgeClient;
-    }
-
-    @Bean
-    public DynamoDbClient getDynamoDbClient() {
-        return DynamoDbClient.builder()
-                .build();
-    }
-    // Amazon SQS Async
-    private AmazonSQSAsync amazonSQSAsync() {
-
-        AmazonSQSAsyncClientBuilder amazonSQSAsyncClientBuilder =
-                AmazonSQSAsyncClientBuilder.standard();
-
-        return amazonSQSAsyncClientBuilder.build();
-    }
-
-
+  @Bean
+  public DynamoDbClient getDynamoDbClient() {
+    return DynamoDbClient.builder()
+      .build();
+  }
 }
