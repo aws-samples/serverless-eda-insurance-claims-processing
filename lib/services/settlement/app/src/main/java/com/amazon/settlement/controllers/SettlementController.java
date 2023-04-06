@@ -6,11 +6,13 @@ package com.amazon.settlement.controllers;
 import com.amazon.settlement.model.SettlementRequest;
 import com.amazon.settlement.model.SettlementResponse;
 import com.amazon.settlement.services.SettlementService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@RestController("/settlement")
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
+@RequestMapping("/settlement")
 public class SettlementController {
   private final SettlementService settlementService;
 

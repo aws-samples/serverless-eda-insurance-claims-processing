@@ -3,6 +3,11 @@
 
 package com.amazon.settlement.config;
 
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSAsync;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import org.springframework.cloud.aws.messaging.config.SimpleMessageListenerContainerFactory;
 import org.springframework.cloud.aws.messaging.config.annotation.EnableSqs;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +17,20 @@ import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
 @Configuration
 @EnableSqs
 public class SpringCloudConfig {
+
+  @Bean
+  public SimpleMessageListenerContainerFactory simpleMessageListenerContainerFactory() {
+    SimpleMessageListenerContainerFactory factory = new SimpleMessageListenerContainerFactory();
+    factory.setAmazonSqs(getAmazonSqsClient());
+    factory.setWaitTimeOut(5);
+
+    return factory;
+  }
+
+  private AmazonSQSAsync getAmazonSqsClient() {
+    AmazonSQSAsync amazonSQSAsync = AmazonSQSAsyncClientBuilder.defaultClient();
+    return amazonSQSAsync;
+  }
 
   @Bean
   public EventBridgeClient amazonEventBridgeAsync() {
