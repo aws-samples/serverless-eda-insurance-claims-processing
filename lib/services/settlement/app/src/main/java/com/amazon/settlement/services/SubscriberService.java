@@ -5,8 +5,9 @@ package com.amazon.settlement.services;
 
 import com.amazon.settlement.model.SettlementRequest;
 import com.amazon.settlement.model.SettlementResponse;
-import com.amazon.settlement.model.input.Settlement;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.amazon.settlement.model.input.generated.AWSEvent;
+import com.amazon.settlement.model.input.generated.FraudNotDetected;
+import com.amazon.settlement.model.input.generated.marshaller.Marshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,8 @@ import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequestEntry;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +48,8 @@ public class SubscriberService {
     log.info("message received {} {}", senderId, message);
 
     try {
-      Settlement settlement = objectMapper.readValue(message, Settlement.class);
+      AWSEvent<FraudNotDetected> settlement = Marshaller.unmarshalEvent(
+        new ByteArrayInputStream(message.getBytes()), FraudNotDetected.class);
 
       SettlementRequest request = SettlementRequest.builder()
         .customerId(settlement.getDetail().getCustomerId())
@@ -73,7 +77,7 @@ public class SubscriberService {
       if (resp != null) {
         log.info("Object sent. Details: " + resp);
       }
-    } catch (JsonProcessingException e) {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }

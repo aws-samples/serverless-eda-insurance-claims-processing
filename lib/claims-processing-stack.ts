@@ -19,6 +19,7 @@ import {FraudEvents} from "./services/fraud/infra/fraud-events";
 import {FraudService} from "./services/fraud/infra/fraud-service";
 import {NotificationsService} from "./services/notifications/infra/notifications-service";
 import {SettlementService} from "./services/settlement/infra/settlement-service";
+import {CfnDiscoverer} from "aws-cdk-lib/aws-eventschemas";
 
 export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -33,6 +34,10 @@ export class ClaimsProcessingStack extends Stack {
 
     const bus = new EventBus(this, "CustomBus", {
       eventBusName: `${stackName}-ClaimsProcessingBus`,
+    });
+
+    new CfnDiscoverer(this, "SchemaDiscoverer", {
+      sourceArn: bus.eventBusArn
     });
 
     const documentService = new DocumentService(this, "DocumentService", {
