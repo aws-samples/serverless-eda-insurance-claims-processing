@@ -3,9 +3,7 @@
 
 package com.amazon.settlement.config;
 
-import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.springframework.cloud.aws.messaging.config.SimpleMessageListenerContainerFactory;
 import org.springframework.cloud.aws.messaging.config.annotation.EnableSqs;
@@ -28,8 +26,7 @@ public class SpringCloudConfig {
   }
 
   private AmazonSQSAsync getAmazonSqsClient() {
-    AmazonSQSAsync amazonSQSAsync = AmazonSQSAsyncClientBuilder.defaultClient();
-    return amazonSQSAsync;
+    return AmazonSQSAsyncClientBuilder.defaultClient();
   }
 
   @Bean
