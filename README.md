@@ -95,29 +95,17 @@ Once you have updated the `config.ts` file with fake API endpoints, you can save
 
 ### Deploy CDK stack (Backend)
 
-> :warning: Make sure docker engine is running
+> :warning: Make sure docker engine is running and you have a user profile in docker.io. Your username will be required.
 
 * Clone the repository
-* Build the containerized Spring Boot-application
-  1)  `cd lib/services/settlement/app`
-  2)  `docker build -f src/main/docker/Dockerfile -t <user-name>/<image-name>:<tag-name>`
-  3)  `docker push <user-name>/<image-name>:<tag-name>`
-
-
 * From project root, run following commands
 
     `npm install`
 
 
-* Update `package.json` to refer this newly created image under `scripts` for `deploy` command:  
+* Provide docker.io username in the below command to deploy the application successfully:
 
-  ```
-  "deploy": "cdk deploy --outputs-file react-claims/src/cdk-outputs.json --parameters imagename=<user-name>/<image-name>:<tag-name> --all",
-  ```
-
-* Once `package.json` is updated, run the following command:
-
-  `npm run deploy`
+  `npm run deploy --username=<your docker.io username>`
 
 Wait until the stacks are deployed.
 
@@ -129,19 +117,23 @@ In order to deploy the frontend:
 
 then run following commands:
 
-`npm install`
-`npm run amplify init`
+```bash
+npm install
+npm run amplify init
+```
 
 Provide following values when prompted -
 
-> Enter a name for the environment <environment name, like dev, sandbox> **claimsdev**
-> Choose your default editor: Visual Studio Code
-> Select the authentication method you want to use: **AWS profile**
+> Enter a name for the environment <environment name, like dev, sandbox> **claimsdev**  
+> Choose your default editor: Visual Studio Code  
+> Select the authentication method you want to use: **AWS profile**  
 > Please choose the profile you want to use: **default**
 
 Next run this command:
 
-`npm run amplify push`
+```bash
+npm run amplify push
+```
 
 > Are you sure you want to continue? **Yes**
 
@@ -169,17 +161,17 @@ Go to front end url (if published) or if you are running the front end in local,
 
 On the first page, click on `Create Account`
 
-![landing page](/images/landing_page.png)
+![landing page](images/landing_page.png)
 
 Fill in details and click on `Create Account` button.
 
-![Create Account](/images/create_account.png)
+![Create Account](images/create_account.png)
 
 > Make sure to provide a valid email address to receive an OTP
 
 Verify email by entering code received on your email id and click on `Confirm` button.
 
-![email_verify](/images/email_verify.png)
+![email_verify](images/email_verify.png)
 
 On the next screen, provide following values -
 
@@ -199,7 +191,7 @@ On the next screen, provide following values -
 - Mileage: 200000
 - VIN: 1HGCF86461A130849
 
-![registration](/images/registration.png)
+![registration](images/registration.png)
 
 Click on `Submit`. This will initiate a request to create a policy record.
 
@@ -233,7 +225,7 @@ The frontend app uses the `customerId` from this event payload to use in subsequ
 After this request is complete, you'll see options to upload the license and car image.
 
 Select first license image and click on `Upload`.
-![select_dl](/images/select_dl.png)
+![select_dl](images/select_dl.png)
 
 You should see `Document.Processed` event payload on right half of the page:
 
@@ -369,11 +361,11 @@ Now that the customer has been on-boarded, we need to replicate a scenario of an
 
 Click on `File a new claim` and scroll down to the new claim form.
 
-![new_claim](/images/new_claim.png)
+![new_claim](images/new_claim.png)
 
 Fill in all the fields. Please note that the event date should be in future from today after the policy creation date. So if you are testing this step right after registration, select the next day for the occurrence date.
 
-![claim_form](/images/claim_form.png)
+![claim_form](images/claim_form.png)
 
 Make sure the driversLicenseNumber matches with the actual DL number that has been extracted from the DL document image. Otherwise, claim will be rejected based on personal information mismatch:
 
@@ -422,7 +414,7 @@ Once claim has been accepted successfully, you should see below event:
 Now you can see `claimsId` in addition to `customerId`.
 
 There should be an option to upload car image with damage.
-![damage](/images/damage.png)
+![damage](images/damage.png)
 
 At this point if you COLOR_DETECT_API returns red color, then you will again see a fraud detection event as your policy has registered a green car:
 
@@ -447,17 +439,42 @@ At this point if you COLOR_DETECT_API returns red color, then you will again see
 
 If COLOR_DETECT_API returns green color and DAMAGE_DETECT_API returns any kind of damage, you can upload the damaged green car image to complete the FNOL process.
 
+### Settlement
+As soon as the correct image of the damage car is uploaded and processed, you should see a `Settlement.Finalized` event coming back from the Settlement service.
+Settlement service is built using Spring Boot application running on ECS Fargate. This shows that event-driven applications can be integrated with container workloads seamlessly.
+
+The event payload would look like:
+
+```json
+{
+ "version": "0",
+ "id": "e2a9c866-cb5b-728c-ce18-3b17477fa5ff",
+ "detail-type": "Settlement.Finalized",
+ "source": "settlement.service",
+ "account": "123456789",
+ "time": "2023-04-09T23:20:44Z",
+ "region": "us-east-2",
+ "resources": [],
+ "detail": {
+  "settlementId": "377d788b-9922-402a-a56c-c8460e34e36d",
+  "customerId": "67cac76c-40b1-4d63-a8b5-ad20f6e2e6b9",
+  "claimId": "b1192ba0-de7e-450f-ac13-991613c48041",
+  "settlementMessage": "Based on our analysis on the damage of your car per claim id b1192ba0-de7e-450f-ac13-991613c48041, your out-of-pocket expense will be $100.00."
+ }
+}
+```
+
 ### Clear Events
 
 To clear events on the web page, click on `Clear` button above the list of events. This will only clear the area on the web page where events log is displayed.
 
-![clear-events](/images/clear_events.png)
+![clear-events](images/clear_events.png)
 
 ### Clear Data
 
 To delete all the data for current logged-in user, you can use `CLEAR ALL DATA` button. Clicking on this button will clear data for the current logged-in user in S3 bucket and DynamoDB tables.
 
-![clear-all](/images/clear_all.png)
+![clear-all](images/clear_all.png)
 
 ## Observability
 

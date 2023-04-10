@@ -3,13 +3,15 @@
 
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
-import {Aspects} from "aws-cdk-lib";
-import {ClaimsProcessingStack} from "../lib/claims-processing-stack";
-import {AwsSolutionsChecks, NagSuppressions} from "cdk-nag";
+import { Aspects } from "aws-cdk-lib";
+import { ClaimsProcessingStack } from "../lib/claims-processing-stack";
+import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 
 const app = new cdk.App();
+
 // Add the cdk-nag AwsSolutions Pack with extra verbose logging enabled.
-Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
+Aspects.of(app).add(new AwsSolutionsChecks({verbose: true}));
+
 const mStack = new ClaimsProcessingStack(app, "ClaimsProcessingStack", {});
 
 NagSuppressions.addStackSuppressions(mStack, [
