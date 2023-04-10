@@ -1,13 +1,13 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import {JsonPath, LogLevel, StateMachine, StateMachineType,} from "aws-cdk-lib/aws-stepfunctions";
-import {Construct} from "constructs";
-import {Table} from "aws-cdk-lib/aws-dynamodb";
-import {DynamoAttributeValue, DynamoUpdateItem, DynamoUpdateItemProps,} from "aws-cdk-lib/aws-stepfunctions-tasks";
+import { JsonPath, LogLevel, StateMachine, StateMachineType, } from "aws-cdk-lib/aws-stepfunctions";
+import { Construct } from "constructs";
+import { Table } from "aws-cdk-lib/aws-dynamodb";
+import { DynamoAttributeValue, DynamoUpdateItem, DynamoUpdateItemProps, } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import * as logs from "aws-cdk-lib/aws-logs";
-import {RetentionDays} from "aws-cdk-lib/aws-logs";
-import {RemovalPolicy} from "aws-cdk-lib";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { RemovalPolicy } from "aws-cdk-lib";
 
 export interface UpdatePolicyStepFunctionProps {
   policyTable: Table;

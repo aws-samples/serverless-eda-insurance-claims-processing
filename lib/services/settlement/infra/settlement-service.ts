@@ -46,7 +46,7 @@ export class SettlementService extends Construct {
     });
 
     this.table = new dynamodb.Table(this, props.settlementTableName, {
-      partitionKey: {name: "Id", type: dynamodb.AttributeType.STRING,},
+      partitionKey: { name: "Id", type: dynamodb.AttributeType.STRING, },
       tableName: props.settlementTableName,
       readCapacity: 5,
       writeCapacity: 5,
@@ -107,15 +107,15 @@ export class SettlementService extends Construct {
       path: "/actuator/health"
     });
 
-    const scaling = loadBalancedFargateService.service.autoScaleTaskCount({maxCapacity: 6, minCapacity: 2});
+    const scaling = loadBalancedFargateService.service.autoScaleTaskCount({ maxCapacity: 6, minCapacity: 2 });
     scaling.scaleOnCpuUtilization("CpuScaling", {
       targetUtilizationPercent: 50,
       scaleInCooldown: Duration.seconds(60),
       scaleOutCooldown: Duration.seconds(60)
     });
 
-    new CfnOutput(this, "EventBridge: ", {value: props.bus.eventBusName});
-    new CfnOutput(this, "SQS-Queue: ", {value: queue.queueName});
+    new CfnOutput(this, "EventBridge: ", { value: props.bus.eventBusName });
+    new CfnOutput(this, "SQS-Queue: ", { value: queue.queueName });
 
     this.settlementMetricsWidget = createGraphWidget("Settlement Summary", [
       createMetric(
