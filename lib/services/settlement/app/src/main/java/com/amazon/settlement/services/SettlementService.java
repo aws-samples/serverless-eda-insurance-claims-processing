@@ -6,9 +6,9 @@ package com.amazon.settlement.services;
 import com.amazon.settlement.model.SettlementRequest;
 import com.amazon.settlement.model.SettlementResponse;
 import com.amazon.settlement.repository.SettlementRepository;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class SettlementService {
 
   private final SettlementRepository settlementRepository;
