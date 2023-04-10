@@ -3,7 +3,7 @@
   "id": "44d0a69a-87e4-8965-f217-16413887cc8b",
   "detail-type": "Fraud.Not.Detected",
   "source": "fraud.service",
-  "account": "974751372104",
+  "account": "123456789012",
   "time": "2023-03-10T17:31:52Z",
   "region": "us-east-2",
   "resources": [],

@@ -6,7 +6,7 @@ RUN apt-get update --fix-missing && apt-get install zip curl -y
 RUN \
     curl -s "https://get.sdkman.io" | bash; \
     bash -c "source $HOME/.sdkman/bin/sdkman-init.sh; \
-    sdk install maven; \ 
+    sdk install maven; \
     sdk install java 19.0.2-amzn;"
 
 COPY ./pom.xml ./pom.xml
@@ -33,4 +33,5 @@ COPY --from=builder target/settlement-0.0.1-SNAPSHOT.jar settlement.jar
 COPY --from=builder custom-jre custom-jre
 
 EXPOSE 8080
+HEALTHCHECK CMD curl --fail http://localhost:8080/actuator/health || exit 1
 CMD ["./custom-jre/bin/java","-jar", "-Dspring.profiles.active=prod","/settlement.jar"]
