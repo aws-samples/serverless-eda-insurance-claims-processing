@@ -33,7 +33,7 @@ NagSuppressions.addStackSuppressions(mStack, [
   },
   {
     id: "AwsSolutions-APIG2",
-    reason: "Implement this in next version as schema might change.",
+    reason: "Implement this when focusing on security best practices.",
   },
   {
     id: "AwsSolutions-APIG3",
@@ -49,7 +49,7 @@ NagSuppressions.addStackSuppressions(mStack, [
   },
   {
     id: "AwsSolutions-SQS3",
-    reason: "DLQ not required as of now.",
+    reason: "DLQ not required for demo app.",
   },
   {
     id: "AwsSolutions-L1",
@@ -58,19 +58,19 @@ NagSuppressions.addStackSuppressions(mStack, [
   },
   {
     id: 'AwsSolutions-VPC7',
-    reason: 'Not necessary.'
+    reason: 'Not necessary for demo.'
   },
   {
     id: 'AwsSolutions-ECS4',
-    reason: 'Not necessary.'
+    reason: 'Container Insights will be added when focusing on observability throughout the app.'
   },
   {
     id: 'AwsSolutions-ECS2',
-    reason: 'Not necessary.'
+    reason: 'Not necessary to use Secrets Manager for demo purposes.'
   },
   {
     id: 'AwsSolutions-ELB2',
-    reason: 'Will be added after initial testing'
+    reason: 'Access logging Will be added when focusing on observability throughout the app.'
   },
   {
     id: 'AwsSolutions-EC23',
