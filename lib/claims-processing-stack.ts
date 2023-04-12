@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { CfnParameter, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -24,11 +24,6 @@ import { CfnDiscoverer } from "aws-cdk-lib/aws-eventschemas";
 export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-
-    const imageName = new CfnParameter(this, 'imagename', {
-      description: 'Complete name of the container image for the settlement service',
-      type: 'String',
-    }).valueAsString
 
     const stackName = Stack.of(this).stackName;
 
@@ -64,6 +59,17 @@ export class ClaimsProcessingStack extends Stack {
     });
     const claimsTable = claimsService.claimsTable;
 
+    const fraudService = new FraudService(this, "FraudService", {
+      bus,
+      customerTable,
+      policyTable,
+      claimsTable,
+    });
+
+    const settlementService = new SettlementService(this, "SettlementService", {
+      bus,
+    });
+
     new NotificationsService(this, "NotificationsService", {
       bus,
       customerTable,
@@ -80,20 +86,6 @@ export class ClaimsProcessingStack extends Stack {
           SettlementEvents.SETTLEMENT_FINALIZED
         ],
       },
-    });
-
-    const fraudService = new FraudService(this, "FraudService", {
-      bus,
-      customerTable,
-      policyTable,
-      claimsTable,
-    });
-
-    const settlementService = new SettlementService(this, "SettlementService", {
-      bus,
-      settlementImageName: imageName,
-      settlementTableName: `${stackName}-settlement-table`,
-      settlementQueueName: `${stackName}-settlement-queue`
     });
 
     const cleanupService = new CleanupService(this, "CleanupService", {

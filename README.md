@@ -100,14 +100,14 @@ Once you have updated the `config.ts` file with fake API endpoints, you can save
 * Clone the repository
 * From project root, run following commands
 
-    `npm install`
+  `npm install`
 
 
-* Provide docker.io username in the below command to deploy the application successfully:
+* Followed by:
 
-  `npm run deploy --username=<your docker.io username>`
+  `npm run deploy`
 
-Wait until the stacks are deployed.
+Wait until the stack is deployed.
 
 ### Deploy Amplify App (Frontend)
 

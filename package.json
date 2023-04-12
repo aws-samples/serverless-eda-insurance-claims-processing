@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy": "DOCKER_USERNAME=$npm_config_username make deploy",
+    "deploy": "cdk deploy --outputs-file react-claims/src/cdk-outputs.json --all",
     "format": "npx prettier --write ."
   },
   "devDependencies": {

@@ -4,19 +4,22 @@
 import {
   aws_dynamodb as dynamodb,
   aws_ec2 as ec2,
+  aws_ecr_assets as ecr_assets,
   aws_ecs as ecs,
   aws_ecs_patterns as ecs_patterns,
   CfnOutput,
   Duration,
-  RemovalPolicy
+  RemovalPolicy,
+  Stack,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { EventBus } from "aws-cdk-lib/aws-events";
-import { EventbridgeToSqs, EventbridgeToSqsProps } from "@aws-solutions-constructs/aws-eventbridge-sqs";
+import { EventbridgeToSqs } from "@aws-solutions-constructs/aws-eventbridge-sqs";
 import { createGraphWidget, createMetric } from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { FraudEvents } from "../../fraud/infra/fraud-events";
+import * as path from "path";
 
 export enum SettlementEvents {
   SOURCE = "settlement.service",
@@ -25,9 +28,6 @@ export enum SettlementEvents {
 
 interface SettlementServiceProps {
   readonly bus: EventBus,
-  readonly settlementImageName: string;
-  readonly settlementTableName: string;
-  readonly settlementQueueName: string;
 }
 
 export class SettlementService extends Construct {
@@ -45,15 +45,14 @@ export class SettlementService extends Construct {
       vpc: vpc
     });
 
-    this.table = new dynamodb.Table(this, props.settlementTableName, {
+    this.table = new dynamodb.Table(this, "SettlementTable", {
       partitionKey: { name: "Id", type: dynamodb.AttributeType.STRING, },
-      tableName: props.settlementTableName,
       readCapacity: 5,
       writeCapacity: 5,
       removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
     });
 
-    const constructProps: EventbridgeToSqsProps = {
+    const ebToSqsConstruct = new EventbridgeToSqs(this, 'sqs-construct', {
       existingEventBusInterface: props.bus,
       eventRuleProps: {
         eventPattern: {
@@ -66,12 +65,15 @@ export class SettlementService extends Construct {
         }
       },
       queueProps: {
-        queueName: props.settlementQueueName
+        queueName: `${Stack.of(this).stackName}-EBTarget`
       }
-    };
+    });
 
-    const constructStack = new EventbridgeToSqs(this, 'sqs-construct', constructProps);
-    const queue = constructStack.sqsQueue;
+    const queue = ebToSqsConstruct.sqsQueue;
+
+    const asset = new ecr_assets.DockerImageAsset(this, "BuildImage", {
+      directory: path.join(__dirname, "../app"),
+    });
 
     const loadBalancedFargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
       this,
@@ -79,11 +81,11 @@ export class SettlementService extends Construct {
       {
         cluster: cluster,
         taskImageOptions: {
-          image: ecs.ContainerImage.fromRegistry(props.settlementImageName),
+          image: ecs.ContainerImage.fromDockerImageAsset(asset),
           environment: {
             "SQS_ENDPOINT_URL": queue.queueUrl,
             "EVENTBUS_NAME": props.bus.eventBusName,
-            "DYNAMODB_TABLE_NAME": props.settlementTableName
+            "DYNAMODB_TABLE_NAME": this.table.tableName
           },
           containerPort: 8080,
           logDriver: new ecs.AwsLogDriver({
