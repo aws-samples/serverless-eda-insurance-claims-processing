@@ -13,11 +13,20 @@ This sample application comprises:
 
 The backend infrastructure is set up at the root folder of the repository. Code for frontend is under `/react-claims` directory.
 
-## Microservices Architecture
+## Overall Architecture
 
-![Claims_Microservice_Layer](/images/Claims_Microservice_Layer.png)
+![Overall Architecture](images/overall_architecture.png)
 
-Different services in backend architecture interact with Amazon EventBridge Event Bus. The event rules can invoke more than one target for any event. For example, when customer is submitted successfully, notification service is invoked to notify front end and a step function is invoked to process the customer and create urls to upload license and vehicle images.
+Different services in backend architecture interact with Amazon EventBridge custom event Bus. The event rules can invoke more than one target for any event. For example, when customer is submitted successfully, notification service is invoked to notify front end and a step function is invoked to process the customer and create urls to upload license and vehicle images.
+
+This overall architecture consists of below domains. Visit each one of them for underlying details:
+
+- [Customer](lib/services/customer/README.md)
+- [Claims](lib/services/claims/README.md)
+- [Documents](lib/services/documents/README.md)
+- [Fraud](lib/services/fraud/README.md)
+- [Settlement](lib/services/settlement/README.md)
+- [Notifications](lib/services/notifications/README.md)
 
 ## Setup
 
