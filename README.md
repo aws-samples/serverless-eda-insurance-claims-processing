@@ -104,7 +104,7 @@ Once you have updated the `config.ts` file with fake API endpoints, you can save
 
 ### Deploy CDK stack (Backend)
 
-> :warning: Make sure docker engine is running and you have a user profile in docker.io. Your username will be required.
+> :warning: Make sure docker engine is running.
 
 * Clone the repository
 * From project root, run following commands
