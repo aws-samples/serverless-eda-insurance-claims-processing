@@ -8,12 +8,7 @@ import { SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import {
-  BlockPublicAccess,
-  Bucket,
-  BucketEncryption,
-  HttpMethods,
-} from "aws-cdk-lib/aws-s3";
+import { BlockPublicAccess, Bucket, BucketEncryption, HttpMethods, } from "aws-cdk-lib/aws-s3";
 import {
   Choice,
   Condition,
@@ -55,7 +50,7 @@ export class DocumentService extends Construct {
     const documentProcessingSM =
       this.createDocumentProcessingStateMachine(props);
 
-    const s3rule = new Rule(this, "signupDocumentsRule", {
+    new Rule(this, "signupDocumentsRule", {
       // eventBus: bus, // Only available for default event bus
       eventPattern: {
         source: ["aws.s3"],
@@ -261,10 +256,11 @@ export class DocumentService extends Construct {
       {
         retention: RetentionDays.FIVE_DAYS,
         removalPolicy: RemovalPolicy.DESTROY,
+        logGroupName: "/aws/vendedlogs/states/DocumentProcessingSFN"
       }
     );
 
-    const documentProcessingSM = new StateMachine(
+    return new StateMachine(
       this,
       "DocumentProcessingStateMachine",
       {
@@ -279,8 +275,6 @@ export class DocumentService extends Construct {
         tracingEnabled: true,
       }
     );
-
-    return documentProcessingSM;
   }
 
   private createDocumentsBucket() {

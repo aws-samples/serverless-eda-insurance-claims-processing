@@ -1,0 +1,27 @@
+{
+  "version": "0",
+  "id": "44d0a69a-87e4-8965-f217-16413887cc8b",
+  "detail-type": "Fraud.Not.Detected",
+  "source": "fraud.service",
+  "account": "123456789012",
+  "time": "2023-03-10T17:31:52Z",
+  "region": "us-east-2",
+  "resources": [],
+  "detail": {
+    "customerId": "af187005-4eef-49d2-a619-64e65cfcc4bd",
+    "documentType": "CAR",
+    "analyzedFieldAndValues": {
+      "damage": {
+        "Name": "bumper_dent",
+        "Confidence": 84.26200103759766
+      },
+      "color": {
+        "Name": "red",
+        "Confidence": 95.27899932861328
+      },
+      "type": "claims"
+    },
+    "recordId": "e15c19b1-9b44-4db2-9119-9e0df9c08c36",
+    "fraudType": "CLAIMS"
+  }
+}

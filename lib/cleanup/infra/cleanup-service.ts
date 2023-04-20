@@ -32,6 +32,7 @@ interface CleanupServiceProps {
   customerTableName: string;
   policyTableName: string;
   claimsTableName: string;
+  settlementTableName: string,
   documentsBucketName: string;
 }
 
@@ -60,6 +61,7 @@ export class CleanupService extends Construct {
           POLICY_TABLE_NAME: props.policyTableName,
           CLAIMS_TABLE_NAME: props.claimsTableName,
           DOCUMENT_BUCKET_NAME: props.documentsBucketName,
+          SETTLEMENT_TABLE_NAME: props.settlementTableName,
         },
       }
     );

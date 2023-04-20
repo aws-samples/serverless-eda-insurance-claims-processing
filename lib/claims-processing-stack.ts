@@ -18,6 +18,8 @@ import { DocumentService } from "./services/documents/infra/documents-service";
 import { FraudEvents } from "./services/fraud/infra/fraud-events";
 import { FraudService } from "./services/fraud/infra/fraud-service";
 import { NotificationsService } from "./services/notifications/infra/notifications-service";
+import { SettlementEvents, SettlementService } from "./services/settlement/infra/settlement-service";
+import { CfnDiscoverer } from "aws-cdk-lib/aws-eventschemas";
 
 export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -27,6 +29,10 @@ export class ClaimsProcessingStack extends Stack {
 
     const bus = new EventBus(this, "CustomBus", {
       eventBusName: `${stackName}-ClaimsProcessingBus`,
+    });
+
+    new CfnDiscoverer(this, "SchemaDiscoverer", {
+      sourceArn: bus.eventBusArn
     });
 
     const documentService = new DocumentService(this, "DocumentService", {
@@ -53,6 +59,17 @@ export class ClaimsProcessingStack extends Stack {
     });
     const claimsTable = claimsService.claimsTable;
 
+    const fraudService = new FraudService(this, "FraudService", {
+      bus,
+      customerTable,
+      policyTable,
+      claimsTable,
+    });
+
+    const settlementService = new SettlementService(this, "SettlementService", {
+      bus,
+    });
+
     new NotificationsService(this, "NotificationsService", {
       bus,
       customerTable,
@@ -66,21 +83,16 @@ export class ClaimsProcessingStack extends Stack {
           ClaimsEvents.CLAIM_REJECTED,
           DocumentsEvents.DOCUMENT_PROCESSED,
           FraudEvents.FRAUD_DETECTED,
+          SettlementEvents.SETTLEMENT_FINALIZED
         ],
       },
-    });
-
-    const fraudService = new FraudService(this, "FraudService", {
-      bus,
-      customerTable,
-      policyTable,
-      claimsTable,
     });
 
     const cleanupService = new CleanupService(this, "CleanupService", {
       customerTableName: customerTable.tableName,
       policyTableName: policyTable.tableName,
       claimsTableName: claimsTable.tableName,
+      settlementTableName: settlementService.table.tableName,
       documentsBucketName: documentService.documentsBucket.bucketName,
     });
 
@@ -90,6 +102,7 @@ export class ClaimsProcessingStack extends Stack {
     documentService.documentsBucket.grantReadWrite(
       cleanupService.cleanupLambdaFunction
     );
+    settlementService.table.grantReadWriteData(cleanupService.cleanupLambdaFunction);
 
     const metricsQueueWithLambdaSubscription =
       createMetricsQueueWithLambdaSubscription(this);
@@ -105,6 +118,7 @@ export class ClaimsProcessingStack extends Stack {
           ClaimsEvents.CLAIMS_SOURCE,
           DocumentsEvents.SOURCE,
           FraudEvents.SOURCE,
+          SettlementEvents.SOURCE,
           "aws.s3",
         ],
       },
@@ -121,6 +135,7 @@ export class ClaimsProcessingStack extends Stack {
         claimsService.claimsMetricsWidget,
         fraudService.fraudMetricsWidget,
         documentService.documentsMetricsWidget,
+        settlementService.settlementMetricsWidget
       ],
     });
   }
