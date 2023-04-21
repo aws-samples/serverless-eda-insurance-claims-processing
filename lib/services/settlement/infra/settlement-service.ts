@@ -2,24 +2,32 @@
 // SPDX-License-Identifier: MIT-0
 
 import {
-  aws_dynamodb as dynamodb,
-  aws_ec2 as ec2,
-  aws_ecr_assets as ecr_assets,
-  aws_ecs as ecs,
-  aws_ecs_patterns as ecs_patterns,
+  HttpApi,
+  HttpMethod,
+  HttpRoute,
+  HttpRouteKey,
+  VpcLink
+} from "@aws-cdk/aws-apigatewayv2-alpha";
+import { HttpAlbIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import { EventbridgeToSqs } from "@aws-solutions-constructs/aws-eventbridge-sqs";
+import {
   CfnOutput,
   Duration,
   RemovalPolicy,
   Stack,
+  aws_dynamodb as dynamodb,
+  aws_ec2 as ec2,
+  aws_ecr_assets as ecr_assets,
+  aws_ecs as ecs,
+  aws_ecs_patterns as ecs_patterns
 } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import { EventBus } from "aws-cdk-lib/aws-events";
-import { EventbridgeToSqs } from "@aws-solutions-constructs/aws-eventbridge-sqs";
-import { createGraphWidget, createMetric } from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
+import { EventBus } from "aws-cdk-lib/aws-events";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { FraudEvents } from "../../fraud/infra/fraud-events";
+import { Construct } from 'constructs';
 import * as path from "path";
+import { createGraphWidget, createMetric } from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
+import { FraudEvents } from "../../fraud/infra/fraud-events";
 
 export enum SettlementEvents {
   SOURCE = "settlement.service",
@@ -37,11 +45,11 @@ export class SettlementService extends Construct {
   constructor(scope: Construct, id: string, props: SettlementServiceProps) {
     super(scope, id);
 
-    const vpc = new ec2.Vpc(this, "settlement-vpc", {
+    const vpc = new ec2.Vpc(this, "vpc", {
       maxAzs: 3
     });
 
-    const cluster = new ecs.Cluster(this, "settlement-cluster", {
+    const cluster = new ecs.Cluster(this, "cluster", {
       vpc: vpc
     });
 
@@ -52,7 +60,7 @@ export class SettlementService extends Construct {
       removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
     });
 
-    const ebToSqsConstruct = new EventbridgeToSqs(this, 'sqs-construct', {
+    const ebToSqsConstruct = new EventbridgeToSqs(this, 'eb-to-sqs-target', {
       existingEventBusInterface: props.bus,
       eventRuleProps: {
         eventPattern: {
@@ -71,13 +79,13 @@ export class SettlementService extends Construct {
 
     const queue = ebToSqsConstruct.sqsQueue;
 
-    const asset = new ecr_assets.DockerImageAsset(this, "BuildImage", {
+    const asset = new ecr_assets.DockerImageAsset(this, "image", {
       directory: path.join(__dirname, "../app"),
     });
 
     const loadBalancedFargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
       this,
-      "settlement-service",
+      "alb-fargate-service",
       {
         cluster: cluster,
         taskImageOptions: {
@@ -96,7 +104,7 @@ export class SettlementService extends Construct {
         },
         memoryLimitMiB: 2048,
         cpu: 1024,
-        publicLoadBalancer: true,
+        publicLoadBalancer: false,
         desiredCount: 2,
         listenerPort: 8080
       });
@@ -116,8 +124,28 @@ export class SettlementService extends Construct {
       scaleOutCooldown: Duration.seconds(60)
     });
 
-    new CfnOutput(this, "EventBridge: ", { value: props.bus.eventBusName });
-    new CfnOutput(this, "SQS-Queue: ", { value: queue.queueName });
+    const listener = loadBalancedFargateService.loadBalancer.listeners[0];    
+    const httpApi = new HttpApi(this, "settlement-http-api", {});
+    const vpcLink = new VpcLink(this, "settlement-vpc-link", {
+      vpc,
+    });
+    
+    const integration = new HttpAlbIntegration(
+      "http-alb-integration",
+      listener,
+      {
+        method: HttpMethod.POST,
+        vpcLink,
+      }
+    );
+    
+    new HttpRoute(this, "http-route", {
+      httpApi,
+      routeKey: HttpRouteKey.with("/settlement", HttpMethod.POST),
+      integration,
+    });
+
+    new CfnOutput(this, "HttpApiEndpoint", { value: `${httpApi.url}settlement` });
 
     this.settlementMetricsWidget = createGraphWidget("Settlement Summary", [
       createMetric(
