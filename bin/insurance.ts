@@ -32,6 +32,10 @@ NagSuppressions.addStackSuppressions(mStack, [
     reason: "PITR not required for demo application.",
   },
   {
+    id: "AwsSolutions-APIG1",
+    reason: "Access log is skipped for Settlement HTTP API.",
+  },
+  {
     id: "AwsSolutions-APIG2",
     reason: "Implement this when focusing on security best practices.",
   },
