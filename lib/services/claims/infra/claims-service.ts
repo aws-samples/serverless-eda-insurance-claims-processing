@@ -35,6 +35,7 @@ import {
 import { FraudEvents } from "../../fraud/infra/fraud-events";
 import { ClaimsEvents } from "./claims-events";
 import { UpdateClaimsStepFunction } from "./step-functions/updateClaims";
+import { CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
 
 interface ClaimsServiceProps {
   bus: EventBus;
@@ -128,6 +129,7 @@ export class ClaimsService extends Construct {
     );
 
     addDefaultGatewayResponse(fnolApi);
+    addWebAcl(this, fnolApi.deploymentStage.stageArn, "MetricForFnolApiWebACL");
 
     const claimsLambdaRole = new Role(this, "ClaimsQueueConsumerFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
@@ -222,4 +224,39 @@ export class ClaimsService extends Construct {
       ),
     ]);
   }
+}
+
+function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
+  const xssWebAcl = new CfnWebACL(scope, "WebAcl", {
+    defaultAction: { allow: {} },
+    scope: "REGIONAL",
+    visibilityConfig: {
+      sampledRequestsEnabled: true,
+      cloudWatchMetricsEnabled: true,
+      metricName
+    },
+    rules: [
+      {
+        name: "AWS-AWSManagedRulesCommonRuleSet",
+        priority: 0,
+        overrideAction: { none: {} },
+        visibilityConfig: {
+          sampledRequestsEnabled: true,
+          cloudWatchMetricsEnabled: true,
+          metricName: `${metricName}-CRS`
+        },
+        statement: {
+          managedRuleGroupStatement: {
+            name: "AWSManagedRulesCommonRuleSet",
+            vendorName: "AWS",
+          },
+        },
+      },
+    ],
+  });
+
+  new CfnWebACLAssociation(scope, "WebACLAssociation", {
+    resourceArn: stageArn,
+    webAclArn: xssWebAcl.attrArn,
+  });
 }

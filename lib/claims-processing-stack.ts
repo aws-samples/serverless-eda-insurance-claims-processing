@@ -75,10 +75,8 @@ export class ClaimsProcessingStack extends Stack {
       customerTable,
       eventPattern: {
         detailType: [
-          CustomerEvents.CUSTOMER_SUBMITTED,
           CustomerEvents.CUSTOMER_ACCEPTED,
           CustomerEvents.CUSTOMER_REJECTED,
-          ClaimsEvents.CLAIM_REQUESTED,
           ClaimsEvents.CLAIM_ACCEPTED,
           ClaimsEvents.CLAIM_REJECTED,
           DocumentsEvents.DOCUMENT_PROCESSED,

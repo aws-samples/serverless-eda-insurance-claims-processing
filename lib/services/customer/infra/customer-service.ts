@@ -38,6 +38,7 @@ import { FraudEvents } from "../../fraud/infra/fraud-events";
 import { CustomerEvents } from "./customer-events";
 import { CreateCustomerStepFunction } from "./step-functions/createCustomer";
 import { UpdatePolicyStepFunction } from "./step-functions/updatePolicy";
+import { CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
 
 function addDefaultGatewayResponse(api: RestApi) {
   api.addGatewayResponse("default-4xx-response", {
@@ -244,7 +245,9 @@ export class CustomerService extends Construct {
       new LambdaIntegration(signupLambdaFunction),
       { authorizationType: AuthorizationType.IAM }
     );
+
     addDefaultGatewayResponse(signupApi);
+    addWebAcl(this, signupApi.deploymentStage.stageArn, "MetricForSignupApiWebACL");
 
     const customerApi = new RestApi(scope, "CustomerApi", {
       endpointConfiguration: {
@@ -323,4 +326,39 @@ export class CustomerService extends Construct {
       ),
     ]);
   }
+}
+
+function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
+  const xssWebAcl = new CfnWebACL(scope, "WebAcl", {
+    defaultAction: { allow: {} },
+    scope: "REGIONAL",
+    visibilityConfig: {
+      sampledRequestsEnabled: true,
+      cloudWatchMetricsEnabled: true,
+      metricName
+    },
+    rules: [
+      {
+        name: "AWS-AWSManagedRulesCommonRuleSet",
+        priority: 0,
+        overrideAction: { none: {} },
+        visibilityConfig: {
+          sampledRequestsEnabled: true,
+          cloudWatchMetricsEnabled: true,
+          metricName: `${metricName}-CRS`
+        },
+        statement: {
+          managedRuleGroupStatement: {
+            name: "AWSManagedRulesCommonRuleSet",
+            vendorName: "AWS",
+          },
+        },
+      },
+    ],
+  });
+
+  new CfnWebACLAssociation(scope, "WebACLAssociation", {
+    resourceArn: stageArn,
+    webAclArn: xssWebAcl.attrArn,
+  });
 }
