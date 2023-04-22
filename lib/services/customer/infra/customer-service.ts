@@ -247,7 +247,7 @@ export class CustomerService extends Construct {
     );
 
     addDefaultGatewayResponse(signupApi);
-    addWebAcl(this, signupApi.deploymentStage.stageArn, "MetricForSignupApiWebACL");
+    addWebAcl(this, signupApi.deploymentStage.stageArn, "SignupApiWebACL");
 
     const customerApi = new RestApi(scope, "CustomerApi", {
       endpointConfiguration: {
@@ -270,6 +270,7 @@ export class CustomerService extends Construct {
     );
 
     addDefaultGatewayResponse(customerApi);
+    addWebAcl(this, customerApi.deploymentStage.stageArn, "GetCustomerApiWebACL");
 
     new Rule(this, "CreateCustomerEventsRule", {
       eventBus: bus,
@@ -328,14 +329,14 @@ export class CustomerService extends Construct {
   }
 }
 
-function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
-  const xssWebAcl = new CfnWebACL(scope, "WebAcl", {
+function addWebAcl(scope: Construct, stageArn: string, webAcl: string) {
+  const xssWebAcl = new CfnWebACL(scope, webAcl, {
     defaultAction: { allow: {} },
     scope: "REGIONAL",
     visibilityConfig: {
       sampledRequestsEnabled: true,
       cloudWatchMetricsEnabled: true,
-      metricName
+      metricName: `MetricFor${webAcl}`
     },
     rules: [
       {
@@ -345,7 +346,7 @@ function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
         visibilityConfig: {
           sampledRequestsEnabled: true,
           cloudWatchMetricsEnabled: true,
-          metricName: `${metricName}-CRS`
+          metricName: `MetricFor${webAcl}-CRS`
         },
         statement: {
           managedRuleGroupStatement: {
@@ -357,7 +358,7 @@ function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
     ],
   });
 
-  new CfnWebACLAssociation(scope, "WebACLAssociation", {
+  new CfnWebACLAssociation(scope, `${webAcl}Association`, {
     resourceArn: stageArn,
     webAclArn: xssWebAcl.attrArn,
   });

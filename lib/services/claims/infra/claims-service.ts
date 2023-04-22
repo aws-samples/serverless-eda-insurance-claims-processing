@@ -129,7 +129,7 @@ export class ClaimsService extends Construct {
     );
 
     addDefaultGatewayResponse(fnolApi);
-    addWebAcl(this, fnolApi.deploymentStage.stageArn, "MetricForFnolApiWebACL");
+    addWebAcl(this, fnolApi.deploymentStage.stageArn, "FnolApiWebACL");
 
     const claimsLambdaRole = new Role(this, "ClaimsQueueConsumerFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
@@ -226,14 +226,14 @@ export class ClaimsService extends Construct {
   }
 }
 
-function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
-  const xssWebAcl = new CfnWebACL(scope, "WebAcl", {
+function addWebAcl(scope: Construct, stageArn: string, webAcl: string) {
+  const xssWebAcl = new CfnWebACL(scope, webAcl, {
     defaultAction: { allow: {} },
     scope: "REGIONAL",
     visibilityConfig: {
       sampledRequestsEnabled: true,
       cloudWatchMetricsEnabled: true,
-      metricName
+      metricName: `MetricFor${webAcl}`
     },
     rules: [
       {
@@ -243,7 +243,7 @@ function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
         visibilityConfig: {
           sampledRequestsEnabled: true,
           cloudWatchMetricsEnabled: true,
-          metricName: `${metricName}-CRS`
+          metricName: `MetricFor${webAcl}-CRS`
         },
         statement: {
           managedRuleGroupStatement: {
@@ -255,7 +255,7 @@ function addWebAcl(scope: Construct, stageArn: string, metricName: string) {
     ],
   });
 
-  new CfnWebACLAssociation(scope, "WebACLAssociation", {
+  new CfnWebACLAssociation(scope, `${webAcl}Association`, {
     resourceArn: stageArn,
     webAclArn: xssWebAcl.attrArn,
   });
