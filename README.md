@@ -32,6 +32,9 @@ This overall architecture consists of below domains. Visit each one of them for 
 
 ### Prerequisites
 
+> :fire: **NOTE**
+> Below setup will not work on M1 Macs. Use [AWS Cloud9](https://aws.amazon.com/cloud9/) instead.
+
 - Install [NodeJS](https://nodejs.org/en/download/)
 - [Set up AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
 - [Set up AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)

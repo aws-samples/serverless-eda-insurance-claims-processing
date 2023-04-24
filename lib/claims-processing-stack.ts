@@ -26,6 +26,7 @@ export class ClaimsProcessingStack extends Stack {
     super(scope, id, props);
 
     const stackName = Stack.of(this).stackName;
+    const region = Stack.of(this).region;
 
     const bus = new EventBus(this, "CustomBus", {
       eventBusName: `${stackName}-ClaimsProcessingBus`,
@@ -127,7 +128,7 @@ export class ClaimsProcessingStack extends Stack {
     });
 
     new ClaimsProcessingCWDashboard(this, "ClaimsProcessingCWDashboard", {
-      dashboardName: `${stackName}-Claims-Processing-Dashboard`,
+      dashboardName: `${stackName}-${region}-Claims-Processing-Dashboard`,
       graphWidgets: [
         customerService.customerMetricsWidget,
         claimsService.claimsMetricsWidget,
