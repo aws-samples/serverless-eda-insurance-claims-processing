@@ -4,18 +4,11 @@
 import React from "react";
 import {
   Flex,
-  Divider,
   TextField,
   CheckboxField,
   Button,
 } from "@aws-amplify/ui-react";
 import { API } from "aws-amplify";
-import UploadFile from "./UploadFile";
-
-import damaged_car_1 from "./Vehicles/damaged_car_1.jpeg";
-import damaged_car_2 from "./Vehicles/damaged_car_2.jpeg";
-
-import red_car from "./Vehicles/red_car.jpg";
 
 class TF extends React.Component {
   onChange;
@@ -92,7 +85,6 @@ class ClaimForm extends React.Component {
     };
 
     this.submitClaim = this.submitClaim.bind(this);
-    // this.componentDidMount = this.componentDidMount.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
   }
 
@@ -113,7 +105,7 @@ class ClaimForm extends React.Component {
     };
   }
 
-  submitClaim() {
+  async submitClaim() {
     const today = new Date();
     const body = {
       incident: {
@@ -163,7 +155,8 @@ class ClaimForm extends React.Component {
       headers: {}, // OPTIONAL
     };
 
-    API.post(apiName, path, myInit);
+    await API.post(apiName, path, myInit);
+    this.props.nextStep();
   }
 
   render() {
@@ -276,19 +269,6 @@ class ClaimForm extends React.Component {
         <Button variation="primary" onClick={this.submitClaim}>
           Submit Claim
         </Button>
-
-        <Divider size="large" orientation="horizontal" />
-
-        <UploadFile
-          s3URL={this.state.uploadCarDamageUrl}
-          images={[
-            { path: damaged_car_1 },
-            { path: damaged_car_2 },
-            { path: red_car },
-          ]}
-          title="Upload Vehicle Image"
-          display={this.state.uploadCarDamageUrl ? "" : "none"}
-        />
       </Flex>
     );
   }

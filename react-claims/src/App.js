@@ -3,11 +3,31 @@
 
 import SignupForm from "./Signup";
 import UpdateArea from "./Updates";
-import { Divider, Grid, Card } from "@aws-amplify/ui-react";
-import { withAuthenticator } from "@aws-amplify/ui-react";
+import UploadFile from "./UploadFile";
 import React from "react";
 import ClaimForm from "./Claim";
-import { API } from "aws-amplify";
+import { API, Auth } from "aws-amplify";
+import StepWizard from "react-step-wizard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faNewspaper, faCircleXmark, faCarBurst } from '@fortawesome/free-solid-svg-icons';
+import {
+  Divider,
+  Grid, 
+  Link,
+  Card,
+  Button,
+  Flex,
+  Heading,
+  withAuthenticator } from "@aws-amplify/ui-react";
+
+import dl_AZ from "./DL/dl_AZ.jpg";
+import dl_MA from "./DL/dl_MA.jpg";
+import dl_OH from "./DL/dl_OH.jpg";
+import damaged_car_1 from "./Vehicles/damaged_car_1.jpeg";
+import damaged_car_2 from "./Vehicles/damaged_car_2.jpeg";
+import red_car from "./Vehicles/red_car.jpg";
+import green_car from "./Vehicles/green_car.jpg";
 
 class App extends React.Component {
   constructor(props) {
@@ -17,6 +37,7 @@ class App extends React.Component {
   }
 
   async updateState(key, value) {
+    console.log(key, value)
     this.setState({ [key]: value });
     if (key === "completedReg" && value === true) {
       const customer = await this.getCustomer();
@@ -41,38 +62,90 @@ class App extends React.Component {
     });
   }
 
+  signOut() {
+    Auth.signOut();
+  }
+
   render() {
     return (
-      <div>
+      <>
+        
         <Grid
           columnGap="0.5rem"
           rowGap="0.5rem"
-          templateColumns="60% 0% 40%"
+          templateColumns="65% 0% 35%"
           templateRows="1fr"
         >
+          <Card columnStart="1" columnEnd="-1"  backgroundColor='hsl(130, 33%, 37%)'>
+            <Flex width="100%">
+              <Heading width='90%' level={3} color='hsl(130, 60%, 95%)'>
+                <Flex><FontAwesomeIcon icon={faCarBurst} size="lg"/>Insurance claim form</Flex>
+              </Heading>
+              <Button variation="secondary" onClick={this.signOut}>
+                <Flex><FontAwesomeIcon icon={faCircleXmark} size="lg"/> Sign Out </Flex> 
+              </Button>
+            </Flex>
+          </Card>
+
           <Card columnStart="1" columnEnd="2" key={this.state.key}>
-            <SignupForm
-              updateState={this.updateState}
-              driversLicenseImageUrl={this.state.driversLicenseImageUrl}
-              getCustomer={this.getCustomer}
-              completedReg={this.state.completedReg}
-              carImageUrl={this.state.carImageUrl}
-            />
-            <ClaimForm
-              display={this.state.displayClaimForm ? "" : "none"}
-              customer={this.state.customer}
-              uploadCarDamageUrl={this.state.uploadCarDamageUrl}
-            />
+            <StepWizard>
+
+              <SignupForm
+                updateState={this.updateState}
+                getCustomer={this.getCustomer}
+                completedReg={this.state.completedReg}
+              />
+
+              <UploadFile
+                s3URL={this.state.driversLicenseImageUrl}
+                images={[{ path: dl_AZ }, { path: dl_MA }, { path: dl_OH }]}
+                title="Upload Drivers License"
+              />
+
+              <UploadFile
+                s3URL={this.state.carImageUrl}
+                images={[{ path: red_car }, { path: green_car }]}
+                title="Upload Vehicle Image"
+              />  
+
+              <ClaimForm
+                customer={this.state.customer}
+              />
+
+              <UploadFile
+                s3URL={this.state.uploadCarDamageUrl}
+                images={[
+                  { path: damaged_car_1 },
+                  { path: damaged_car_2 },
+                  { path: red_car },
+                ]}
+                title="Upload Vehicle Image"
+              />
+
+              <h1>Claim Submitted!</h1>
+
+            </StepWizard>
+          
           </Card>
 
-          <Divider orientation="vertical" />
 
-          <Card columnStart="3" columnEnd="-1">
-            <UpdateArea updateState={this.updateState} />
+          <Card columnStart="3" columnEnd="-1" variation="outlined" marginRight='15px'>
+            <UpdateArea updateState={this.updateState}/>
           </Card>
           <Divider orientation="vertical" />
+
+          <Card columnStart="1" columnEnd="-1" backgroundColor='hsl(130, 33%, 37%)'>
+            <Flex direction="column" alignItems="flex-start">
+              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing/">
+                <Flex><FontAwesomeIcon icon={faGithub} size="lg"/> Github repository </Flex>
+              </Link>
+              <Link color='hsl(130, 60%, 95%)' href="https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-1/">
+                <Flex><FontAwesomeIcon icon={faNewspaper} size="lg"/> Blog series </Flex>
+              </Link>
+            </Flex>
+          </Card>
         </Grid>
-      </div>
+        </>
     );
   }
 }

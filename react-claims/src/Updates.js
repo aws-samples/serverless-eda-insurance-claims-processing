@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import React from "react";
-import { Button, Flex } from "@aws-amplify/ui-react";
+import { Button, Flex, ScrollView } from "@aws-amplify/ui-react";
 import { PubSub, Auth, API, Amplify } from "aws-amplify";
 import { AWSIoTProvider } from "@aws-amplify/pubsub";
 import awsmobile from "./aws-exports";
@@ -39,6 +39,9 @@ class UpdateArea extends React.Component {
     });
 
     const respData = data.value.detail;
+    console.log("----")
+    console.dir(respData)
+    console.log("----")
     if (data.value["detail-type"] === "Customer.Accepted") {
       if (respData.driversLicenseImageUrl) {
         this.updateParent(
@@ -73,10 +76,12 @@ class UpdateArea extends React.Component {
           alignItems="flex-start"
           alignContent="flex-start"
           gap="1rem"
-          style={{ overflowWrap: "anywhere" }}
-        >
+          >
+
           <Button onClick={this.resetMessages}>Clear</Button>
-          <Notifications messages={this.state.messages}></Notifications>
+          <ScrollView width="90%" height="400px" maxWidth="580px">
+            <Notifications messages={this.state.messages}></Notifications>
+          </ScrollView>
         </Flex>
       </div>
     );

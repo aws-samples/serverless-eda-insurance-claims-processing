@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: MIT-0
 
 import React from "react";
-import { Divider, Flex, Button, Text, Image } from "@aws-amplify/ui-react";
+import { Flex, Button, Text, Image } from "@aws-amplify/ui-react";
 import * as axios from "axios";
 
 class UploadFile extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       message: "Updates will go here.",
       readyToUpload: true,
@@ -20,7 +21,7 @@ class UploadFile extends React.Component {
     this.uploadToS3 = this.uploadToS3.bind(this);
     this.selectImage = this.selectImage.bind(this);
   }
-
+ 
   static getDerivedStateFromProps(props, state) {
     return {
       s3url: props.s3URL,
@@ -47,23 +48,43 @@ class UploadFile extends React.Component {
     });
   }
 
-  uploadToS3() {
+  async uploadToS3() {
     if (this.state.selectedImgIndx !== undefined) {
       const image = this.state.images[this.state.selectedImgIndx];
-      fetch(image.path)
-        .then((res) => res.blob())
-        .then((blob) => {
-          axios
-            .put(this.state.s3url, blob)
-            .then((res) => {
-              this.setState({
-                readyToUpload: false,
-                selectedFile: undefined,
-                statusMessage: "File uploaded successfully.",
-              });
-            })
-            .catch((err) => console.error(err));
+      console.log("s3 bucket", this.state.s3url)
+      try{
+        const imgRes = await fetch(image.path);
+        const imgBlog = await imgRes.blob();
+
+        const uploadImg = await axios.put(this.state.s3url, imgBlog);
+
+        this.setState({
+          readyToUpload: false,
+          selectedFile: undefined,
+          statusMessage: "File uploaded successfully.",
         });
+
+        this.props.nextStep();
+        
+      } catch(err) {
+        console.error(err);
+      }
+      
+      // fetch(image.path)
+      //   .then((res) => res.blob())
+      //   .then((blob) => {
+      //     axios
+      //       .put(this.state.s3url, blob)
+      //       .then((res) => {
+      //         this.setState({
+      //           readyToUpload: false,
+      //           selectedFile: undefined,
+      //           statusMessage: "File uploaded successfully.",
+      //         });
+      //         this.props.nextStep();
+      //       })
+      //       .catch((err) => console.error(err));
+      //   });
     }
   }
 
@@ -95,8 +116,6 @@ class UploadFile extends React.Component {
             Upload
           </Button>
           <Text>{this.state.statusMessage}</Text>
-
-          <Divider size="large" orientation="horizontal" />
         </Flex>
       </div>
     );
