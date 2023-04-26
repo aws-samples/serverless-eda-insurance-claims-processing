@@ -154,8 +154,11 @@ run `amplify init`
 Provide inputs as below when prompted - 
 
 > Enter a name for the environment **dev**
+
 > Choose your default editor: Visual Studio Code  
+
 > Select the authentication method you want to use: **AWS profile**  
+
 > Please choose the profile you want to use: **default**
 
 You should see output similar to this - 
@@ -204,11 +207,11 @@ Deployed hosting amplifyhosting [ ======================================== ] 1/1
 Deployment state saved successfully.
 ```
 
-After this, export the amplify backend stack to the CDK stack maintained in parent directory. 
+After this, export the amplify backend stack to the CDK stack maintained in parent directory. Run following command - 
 
 `amplify export --out ../lib`
 
-You should see a new directory `amplify-export-reactclaims` in <project-root>/lib directory. 
+You should see a new directory `amplify-export-reactclaims` in {project-root}/lib directory. 
 
 Next, follow instructions based on whether you are using CodeCatalyst or local deployment.
 
@@ -224,7 +227,7 @@ Next, follow instructions based on whether you are using CodeCatalyst or local d
 
 * Next, deploy the CDK stack :
 
-  `npx deploy`
+  `npm run deploy`
 
 Wait until the stack is deployed.
 
