@@ -109,7 +109,8 @@ Once you have updated the `config.ts` file with fake API endpoints, you can save
 
 You can deploy the application manually or using Amazon CodeCatalyst. Please review corresponding instructions below.
 
-!!! - If you plan to use Amazon CodeCatalyst, create a private GitHub repository with the base code before you proceed. This is because you will need to check in some files that contain your account information like AWS account id, IAM role ARN etc, and you do not want them to be public.
+> :warning: If you plan to use Amazon CodeCatalyst, create a private GitHub repository with the base code before you proceed. This is because you will need to check in some files that contain your account information like AWS account id, IAM role ARN etc, and you do not want them to be public.
+
 
 #### Create Private Repository (skip if not using CodeCatalyst)
 
@@ -170,7 +171,7 @@ Deployment state saved successfully.
 
 Your project has been successfully initialized and connected to the cloud!
 ```
-!!! - Make a note of amplify app id. You will need this in later steps if you are using AWS CodeCatalyst.
+> :stop_sign:  Make a note of amplify app id. You will need this in later steps if you are using AWS CodeCatalyst.
 
 Next, run `amplify push` to create amplify backend resources in your AWS account.
 
@@ -245,7 +246,7 @@ To publish front end changes in the future, call `npm run amplify publish` from 
 
 #### Check in amplify export and configuration files
 
-!!! - Again, its critical that you do these steps on a private repository. Some of the files that we would check in now, should never be public. 
+**:warning:  _Again, its critical that you do these steps on a private repository. Some of the files that we would check in now, should never be public._**
 
 First step is to commit and push all updated and new files to your private repository. The main files that we need to commit are under <root>/lib/ampify-export-reactclaims. 
 
