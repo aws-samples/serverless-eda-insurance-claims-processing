@@ -16,19 +16,21 @@ import {
 import { Construct } from "constructs";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import {
+  CallAwsService,
+  DynamoAttributeValue,
+  DynamoDeleteItem,
+  DynamoDeleteItemProps,
   DynamoPutItem,
   DynamoPutItemProps,
-  DynamoAttributeValue,
-  DynamoDeleteItemProps,
-  DynamoDeleteItem,
-  LambdaInvoke,
-  CallAwsService,
   EventBridgePutEvents,
+  LambdaInvoke,
 } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import * as logs from "aws-cdk-lib/aws-logs";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { EventBus } from "aws-cdk-lib/aws-events";
 import { Bucket } from "aws-cdk-lib/aws-s3";
+import { RemovalPolicy } from "aws-cdk-lib";
 
 export interface CreateCustomerStepFunctionProps {
   requestTable: Table;
@@ -47,7 +49,11 @@ export class CreateCustomerStepFunction extends StateMachine {
     id: string,
     props: CreateCustomerStepFunctionProps
   ) {
-    const logGroup = new logs.LogGroup(scope, "CreateCustomerSFLogGroup");
+    const logGroup = new logs.LogGroup(scope, "CreateCustomerSFLogGroup", {
+      logGroupName: "/aws/vendedlogs/states/CreateCustomerSFN",
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.FIVE_DAYS
+    });
 
     const parseDataState = createParseDataState(scope);
     const saveReqInDBStep = createSaveReqInDBStep(props, scope);
@@ -111,7 +117,7 @@ function createPutCustomerAcceptedEventStep(
   deleteItemStep: DynamoDeleteItem,
   errorHandler: Pass
 ): Choice {
-  const processSuccessChoice = new Choice(scope, "Processing Successful?")
+  return new Choice(scope, "Processing Successful?")
     .when(
       Condition.and(
         Condition.isPresent("$.presignedURLs.dlURL"),
@@ -136,8 +142,6 @@ function createPutCustomerAcceptedEventStep(
       }).next(deleteItemStep)
     )
     .otherwise(errorHandler);
-
-  return processSuccessChoice;
 }
 
 function createGeneratePresignedURLStep(
@@ -304,7 +308,7 @@ function createAcceptCustomerChoice(
 
   putRejectEventStep.next(deleteItemStep);
 
-  const acceptCustomerChoice = new Choice(scope, "Accept Customer?")
+  return new Choice(scope, "Accept Customer?")
     .when(
       Condition.and(
         Condition.booleanEquals("$.validationResults.validAddress", true),
@@ -313,7 +317,6 @@ function createAcceptCustomerChoice(
       saveDataStep
     )
     .otherwise(putRejectEventStep);
-  return acceptCustomerChoice;
 }
 
 function createValidationStep(
@@ -383,12 +386,12 @@ function createDeleteItemStep(
       SK: DynamoAttributeValue.fromString(JsonPath.stringAt("$.SK")),
     },
   };
-  const deleteItemStep = new DynamoDeleteItem(
+
+  return new DynamoDeleteItem(
     scope,
     "DeleteItemStep",
     deleteItemProps
   );
-  return deleteItemStep;
 }
 
 function createSaveReqInDBStep(
@@ -410,12 +413,11 @@ function createSaveReqInDBStep(
     },
   };
 
-  const putItemStep = new DynamoPutItem(
+  return new DynamoPutItem(
     scope,
     "Save Request in DB",
     putItemProps
   );
-  return putItemStep;
 }
 
 function createParseDataState(scope: Construct): Pass {

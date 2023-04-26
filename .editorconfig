@@ -1,0 +1,37 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = false
+max_line_length = 120
+tab_width = 4
+
+[*.java]
+indent_size = 2
+tab_width = 2
+
+[{*.ts,*.js}]
+indent_size = 2
+tab_width = 2
+ij_typescript_spaces_within_imports = true
+ij_javascript_spaces_within_imports = true
+ij_typescript_spaces_within_object_literal_braces = true
+ij_javascript_spaces_within_object_literal_braces = true
+
+[{*.ant,*.fxml,*.jhm,*.jnlp,*.jrxml,*.pom,*.rng,*.tld,*.wadl,*.wsdl,*.xml,*.xsd,*.xsl,*.xslt,*.xul}]
+indent_size = 2
+tab_width = 2
+
+[{*.bash,*.sh,*.zsh}]
+indent_size = 2
+tab_width = 2
+
+[{*.har,*.jsb2,*.jsb3,*.json,.babelrc,.eslintrc,.prettierrc,.stylelintrc,bowerrc,jest.config}]
+indent_size = 2
+
+[Makefile]
+indent_size = 2
+tab_width = 2
