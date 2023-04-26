@@ -51,7 +51,7 @@ class UploadFile extends React.Component {
   async uploadToS3() {
     if (this.state.selectedImgIndx !== undefined) {
       const image = this.state.images[this.state.selectedImgIndx];
-      console.log("s3 bucket", this.state.s3url)
+
       try{
         const imgRes = await fetch(image.path);
         const imgBlog = await imgRes.blob();
@@ -69,22 +69,7 @@ class UploadFile extends React.Component {
       } catch(err) {
         console.error(err);
       }
-      
-      // fetch(image.path)
-      //   .then((res) => res.blob())
-      //   .then((blob) => {
-      //     axios
-      //       .put(this.state.s3url, blob)
-      //       .then((res) => {
-      //         this.setState({
-      //           readyToUpload: false,
-      //           selectedFile: undefined,
-      //           statusMessage: "File uploaded successfully.",
-      //         });
-      //         this.props.nextStep();
-      //       })
-      //       .catch((err) => console.error(err));
-      //   });
+  
     }
   }
 
