@@ -253,7 +253,9 @@ First step is to commit and push all updated and new files to your private repos
 In terminal, navigate to root directory and issue following commands - 
 
 `git add .`
+
 `git commit -m "amplify export files"`
+
 `git push`
 
 The React app needs `aws-exports.js` and process to publish the app requires t`eam-provider-info.json` file to be present. So first step would be to check in these files in your private repository.
@@ -262,9 +264,12 @@ The React app needs `aws-exports.js` and process to publish the app requires t`e
 - Remove `aws-exports.js` and `react-claims/amplify/team-provider-info.json` lines from .gitignore, save, and close the file.
 - `aws-exports.js` and `react-claims/amplify/team-provider-info.json` should now show as updated files. 
 - Commit and push these files to your code repoistory. 
-  `git add .`
-  `git commit -m "configuration files"`
-  `git push`
+
+    `git add .`
+
+    `git commit -m "configuration files"`
+  
+    `git push`
 
 #### Set up CodeCatalyst
 
@@ -293,8 +298,11 @@ Update `Workflow_c1dd.yaml` with details relevant to your account and applicatio
 Commit this file 
 
   `git add .`
+  
   `git commit -m "CodeCatalyst Workflow file"`
+  
   `git push`
+  
 #### Review pipeline in CodeCatalyst
 
 After you push Workflow_c1dd.yaml, a pipeline should kick off in CodeCatalyst and deploy the application. Review the `run` to make sure everything deployed as expected.
