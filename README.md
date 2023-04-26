@@ -105,64 +105,198 @@ const config = {
 
 Once you have updated the `config.ts` file with fake API endpoints, you can save the file and then continue with deploying the backend.
 
-### Deploy CDK stack (Backend)
+### Deployment Options
 
-> :warning: Make sure docker engine is running.
+You can deploy the application manually or using Amazon CodeCatalyst. Please review corresponding instructions below.
 
-* Clone the repository
-* From project root, run following commands
+!!! - If you plan to use Amazon CodeCatalyst, create a private GitHub repository with the base code before you proceed. This is because you will need to check in some files that contain your account information like AWS account id, IAM role ARN etc, and you do not want them to be public.
 
-  `npm install`
+#### Create Private Repository (skip if not using CodeCatalyst)
 
+- Go to github.com, and click on your profile icon.
+- Click on `Your repositories`
+- Click on `New`
+- On next page, specify repository owner and name. 
+- Set visibility to `Private`.
+- DO NOT check the checkbox to add README file (default)
+- Leave other settings as default and click on `Create Repository`
 
-* Followed by:
+#### Initialize Private Repository (skip if not using CodeCatalyst)
 
-  `npm run deploy`
+- On the landing page of your new, blank repository, click on third option to intialize - `Import Code`
+- On the next page, for `Your old repository’s clone URL`, enter `https://github.com/aws-samples/serverless-eda-insurance-claims-processing` 
+- Click on `Begin Import`
+- Your new repository should be initialized shortly. 
+- For following steps use this repository. 
 
-Wait until the stack is deployed.
+### Setup Amplify App
 
-### Deploy Amplify App (Frontend)
+In your local or Cloud9 environment, clone the repository. 
 
-In order to deploy the frontend:
+Open a terminal at project root directory and change directory to `react-claims`
 
 `cd react-claims`
 
-then run following commands:
+Install dependencies
 
-```bash
-npm install
-npm run amplify init
-```
+run `npm install`
 
-Provide following values when prompted -
+Initialize Amplify project
+ 
+run `amplify init`
 
-> Enter a name for the environment <environment name, like dev, sandbox> **claimsdev**  
+Provide inputs as below when prompted - 
+
+> Enter a name for the environment **dev**
 > Choose your default editor: Visual Studio Code  
 > Select the authentication method you want to use: **AWS profile**  
 > Please choose the profile you want to use: **default**
 
-Next run this command:
+You should see output similar to this - 
 
-```bash
-npm run amplify push
+```
+Adding backend environment dev to AWS Amplify app: <your-app-id>
+
+Deployment completed.
+Deploying root stack reactclaims [ ====================-------------------- ] 2/4
+        amplify-reactclaims-dev-121743 AWS::CloudFormation::Stack     CREATE_IN_PROGRESS             Wed Apr 26 2023 12:17:46…     
+        AuthRole                       AWS::IAM::Role                 CREATE_COMPLETE                Wed Apr 26 2023 12:18:01…     
+        DeploymentBucket               AWS::S3::Bucket                CREATE_IN_PROGRESS             Wed Apr 26 2023 12:17:48…     
+        UnauthRole                     AWS::IAM::Role                 CREATE_COMPLETE                Wed Apr 26 2023 12:18:02…     
+
+Deployment state saved successfully.
+✔ Initialized provider successfully.
+✅ Initialized your environment successfully.
+
+Your project has been successfully initialized and connected to the cloud!
+```
+!!! - Make a note of amplify app id. You will need this in later steps if you are using AWS CodeCatalyst.
+
+Next, run `amplify push` to create amplify backend resources in your AWS account.
+
+You should see an output similar to following - 
+
+```
+Deploying root stack reactclaims [ ========================---------------- ] 3/5
+        amplify-reactclaims-dev-121743 AWS::CloudFormation::Stack     UPDATE_IN_PROGRESS             Wed Apr 26 2023 12:22:04…     
+        ....
+        ....
+        ....
+        customunAuthRolePolicy         AWS::CloudFormation::Stack     CREATE_COMPLETE                Wed Apr 26 2023 12:22:30…     
+Deployed auth reactclaims6a6543fe [ ======================================== ] 11/11
+        SNSRole                        AWS::IAM::Role                 CREATE_COMPLETE                Wed Apr 26 2023 12:22:27…     
+        UserPool                       AWS::Cognito::UserPool         
+        ....
+        ....
+        ....
+        IdentityPoolRoleMap            AWS::Cognito::IdentityPoolRol… CREATE_COMPLETE                Wed Apr 26 2023 12:23:45…     
+Deployed custom unAuthRolePolicy [ ======================================== ] 1/1
+        authRolePolicy                 AWS::IAM::ManagedPolicy        CREATE_COMPLETE                Wed Apr 26 2023 12:22:26…     
+Deployed hosting amplifyhosting [ ======================================== ] 1/1
+        AmplifyBranch                  AWS::Amplify::Branch           CREATE_COMPLETE                Wed Apr 26 2023 12:22:13…     
+
+Deployment state saved successfully.
 ```
 
-> Are you sure you want to continue? **Yes**
+After this, export the amplify backend stack to the CDK stack maintained in parent directory. 
 
-After `amplify push` is complete, in the output, there should be a URL for the hosted frontend.
+`amplify export --out ../lib`
 
-If you need to retrieve this URL in the future, run `amplify status` and the output of that command would have `Amplify hosting urls:` section with the URL to the frontend.
-The url will be of this format:
-`https://<env_name>.<autogenerated_amplify_app_id>.amplifyapp.com`
+You should see a new directory `amplify-export-reactclaims` in <project-root>/lib directory. 
+
+Next, follow instructions based on whether you are using CodeCatalyst or local deployment.
+
+### Local deploy
+#### Deploy CDK stack (Backend)
+
+> :warning: Make sure docker engine is running.
+
+* In the terminal, navigate to project root, and install dependencies. 
+
+  `npm install`
+
+
+* Next, deploy the CDK stack :
+
+  `npx deploy`
+
+Wait until the stack is deployed.
+
+#### Deploy Amplify App (Frontend)
+
+In order to deploy the frontend, move to `react-claims` directory in terminal.
+
+`cd react-claims`
+
+Run `amplify publish` to deploy front end application.  After this command completes, use the url it returns to access the application.
 
 > Note: It might take a few minutes for the published app to work.
 
-Run `npm run amplify publish` to deploy front end application. After this command completes, use the url it returns to access the application.
+If you need to retrieve this URL in the future, run `amplify status` and the output of that command would have `Amplify hosting urls:` section with the URL to the frontend.
+
+The url will be of this format:
+`https://<env_name>.<autogenerated_amplify_app_id>.amplifyapp.com`
 
 To work on the frontend locally, run `npm run start` from <root>/react-claims directory. This will host the frontend app locally at http://localhost:3000/
 
 To publish front end changes in the future, call `npm run amplify publish` from <root>/react-claims directory.
 
+### Deploy using Amazon CodeCatalyst
+
+#### Check in amplify export and configuration files
+
+!!! - Again, its critical that you do these steps on a private repository. Some of the files that we would check in now, should never be public. 
+
+First step is to commit and push all updated and new files to your private repository. The main files that we need to commit are under <root>/lib/ampify-export-reactclaims. 
+
+In terminal, navigate to root directory and issue following commands - 
+
+`git add .`
+`git commit -m "amplify export files"`
+`git push`
+
+The React app needs `aws-exports.js` and process to publish the app requires t`eam-provider-info.json` file to be present. So first step would be to check in these files in your private repository.
+
+- Open .gitignore in your project root.
+- Remove `aws-exports.js` and `react-claims/amplify/team-provider-info.json` lines from .gitignore, save, and close the file.
+- `aws-exports.js` and `react-claims/amplify/team-provider-info.json` should now show as updated files. 
+- Commit and push these files to your code repoistory. 
+  `git add .`
+  `git commit -m "configuration files"`
+  `git push`
+
+#### Set up CodeCatalyst
+
+- Create an account in code catalyst
+- Create a new Space
+- Create a new project
+- Bring your own code
+- Install GitHub repositories
+- Connect GitHub account
+- Select your private repository.
+- Create environment
+- Go to settings, AWS Account, IAM Roles, Manage roles from AWS Management Console
+- Click on create role, after role is created, give `AdministratorAccess-Amplify` to that role.  
+- Close AWS tabs and return to code catalyst
+
+#### Update and commit Workflow_c1dd.yaml file
+
+Update `Workflow_c1dd.yaml` with details relevant to your account and application.
+
+- Open `.codecatalyst/workflows/Workflow_c1dd.yaml`
+- Replace <AWS_REGION> with your AWS Account Id
+- Replace <CODE_CATALYST_ROLE_ARN> with the ARN of IAM role you created for Amazon CodeCatalyst.
+- Replace <CODE_CATALYST_SPACE_ID> with CodeCatalyst space id. 
+- Replace <AMPLIFY_APP_ID> with amplify app id
+
+Commit this file 
+
+  `git add .`
+  `git commit -m "CodeCatalyst Workflow file"`
+  `git push`
+#### Review pipeline in CodeCatalyst
+
+After you push Workflow_c1dd.yaml, a pipeline should kick off in CodeCatalyst and deploy the application. Review the `run` to make sure everything deployed as expected.
 ## How to use the application
 
 Now that you have the backend and frontend deployed, let's walk through on how to use the sample application:
