@@ -291,7 +291,7 @@ The React app needs `aws-exports.js` and process to publish the app requires t`e
 - Create environment
 - Go to settings, AWS Account, IAM Roles, Manage roles from AWS Management Console
 - Click on create role, after role is created, give `AdministratorAccess-Amplify` to that role.  
-- Close AWS tabs and return to code catalyst
+- Close AWS tabs and return to code catalyst. Make a note of this role name, as you'll need this in the next step. 
 
 #### Update and commit Workflow_c1dd.yaml file
 
@@ -314,7 +314,21 @@ Commit this file
   
 #### Review pipeline in CodeCatalyst
 
-After you push Workflow_c1dd.yaml, a pipeline should kick off in CodeCatalyst and deploy the application. Review the `run` to make sure everything deployed as expected.
+After you push Workflow_c1dd.yaml, a pipeline should kick off in CodeCatalyst and deploy the application. Review the `run` to make sure everything deployed as expected - 
+ 
+- Go to CodeCatalyst
+- In the top navigation, select the space and project that you created.
+- In the left navigation, expand `CI/CD`
+- Click on `Workflows`
+- On th main page, select the branch that you checked in updated Workflow_c1dd.yaml into.
+- Click on `View All Runs`
+- Click on latest run id. It might still be in progress.
+
+The pipeline performs following tasks - 
+
+- Bootstraps the AWS account
+- Builds and deploys CDK stack, and builds frontend application under react-claims
+- Deploys frontend application
 ## How to use the application
 
 Now that you have the backend and frontend deployed, let's walk through on how to use the sample application:
