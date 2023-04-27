@@ -302,6 +302,7 @@ Update `Workflow_c1dd.yaml` with details relevant to your account and applicatio
 - Replace <CODE_CATALYST_ROLE_NAME> with the IAM role name for the IAM role you created for Amazon CodeCatalyst. Note that this is NOT the ARN. Its the role name in code catalyst.
 - Replace <CODE_CATALYST_ENV_ID> with CodeCatalyst environment id. 
 - Replace <AMPLIFY_APP_ID> with amplify app id
+- Replace <BRANCH_NAME> with your branch name. If you are working on `main` branch, delete this line entirely - `- <BRANCH_NAME>`
 
 Commit this file 
 
