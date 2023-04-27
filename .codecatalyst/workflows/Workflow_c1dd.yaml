@@ -1,0 +1,74 @@
+Name: Workflow_c1dd
+SchemaVersion: "1.0"
+
+# Optional - Set automatic triggers.
+Triggers:
+  - Type: Push
+    Branches:
+      - main
+      - <BRANCH_NAME>
+
+# Required - Define action configurations.
+Actions:
+  Build_8d:
+    Identifier: aws/build@v1.0.0
+    Inputs:
+      Sources:
+        - WorkflowSource
+    Outputs:
+      AutoDiscoverReports:
+        Enabled: false
+      Artifacts:
+        - Name: cdk_output
+          Files:
+            - "**/*"
+    Configuration:
+      Steps:
+        - Run: export AWS_REGION=<AWS_REGION>
+        - Run: npm install
+        - Run: npm install -g aws-cdk
+        - Run: npm run deploy
+        - Run: cd react-claims
+        - Run: npm install
+        - Run: npm run build
+        - Run: ls -lrt
+    Compute:
+      Type: EC2
+    Environment:
+      Connections:
+        - Role: <CODE_CATALYST_ROLE_NAME> # Update this value
+          Name: "<AWS_ACCOUNT_ID>" # Update this value
+      Name: <CODE_CATALYST_ENV_ID> # Update this value
+    DependsOn:
+      - AWSCDKbootstrap_d5 
+  DeploytoAWSAmplifyHosting_6d:
+    Identifier: codecatalyst-labs/deploy-to-amplify-hosting@v1.0.1
+    Environment:
+      Connections:
+        - Role: <CODE_CATALYST_ROLE_NAME> # Update this value
+          Name: "<AWS_ACCOUNT_ID>" # Update this value
+      Name: <CODE_CATALYST_ENV_ID> # Update this value
+    Inputs:
+      Artifacts:
+        - cdk_output
+    Compute:
+      Type: EC2
+    Configuration:
+      Wait: true
+      AWSRegion: <AWS_REGION> # Update this value
+      AppId: <AMPLIFY_APP_ID> # Update this value
+      CreateBranch: true
+      AmplifyBranchName: dev
+      Path: react-claims/build
+  AWSCDKbootstrap_d5:
+    Identifier: aws/cdk-bootstrap@v1.0.3
+    Configuration:
+      Region: <AWS_REGION> # Update this value
+    Environment:
+      Connections:
+        - Role: <CODE_CATALYST_ROLE_NAME> # Update this value
+          Name: "<AWS_ACCOUNT_ID>" # Update this value
+      Name: <CODE_CATALYST_ENV_ID> # Update this value
+    Inputs:
+      Sources:
+        - WorkflowSource
