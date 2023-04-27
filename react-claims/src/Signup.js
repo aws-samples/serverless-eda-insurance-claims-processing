@@ -61,8 +61,6 @@ class SignupForm extends React.Component {
 
   async reset() {
     this.updateParent("key", new Date().getTime());
-    this.updateParent("displayClaimForm", false);
-    this.updateParent("completedReg", false);
   }
 
   getValue(customer, field, defVal) {
@@ -172,7 +170,6 @@ class SignupForm extends React.Component {
     };
 
     await API.post(apiName, path, myInit);
-    this.props.nextStep();
   }
 
   async showClaimsForm() {

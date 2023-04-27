@@ -34,6 +34,12 @@ class App extends React.Component {
     super(props);
     this.state = { uploadDL: false, displayClaimForm: false, key: 1 };
     this.updateState = this.updateState.bind(this);
+
+    this.wizard = null;
+
+    this.setWizardRef = (element) => {
+       this.wizard = element;
+    }
   }
 
   async updateState(key, value) {
@@ -43,6 +49,7 @@ class App extends React.Component {
       const customer = await this.getCustomer();
       this.setState({ customer: customer });
     }
+    if(value === true) this.wizard.nextStep()
   }
 
   getCustomer() {
@@ -69,7 +76,6 @@ class App extends React.Component {
   render() {
     return (
       <>
-        
         <Grid
           columnGap="0.5rem"
           rowGap="0.5rem"
@@ -88,7 +94,8 @@ class App extends React.Component {
           </Card>
 
           <Card columnStart="1" columnEnd="2" key={this.state.key}>
-            <StepWizard>
+            <StepWizard
+              ref={this.setWizardRef}>
 
               <SignupForm
                 updateState={this.updateState}
@@ -97,6 +104,7 @@ class App extends React.Component {
               />
 
               <UploadFile
+                updateState={this.updateState}
                 s3URL={this.state.driversLicenseImageUrl}
                 images={[{ path: dl_AZ }, { path: dl_MA }, { path: dl_OH }]}
                 title="Upload Drivers License"
@@ -113,6 +121,7 @@ class App extends React.Component {
               />
 
               <UploadFile
+                updateState={this.updateState}
                 s3URL={this.state.uploadCarDamageUrl}
                 images={[
                   { path: damaged_car_1 },

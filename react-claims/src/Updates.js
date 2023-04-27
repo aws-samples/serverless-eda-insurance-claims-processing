@@ -39,9 +39,7 @@ class UpdateArea extends React.Component {
     });
 
     const respData = data.value.detail;
-    console.log("----")
-    console.dir(respData)
-    console.log("----")
+    console.log("detail type", data.value["detail-type"])
     if (data.value["detail-type"] === "Customer.Accepted") {
       if (respData.driversLicenseImageUrl) {
         this.updateParent(
@@ -52,9 +50,11 @@ class UpdateArea extends React.Component {
       }
       if (respData.carImageUrl) {
         this.updateParent("carImageUrl", respData.carImageUrl);
+        this.updateParent("carImageUrlReceived", true);
       }
     } else if (respData.uploadCarDamageUrl) {
       this.updateParent("uploadCarDamageUrl", respData.uploadCarDamageUrl);
+      this.updateParent("uploadCarDamageUrlReceived", true);
     } else if (
       respData.documentType === "DRIVERS_LICENSE" &&
       !respData.fraudType

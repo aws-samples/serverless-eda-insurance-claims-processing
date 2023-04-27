@@ -6,6 +6,7 @@ import { Flex, Button, Text, Image } from "@aws-amplify/ui-react";
 import * as axios from "axios";
 
 class UploadFile extends React.Component {
+
   constructor(props) {
     super(props);
 
@@ -20,7 +21,9 @@ class UploadFile extends React.Component {
 
     this.uploadToS3 = this.uploadToS3.bind(this);
     this.selectImage = this.selectImage.bind(this);
+    this.updateParent = props.updateState;
   }
+
  
   static getDerivedStateFromProps(props, state) {
     return {
@@ -57,15 +60,17 @@ class UploadFile extends React.Component {
         const imgBlog = await imgRes.blob();
 
         const uploadImg = await axios.put(this.state.s3url, imgBlog);
-
-        this.setState({
-          readyToUpload: false,
-          selectedFile: undefined,
-          statusMessage: "File uploaded successfully.",
-        });
-
-        this.props.nextStep();
-        
+        console.log(uploadImg)
+        if(uploadImg.statusText === "OK"){
+          this.setState({
+            readyToUpload: false,
+            selectedFile: undefined,
+            statusMessage: "File uploaded successfully.",
+            
+          });
+          if(this.updateParent)
+            this.updateParent("imgUploaded", true)
+        }
       } catch(err) {
         console.error(err);
       }

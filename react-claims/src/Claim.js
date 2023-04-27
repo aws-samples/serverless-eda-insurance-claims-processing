@@ -156,7 +156,6 @@ class ClaimForm extends React.Component {
     };
 
     await API.post(apiName, path, myInit);
-    this.props.nextStep();
   }
 
   render() {
