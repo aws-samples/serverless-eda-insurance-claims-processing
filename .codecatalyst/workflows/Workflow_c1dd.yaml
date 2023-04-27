@@ -6,6 +6,7 @@ Triggers:
   - Type: Push
     Branches:
       - main
+      - <BRANCH_NAME>
 
 # Required - Define action configurations.
 Actions:
