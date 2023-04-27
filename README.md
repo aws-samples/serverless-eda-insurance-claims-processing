@@ -300,7 +300,7 @@ Update `Workflow_c1dd.yaml` with details relevant to your account and applicatio
 - Open `.codecatalyst/workflows/Workflow_c1dd.yaml`
 - Replace <AWS_REGION> with your AWS Account Id
 - Replace <CODE_CATALYST_ROLE_ARN> with the ARN of IAM role you created for Amazon CodeCatalyst.
-- Replace <CODE_CATALYST_SPACE_ID> with CodeCatalyst space id. 
+- Replace <CODE_CATALYST_ENV_ID> with CodeCatalyst environment id. 
 - Replace <AMPLIFY_APP_ID> with amplify app id
 
 Commit this file 
