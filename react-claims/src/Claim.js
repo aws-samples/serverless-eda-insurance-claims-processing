@@ -11,10 +11,9 @@ import {
 } from "@aws-amplify/ui-react";
 import { API } from "aws-amplify";
 import UploadFile from "./UploadFile";
-
+import date from 'date-and-time';
 import damaged_car_1 from "./Vehicles/damaged_car_1.jpeg";
 import damaged_car_2 from "./Vehicles/damaged_car_2.jpeg";
-
 import red_car from "./Vehicles/red_car.jpg";
 
 class TF extends React.Component {
@@ -51,10 +50,11 @@ class TF extends React.Component {
 class ClaimForm extends React.Component {
   constructor(props) {
     super(props);
+    const futureDate = date.format(date.addDays(new Date(), 3), 'YYYY-MM-DD');
 
     this.state = {
       display: props.display,
-      occurrenceDateTime: { value: "", hasError: false, errorMessage: "" },
+      occurrenceDateTime: { value: futureDate, hasError: false, errorMessage: "" },
       country: { value: "US", hasError: false, errorMessage: "" },
       state: { value: "AZ", hasError: false, errorMessage: "" },
       city: { value: "Phoenix", hasError: false, errorMessage: "" },
@@ -114,13 +114,10 @@ class ClaimForm extends React.Component {
   }
 
   submitClaim() {
-    const today = new Date();
     const body = {
       incident: {
         occurrenceDateTime: this.state.occurrenceDateTime.value,
-        fnolDateTime: `${today.getFullYear()}-${
-          today.getMonth() + 1
-        }-${today.getDate()}`,
+        fnolDateTime: date.format(new Date(), 'YYYY-MM-DD'),
         location: {
           country: this.state.country.value,
           state: this.state.state.value,
