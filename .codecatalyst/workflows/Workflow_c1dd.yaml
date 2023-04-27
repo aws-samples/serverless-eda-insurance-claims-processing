@@ -37,7 +37,7 @@ Actions:
       Connections:
         - Role: <CODE_CATALYST_ROLE_ARN> # Update this value
           Name: "<AWS_ACCOUNT_ID>" # Update this value
-      Name: <CODE_CATALYST_SPACE_ID> # Update this value
+      Name: <CODE_CATALYST_ENV_ID> # Update this value
     DependsOn:
       - AWSCDKbootstrap_d5 
   DeploytoAWSAmplifyHosting_6d:
@@ -46,7 +46,7 @@ Actions:
       Connections:
         - Role: <CODE_CATALYST_ROLE_ARN> # Update this value
           Name: "<AWS_ACCOUNT_ID>" # Update this value
-      Name: <CODE_CATALYST_SPACE_ID> # Update this value
+      Name: <CODE_CATALYST_ENV_ID> # Update this value
     Inputs:
       Artifacts:
         - cdk_output
@@ -67,7 +67,7 @@ Actions:
       Connections:
         - Role: <CODE_CATALYST_ROLE_ARN> # Update this value
           Name: "<AWS_ACCOUNT_ID>" # Update this value
-      Name: <CODE_CATALYST_SPACE_ID> # Update this value
+      Name: <CODE_CATALYST_ENV_ID> # Update this value
     Inputs:
       Sources:
         - WorkflowSource
