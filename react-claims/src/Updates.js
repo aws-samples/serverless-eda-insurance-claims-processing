@@ -39,26 +39,23 @@ class UpdateArea extends React.Component {
     });
 
     const respData = data.value.detail;
-    console.log("detail type", data.value["detail-type"])
+
+    if (data.value["detail-type"] === "Fraud.Not.Detected")
+      this.updateParent("nextStep", true);
     if (data.value["detail-type"] === "Customer.Accepted") {
+      this.updateParent("nextStep", true);
       if (respData.driversLicenseImageUrl) {
         this.updateParent(
           "driversLicenseImageUrl",
           respData.driversLicenseImageUrl
         );
-        this.updateParent("uploadDL", true);
       }
       if (respData.carImageUrl) {
         this.updateParent("carImageUrl", respData.carImageUrl);
-        this.updateParent("carImageUrlReceived", true);
       }
     } else if (respData.uploadCarDamageUrl) {
       this.updateParent("uploadCarDamageUrl", respData.uploadCarDamageUrl);
-      this.updateParent("uploadCarDamageUrlReceived", true);
-    } else if (
-      respData.documentType === "DRIVERS_LICENSE" &&
-      !respData.fraudType
-    ) {
+    } else {
       this.updateParent("completedReg", true);
     }
   }

@@ -49,7 +49,7 @@ class App extends React.Component {
       const customer = await this.getCustomer();
       this.setState({ customer: customer });
     }
-    if(value === true) this.wizard.nextStep()
+    if(key === "nextStep" && value === true) this.wizard.nextStep()
   }
 
   getCustomer() {
@@ -103,34 +103,49 @@ class App extends React.Component {
                 completedReg={this.state.completedReg}
               />
 
-              <UploadFile
-                updateState={this.updateState}
-                s3URL={this.state.driversLicenseImageUrl}
-                images={[{ path: dl_AZ }, { path: dl_MA }, { path: dl_OH }]}
-                title="Upload Drivers License"
-              />
+              <>
+                <UploadFile
+                  updateState={this.updateState}
+                  s3URL={this.state.driversLicenseImageUrl}
+                  images={[{ path: dl_AZ }, { path: dl_MA }, { path: dl_OH }]}
+                  title="Upload Drivers License"
+                />
+                <br/>
+                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+              </>
+              
+              <>
+                <UploadFile
+                  s3URL={this.state.carImageUrl}
+                  images={[{ path: red_car }, { path: green_car }]}
+                  title="Upload Vehicle Image"
+                />
+                <br/>
+                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+              </>
 
-              <UploadFile
-                s3URL={this.state.carImageUrl}
-                images={[{ path: red_car }, { path: green_car }]}
-                title="Upload Vehicle Image"
-              />  
+              <>
+                <ClaimForm
+                  customer={this.state.customer}
+                />
+                <br/>
+                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+              </>
 
-              <ClaimForm
-                customer={this.state.customer}
-              />
-
-              <UploadFile
-                updateState={this.updateState}
-                s3URL={this.state.uploadCarDamageUrl}
-                images={[
-                  { path: damaged_car_1 },
-                  { path: damaged_car_2 },
-                  { path: red_car },
-                ]}
-                title="Upload Vehicle Image"
-              />
-
+              <>
+                <UploadFile
+                  updateState={this.updateState}
+                  s3URL={this.state.uploadCarDamageUrl}
+                  images={[
+                    { path: damaged_car_1 },
+                    { path: damaged_car_2 },
+                    { path: red_car },
+                  ]}
+                  title="Upload Vehicle Image"
+                />
+                <br/>
+                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+              </>
               <h1>Claim Submitted!</h1>
 
             </StepWizard>

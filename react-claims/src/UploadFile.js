@@ -60,13 +60,12 @@ class UploadFile extends React.Component {
         const imgBlog = await imgRes.blob();
 
         const uploadImg = await axios.put(this.state.s3url, imgBlog);
-        console.log(uploadImg)
+        console.log("---",uploadImg)
         if(uploadImg.statusText === "OK"){
           this.setState({
             readyToUpload: false,
             selectedFile: undefined,
             statusMessage: "File uploaded successfully.",
-            
           });
           if(this.updateParent)
             this.updateParent("imgUploaded", true)
@@ -98,6 +97,7 @@ class UploadFile extends React.Component {
               selectImage={this.selectImage}
             />
           </Flex>
+          <Flex direction="row">
           <Button
             variation="primary"
             onClick={this.uploadToS3}
@@ -105,6 +105,7 @@ class UploadFile extends React.Component {
           >
             Upload
           </Button>
+          </Flex>
           <Text>{this.state.statusMessage}</Text>
         </Flex>
       </div>

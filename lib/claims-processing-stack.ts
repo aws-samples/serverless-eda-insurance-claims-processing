@@ -82,6 +82,7 @@ export class ClaimsProcessingStack extends Stack {
           ClaimsEvents.CLAIM_REJECTED,
           DocumentsEvents.DOCUMENT_PROCESSED,
           FraudEvents.FRAUD_DETECTED,
+          FraudEvents.FRAUD_NOT_DETECTED,
           SettlementEvents.SETTLEMENT_FINALIZED
         ],
       },

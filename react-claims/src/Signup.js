@@ -332,12 +332,6 @@ class SignupForm extends React.Component {
             >
               Submit
             </Button>
-            <Button
-              variation="primary"
-              onClick={this.showClaimsForm}
-            >
-              File a new claim
-            </Button>
           
             <ClearData reset={this.reset}> </ClearData>
           </Flex>
