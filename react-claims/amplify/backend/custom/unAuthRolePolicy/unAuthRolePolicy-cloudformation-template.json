@@ -149,7 +149,9 @@
           "Statement": [
             {
               "Effect": "Allow",
-              "Action": ["execute-api:Invoke"],
+              "Action": [
+                "execute-api:Invoke"
+              ],
               "Resource": [
                 {
                   "Fn::Sub": [
@@ -282,5 +284,5 @@
     }
   },
   "Outputs": {},
-  "Description": "{\"createdOn\":\"Mac\",\"createdBy\":\"Amplify\",\"createdWith\":\"9.2.1\",\"stackType\":\"custom-customCloudformation\",\"metadata\":{}}"
+  "Description": "{\"createdOn\":\"Mac\",\"createdBy\":\"Amplify\",\"createdWith\":\"11.0.5\",\"stackType\":\"custom-customCloudformation\",\"metadata\":{}}"
 }

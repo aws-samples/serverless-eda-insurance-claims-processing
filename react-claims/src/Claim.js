@@ -4,17 +4,12 @@
 import React from "react";
 import {
   Flex,
-  Divider,
   TextField,
   CheckboxField,
   Button,
 } from "@aws-amplify/ui-react";
-import { API } from "aws-amplify";
-import UploadFile from "./UploadFile";
 import date from 'date-and-time';
-import damaged_car_1 from "./Vehicles/damaged_car_1.jpeg";
-import damaged_car_2 from "./Vehicles/damaged_car_2.jpeg";
-import red_car from "./Vehicles/red_car.jpg";
+import { API } from "aws-amplify";
 
 class TF extends React.Component {
   onChange;
@@ -51,9 +46,11 @@ class ClaimForm extends React.Component {
   constructor(props) {
     super(props);
     const futureDate = date.format(date.addDays(new Date(), 3), 'YYYY-MM-DD');
+    const futureDate = date.format(date.addDays(new Date(), 3), 'YYYY-MM-DD');
 
     this.state = {
       display: props.display,
+      occurrenceDateTime: { value: futureDate, hasError: false, errorMessage: "" },
       occurrenceDateTime: { value: futureDate, hasError: false, errorMessage: "" },
       country: { value: "US", hasError: false, errorMessage: "" },
       state: { value: "AZ", hasError: false, errorMessage: "" },
@@ -92,7 +89,6 @@ class ClaimForm extends React.Component {
     };
 
     this.submitClaim = this.submitClaim.bind(this);
-    // this.componentDidMount = this.componentDidMount.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
   }
 
@@ -113,10 +109,11 @@ class ClaimForm extends React.Component {
     };
   }
 
-  submitClaim() {
+  async submitClaim() {
     const body = {
       incident: {
         occurrenceDateTime: this.state.occurrenceDateTime.value,
+        fnolDateTime: date.format(new Date(), 'YYYY-MM-DD'),
         fnolDateTime: date.format(new Date(), 'YYYY-MM-DD'),
         location: {
           country: this.state.country.value,
@@ -160,7 +157,7 @@ class ClaimForm extends React.Component {
       headers: {}, // OPTIONAL
     };
 
-    API.post(apiName, path, myInit);
+    await API.post(apiName, path, myInit);
   }
 
   render() {
@@ -273,19 +270,6 @@ class ClaimForm extends React.Component {
         <Button variation="primary" onClick={this.submitClaim}>
           Submit Claim
         </Button>
-
-        <Divider size="large" orientation="horizontal" />
-
-        <UploadFile
-          s3URL={this.state.uploadCarDamageUrl}
-          images={[
-            { path: damaged_car_1 },
-            { path: damaged_car_2 },
-            { path: red_car },
-          ]}
-          title="Upload Vehicle Image"
-          display={this.state.uploadCarDamageUrl ? "" : "none"}
-        />
       </Flex>
     );
   }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import React from "react";
-import { Button, Flex } from "@aws-amplify/ui-react";
+import { Button, Flex, ScrollView } from "@aws-amplify/ui-react";
 import { PubSub, Auth, API, Amplify } from "aws-amplify";
 import { AWSIoTProvider } from "@aws-amplify/pubsub";
 import awsmobile from "./aws-exports";
@@ -39,23 +39,23 @@ class UpdateArea extends React.Component {
     });
 
     const respData = data.value.detail;
+
+    if (data.value["detail-type"] === "Fraud.Not.Detected")
+      this.updateParent("nextStep", true);
     if (data.value["detail-type"] === "Customer.Accepted") {
+      this.updateParent("nextStep", true);
       if (respData.driversLicenseImageUrl) {
         this.updateParent(
           "driversLicenseImageUrl",
           respData.driversLicenseImageUrl
         );
-        this.updateParent("uploadDL", true);
       }
       if (respData.carImageUrl) {
         this.updateParent("carImageUrl", respData.carImageUrl);
       }
     } else if (respData.uploadCarDamageUrl) {
       this.updateParent("uploadCarDamageUrl", respData.uploadCarDamageUrl);
-    } else if (
-      respData.documentType === "DRIVERS_LICENSE" &&
-      !respData.fraudType
-    ) {
+    } else {
       this.updateParent("completedReg", true);
     }
   }
@@ -73,10 +73,12 @@ class UpdateArea extends React.Component {
           alignItems="flex-start"
           alignContent="flex-start"
           gap="1rem"
-          style={{ overflowWrap: "anywhere" }}
-        >
+          >
+
           <Button onClick={this.resetMessages}>Clear</Button>
-          <Notifications messages={this.state.messages}></Notifications>
+          <ScrollView width="90%" height="400px" maxWidth="580px">
+            <Notifications messages={this.state.messages}></Notifications>
+          </ScrollView>
         </Flex>
       </div>
     );
