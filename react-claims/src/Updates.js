@@ -40,8 +40,9 @@ class UpdateArea extends React.Component {
 
     const respData = data.value.detail;
 
-    if (data.value["detail-type"] === "Fraud.Not.Detected")
+    if (data.value["detail-type"] === "Fraud.Not.Detected" || data.value["detail-type"] === "Claim.Accepted")
       this.updateParent("nextStep", true);
+    
     if (data.value["detail-type"] === "Customer.Accepted") {
       this.updateParent("nextStep", true);
       if (respData.driversLicenseImageUrl) {

@@ -46,11 +46,9 @@ class ClaimForm extends React.Component {
   constructor(props) {
     super(props);
     const futureDate = date.format(date.addDays(new Date(), 3), 'YYYY-MM-DD');
-    const futureDate = date.format(date.addDays(new Date(), 3), 'YYYY-MM-DD');
 
     this.state = {
       display: props.display,
-      occurrenceDateTime: { value: futureDate, hasError: false, errorMessage: "" },
       occurrenceDateTime: { value: futureDate, hasError: false, errorMessage: "" },
       country: { value: "US", hasError: false, errorMessage: "" },
       state: { value: "AZ", hasError: false, errorMessage: "" },
@@ -113,7 +111,6 @@ class ClaimForm extends React.Component {
     const body = {
       incident: {
         occurrenceDateTime: this.state.occurrenceDateTime.value,
-        fnolDateTime: date.format(new Date(), 'YYYY-MM-DD'),
         fnolDateTime: date.format(new Date(), 'YYYY-MM-DD'),
         location: {
           country: this.state.country.value,
