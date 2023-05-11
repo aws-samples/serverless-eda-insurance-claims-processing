@@ -43,7 +43,6 @@ class App extends React.Component {
   }
 
   async updateState(key, value) {
-    console.log(key, value)
     this.setState({ [key]: value });
     if (key === "completedReg" && value === true) {
       const customer = await this.getCustomer();
@@ -87,7 +86,7 @@ class App extends React.Component {
               <Heading width='90%' level={3} color='hsl(130, 60%, 95%)'>
                 <Flex><FontAwesomeIcon icon={faCarBurst} size="lg"/>Insurance claim form</Flex>
               </Heading>
-              <Button variation="secondary" onClick={this.signOut}>
+              <Button backgroundColor="lightgrey" color="black" onClick={this.signOut}>
                 <Flex><FontAwesomeIcon icon={faCircleXmark} size="lg"/> Sign Out </Flex> 
               </Button>
             </Flex>
@@ -146,7 +145,10 @@ class App extends React.Component {
                 <br/>
                 <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
               </>
-              <h1>Claim Submitted!</h1>
+              <>
+                <h1>Claim Submitted!</h1>
+                <Button variation="secondary" onClick={() => this.wizard.firstStep()}>Start again</Button>
+              </>
 
             </StepWizard>
           
