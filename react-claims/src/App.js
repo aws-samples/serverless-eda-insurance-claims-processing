@@ -197,7 +197,7 @@ class App extends React.Component {
               <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing/">
                 <Flex><FontAwesomeIcon icon={faGithub} size="lg"/> Github repository </Flex>
               </Link>
-              <Link color='hsl(130, 60%, 95%)' href="https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-1/">
+              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing#blogs">
                 <Flex><FontAwesomeIcon icon={faNewspaper} size="lg"/> Blog series </Flex>
               </Link>
             </Flex>
