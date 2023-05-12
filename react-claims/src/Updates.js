@@ -32,6 +32,7 @@ class UpdateArea extends React.Component {
   }
 
   async updateMessages(data) {
+    console.log(data.value["detail-type"], "---")
     let messages = this.state.messages;
     messages.push(JSON.stringify(data.value, null, " "));
     this.setState({

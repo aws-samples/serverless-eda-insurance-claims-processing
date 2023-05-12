@@ -60,7 +60,7 @@ class UploadFile extends React.Component {
         const imgBlog = await imgRes.blob();
 
         const uploadImg = await axios.put(this.state.s3url, imgBlog);
-        console.log("---",uploadImg)
+
         if(uploadImg.statusText === "OK"){
           this.setState({
             readyToUpload: false,

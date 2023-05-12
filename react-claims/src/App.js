@@ -32,8 +32,9 @@ import green_car from "./Vehicles/green_car.jpg";
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { uploadDL: false, displayClaimForm: false, key: 1 };
+    this.state = { uploadDL: false, displayClaimForm: false, key: 1, stepCompleted: 1, btnVisibility: "none" };
     this.updateState = this.updateState.bind(this);
+    this.checkBtnVisibility = this.checkBtnVisibility.bind(this);
 
     this.wizard = null;
 
@@ -48,7 +49,10 @@ class App extends React.Component {
       const customer = await this.getCustomer();
       this.setState({ customer: customer });
     }
-    if(key === "nextStep" && value === true) this.wizard.nextStep()
+    if(key === "nextStep" && value === true){
+      this.state.stepCompleted++;
+      this.wizard.nextStep()
+    } 
   }
 
   getCustomer() {
@@ -70,6 +74,14 @@ class App extends React.Component {
 
   signOut() {
     Auth.signOut();
+  }
+
+  checkBtnVisibility(){
+    if(this.wizard.currentStep < this.state.stepCompleted){
+      this.setState({btnVisibility: "block"});
+    } else {
+      this.setState({btnVisibility: "none"});
+    }
   }
 
   render() {
@@ -94,13 +106,18 @@ class App extends React.Component {
 
           <Card columnStart="1" columnEnd="2" key={this.state.key}>
             <StepWizard
-              ref={this.setWizardRef}>
-
-              <SignupForm
-                updateState={this.updateState}
-                getCustomer={this.getCustomer}
-                completedReg={this.state.completedReg}
-              />
+              ref={this.setWizardRef}
+              onStepChange={this.checkBtnVisibility}>
+                <>
+                <SignupForm
+                  updateState={this.updateState}
+                  getCustomer={this.getCustomer}
+                  completedReg={this.state.completedReg}/>
+                <br/>
+                <Flex>
+                  <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
+                </Flex>
+                </>
 
               <>
                 <UploadFile
@@ -110,7 +127,10 @@ class App extends React.Component {
                   title="Upload Drivers License"
                 />
                 <br/>
-                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                <Flex>
+                  <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                  <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
+                </Flex>
               </>
               
               <>
@@ -120,7 +140,10 @@ class App extends React.Component {
                   title="Upload Vehicle Image"
                 />
                 <br/>
-                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                <Flex>
+                  <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                  <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
+                </Flex>
               </>
 
               <>
@@ -128,7 +151,10 @@ class App extends React.Component {
                   customer={this.state.customer}
                 />
                 <br/>
-                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                <Flex>
+                  <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                  <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
+                </Flex>
               </>
 
               <>
@@ -143,11 +169,17 @@ class App extends React.Component {
                   title="Upload Vehicle Image"
                 />
                 <br/>
-                <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                <Flex>
+                  <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
+                  <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
+                </Flex>
               </>
               <>
                 <h1>Claim Submitted!</h1>
-                <Button variation="secondary" onClick={() => this.wizard.firstStep()}>Start again</Button>
+                <Button variation="secondary" onClick={() => {
+                    this.wizard.firstStep();
+                    this.setState({stepCompleted: 1, btnVisibility: "none"})
+                  }}>Start again</Button>
               </>
 
             </StepWizard>
