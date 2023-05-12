@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: MIT-0
 
 import React from "react";
-import { Divider, Flex, Button, Text, Image } from "@aws-amplify/ui-react";
+import { Flex, Button, Text, Image } from "@aws-amplify/ui-react";
 import * as axios from "axios";
 
 class UploadFile extends React.Component {
+
   constructor(props) {
     super(props);
+
     this.state = {
       message: "Updates will go here.",
       readyToUpload: true,
@@ -19,8 +21,10 @@ class UploadFile extends React.Component {
 
     this.uploadToS3 = this.uploadToS3.bind(this);
     this.selectImage = this.selectImage.bind(this);
+    this.updateParent = props.updateState;
   }
 
+ 
   static getDerivedStateFromProps(props, state) {
     return {
       s3url: props.s3URL,
@@ -47,23 +51,29 @@ class UploadFile extends React.Component {
     });
   }
 
-  uploadToS3() {
+  async uploadToS3() {
     if (this.state.selectedImgIndx !== undefined) {
       const image = this.state.images[this.state.selectedImgIndx];
-      fetch(image.path)
-        .then((res) => res.blob())
-        .then((blob) => {
-          axios
-            .put(this.state.s3url, blob)
-            .then((res) => {
-              this.setState({
-                readyToUpload: false,
-                selectedFile: undefined,
-                statusMessage: "File uploaded successfully.",
-              });
-            })
-            .catch((err) => console.error(err));
-        });
+
+      try{
+        const imgRes = await fetch(image.path);
+        const imgBlog = await imgRes.blob();
+
+        const uploadImg = await axios.put(this.state.s3url, imgBlog);
+
+        if(uploadImg.statusText === "OK"){
+          this.setState({
+            readyToUpload: false,
+            selectedFile: undefined,
+            statusMessage: "File uploaded successfully.",
+          });
+          if(this.updateParent)
+            this.updateParent("imgUploaded", true)
+        }
+      } catch(err) {
+        console.error(err);
+      }
+  
     }
   }
 
@@ -87,6 +97,7 @@ class UploadFile extends React.Component {
               selectImage={this.selectImage}
             />
           </Flex>
+          <Flex direction="row">
           <Button
             variation="primary"
             onClick={this.uploadToS3}
@@ -94,9 +105,8 @@ class UploadFile extends React.Component {
           >
             Upload
           </Button>
+          </Flex>
           <Text>{this.state.statusMessage}</Text>
-
-          <Divider size="large" orientation="horizontal" />
         </Flex>
       </div>
     );

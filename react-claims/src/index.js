@@ -9,6 +9,7 @@ import { Amplify } from "aws-amplify";
 import awsExports from "./aws-exports";
 import "@aws-amplify/ui-react/styles.css";
 import { getEndpointUrl } from "./utils";
+import { ThemeProvider, defaultDarkModeOverride } from "@aws-amplify/ui-react";
 
 Amplify.configure(awsExports);
 Amplify.configure({
@@ -38,11 +39,16 @@ Amplify.configure({
   },
 });
 
+const theme = {
+  name: 'insurance-theme',
+  overrides: [defaultDarkModeOverride],
+};
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
+  <ThemeProvider theme={theme} colorMode="light">
     <App />
-  </React.StrictMode>
+  </ThemeProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function
