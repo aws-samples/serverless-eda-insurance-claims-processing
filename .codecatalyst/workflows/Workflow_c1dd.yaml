@@ -37,7 +37,7 @@ Actions:
     Environment:
       Connections:
         - Role: <CODE_CATALYST_ROLE_NAME> # Update this value
-          Name: "<AWS_ACCOUNT_ID>" # Update this value
+          Name: "<AWS_ACCOUNT_NAME>" # Update this value
       Name: <CODE_CATALYST_ENV_ID> # Update this value
     DependsOn:
       - AWSCDKbootstrap_d5 
@@ -46,7 +46,7 @@ Actions:
     Environment:
       Connections:
         - Role: <CODE_CATALYST_ROLE_NAME> # Update this value
-          Name: "<AWS_ACCOUNT_ID>" # Update this value
+          Name: "<AWS_ACCOUNT_NAME>" # Update this value
       Name: <CODE_CATALYST_ENV_ID> # Update this value
     Inputs:
       Artifacts:
@@ -67,7 +67,7 @@ Actions:
     Environment:
       Connections:
         - Role: <CODE_CATALYST_ROLE_NAME> # Update this value
-          Name: "<AWS_ACCOUNT_ID>" # Update this value
+          Name: "<AWS_ACCOUNT_NAME>" # Update this value
       Name: <CODE_CATALYST_ENV_ID> # Update this value
     Inputs:
       Sources:
