@@ -3,40 +3,33 @@
 
 package com.amazon.settlement.config;
 
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
-import org.springframework.cloud.aws.messaging.config.SimpleMessageListenerContainerFactory;
-import org.springframework.cloud.aws.messaging.config.annotation.EnableSqs;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
 
 @Configuration
-@EnableSqs
 public class SpringCloudConfig {
 
-  @Bean
-  public SimpleMessageListenerContainerFactory simpleMessageListenerContainerFactory() {
-    SimpleMessageListenerContainerFactory factory = new SimpleMessageListenerContainerFactory();
-    factory.setAmazonSqs(getAmazonSqsClient());
-    factory.setWaitTimeOut(5);
-
-    return factory;
-  }
-
-  private AmazonSQSAsync getAmazonSqsClient() {
-    return AmazonSQSAsyncClientBuilder.defaultClient();
-  }
+  @Value("${region}")
+  private String AWS_REGION;
 
   @Bean
-  public EventBridgeClient amazonEventBridgeAsync() {
-    return EventBridgeClient.create();
+  public EventBridgeClient eventBridgeClient() {
+    return EventBridgeClient.builder()
+      .region(Region.of(AWS_REGION))
+      .httpClientBuilder(UrlConnectionHttpClient.builder())
+      .build();
   }
 
   @Bean
-  public DynamoDbClient getDynamoDbClient() {
+  public DynamoDbClient dynamoDbClient() {
     return DynamoDbClient.builder()
+      .region(Region.of(AWS_REGION))
+      .httpClientBuilder(UrlConnectionHttpClient.builder())
       .build();
   }
 }
