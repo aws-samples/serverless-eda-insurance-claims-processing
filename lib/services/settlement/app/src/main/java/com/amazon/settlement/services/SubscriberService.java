@@ -41,7 +41,7 @@ public class SubscriberService {
     this.settlementService = settlementService;
   }
 
-  @SqsListener("${sqs.end-point.uri}")
+  @SqsListener("${sqs.endpoint.uri}")
   public void receiveMessage(String message) {
     log.info("message received {}", message);
 
