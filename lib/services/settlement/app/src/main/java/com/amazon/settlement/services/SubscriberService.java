@@ -9,11 +9,9 @@ import com.amazon.settlement.model.input.generated.AWSEvent;
 import com.amazon.settlement.model.input.generated.FraudNotDetected;
 import com.amazon.settlement.model.input.generated.marshaller.Marshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.aws.messaging.listener.SqsMessageDeletionPolicy;
-import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
@@ -43,9 +41,9 @@ public class SubscriberService {
     this.settlementService = settlementService;
   }
 
-  @SqsListener(value = "${sqs.end-point.uri}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
-  public void receiveMessage(String message, @Header("SenderId") String senderId) {
-    log.info("message received {} {}", senderId, message);
+  @SqsListener("${sqs.endpoint.uri}")
+  public void receiveMessage(String message) {
+    log.info("message received {}", message);
 
     try {
       AWSEvent<FraudNotDetected> settlement = Marshaller.unmarshalEvent(
@@ -72,6 +70,8 @@ public class SubscriberService {
       requestEntryList.add(putEventsRequestEntry);
 
       PutEventsRequest putEventsRequest = PutEventsRequest.builder().entries(requestEntryList).build();
+      log.info("Publishing Event to EventBridge custom event bus");
+
       PutEventsResponse resp = eventBridgeClient.putEvents(putEventsRequest);
 
       if (resp != null) {

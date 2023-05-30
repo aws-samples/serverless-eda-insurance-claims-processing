@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This code repository contains sample application for Insurance Claims Processing using Serverless and Event Driven Architecture as described in [this blog](https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-2/).
+This code repository contains a sample application for Insurance Claims Processing using Serverless and Event Driven Architecture as described in [this blog](https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-2/).
 
 ## Blogs
 - [Building a modern, event-driven application for insurance claims processing – Part 1](https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-1/)
@@ -13,8 +13,8 @@ This code repository contains sample application for Insurance Claims Processing
 
 This sample application comprises:
 
-- Frontend - using AWS AppSync and ReactJS
-- Backend - using AWS Serverless Cloud Native services with AWS CDK as IaC
+- Frontend — using AWS AppSync and ReactJS
+- Backend — using AWS Serverless Cloud Native services with AWS CDK as IaC
 
 The backend infrastructure is set up at the root folder of the repository. Code for frontend is under `/react-claims` directory.
 
@@ -22,7 +22,7 @@ The backend infrastructure is set up at the root folder of the repository. Code 
 
 ![Overall Architecture](images/overall_architecture.png)
 
-Different services in backend architecture interact with Amazon EventBridge custom event Bus. The event rules can invoke more than one target for any event. For example, when customer is submitted successfully, notification service is invoked to notify front end and a step function is invoked to process the customer and create urls to upload license and vehicle images.
+Different services in backend architecture interact with Amazon EventBridge custom event Bus. The event rules can invoke more than one target for any event. For example, when a customer is submitted successfully, notification service is invoked to notify a front end and a step function is invoked to process the customer and create urls to upload license and vehicle images.
 
 This overall architecture consists of below domains. Visit each one of them for underlying details:
 
@@ -51,7 +51,7 @@ This overall architecture consists of below domains. Visit each one of them for 
 
 > :warning: DO NOT MISS THIS SETUP BEFORE DEPLOYING THE STACK
 
-Ideally, when this application runs in production it depends on inference endpoints to detect car color and car damages. This can be achieved by using Amazon Rekognition Custom Label. You can send a JPEG/PNG image to the endpoint (using API Gateway) and Rekognition Custom Label. The APIs in this sample expects a response as below:
+Ideally, when this application runs in production, it depends on inference endpoints to detect car color and car damages. This can be achieved by using Amazon Rekognition Custom Label. You can send a JPEG/PNG image to the endpoint (using API Gateway) and Rekognition Custom Label. The APIs in this sample expect a response as below:
 
 - Car color prediction API response:
 
@@ -106,16 +106,16 @@ const config = {
 };
 ```
 
-> :warning: Note that webhook url expire in 7 days of creation. The urls that are present in the repository when you cloned the app might have expired by the time you use. Create your version of webhook URL
+> :Warning: Note that webhook url expires in 7 days of creation. The urls that are present in the repository when you cloned the app might have expired by the time you use. Create your version of webhook URL
 
 Once you have updated the `config.ts` file with fake API endpoints, you can save the file and then continue with deploying the backend.
 
 ### Deploy CDK stack (Backend)
 
-> :warning: Make sure docker engine is running.
+> :warning: Make sure the docker engine is running.
 
 * Clone the repository
-* From project root, run following commands
+* From project root, run the following commands
 
   `npm install`
 
@@ -132,14 +132,14 @@ In order to deploy the frontend:
 
 `cd react-claims`
 
-then run following commands:
+then run the following commands:
 
 ```bash
 npm install
 npm run amplify init
 ```
 
-Provide following values when prompted -
+Provide the following values when prompted -
 
 > Enter a name for the environment <environment name, like dev, sandbox> **claimsdev**  
 > Choose your default editor: Visual Studio Code  
@@ -292,7 +292,11 @@ Above event has the extracted attributes from the driver's license image that yo
 
 ### Fraud Processing
 
-If you notice closely, that you have provided in the form earlier (Connor) does not match with the first name that was extracted from the uploaded driver's license, therefore a document fraud was detected. This resulted in a `fraud .detection` event as below:
+If you notice closely,
+that you have provided in the form earlier (Connor)
+does not match with the first name that was extracted from the uploaded driver's license,
+therefore, a document fraud was detected.
+This resulted in a `fraud.detected` event as below:
 
 ```json
 {
@@ -315,7 +319,7 @@ If you notice closely, that you have provided in the form earlier (Connor) does 
 
 In order to fix the above discrepancy, choose the second DL and upload. Now you should not see any more event related to fraud.
 
-A similar fraud detection logic is application for car images. If you have provided color `Green` in the form but COLOR_DETECT_API is set to return the car color as Red, then it is identifies as a document fraud:
+A similar fraud detection logic is application for car images. If you have provided color `Green` in the form but COLOR_DETECT_API is set to return the car color as Red, then it is identified as a document fraud:
 
 ```json
 {
