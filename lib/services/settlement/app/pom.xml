@@ -14,7 +14,7 @@
   <name>Settlement</name>
   <description>Settlement service</description>
   <properties>
-    <java.version>19</java.version>
+    <java.version>17</java.version>
     <testcontainers.version>1.17.6</testcontainers.version>
   </properties>
   <dependencyManagement>

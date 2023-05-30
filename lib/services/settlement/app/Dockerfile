@@ -14,24 +14,19 @@ COPY src ./src/
 
 SHELL ["/bin/bash", "-c"]
 
-RUN . $HOME/.sdkman/bin/sdkman-init.sh && mvn -Dmaven.test.skip=true clean package && cd target && unzip settlement-0.0.1-SNAPSHOT.jar
+RUN . $HOME/.sdkman/bin/sdkman-init.sh && mvn -Dmaven.test.skip=true clean package
 
-RUN bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && jdeps --ignore-missing-deps \
-    --multi-release 19 --print-module-deps \
-    --class-path target/BOOT-INF/lib/* \
-    target/settlement-0.0.1-SNAPSHOT.jar > jre-deps.info"
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17.0.7-al2023-headless
 
-RUN bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && export JAVA_TOOL_OPTIONS=\"-Djdk.lang.Process.launchMechanism=vfork\" && \
-    jlink --verbose --compress 2 --strip-java-debug-attributes \
-    --no-header-files --no-man-pages --output custom-jre \
-    --add-modules $(cat jre-deps.info)"
-
-FROM public.ecr.aws/lts/ubuntu:22.04
-RUN addgroup --system spring && adduser --system spring --ingroup spring
-USER spring:spring
 COPY --from=builder target/settlement-0.0.1-SNAPSHOT.jar settlement.jar
-COPY --from=builder custom-jre custom-jre
+
+RUN yum install -y shadow-utils
+
+RUN groupadd --system spring
+RUN adduser spring -g spring
+
+USER spring:spring
 
 EXPOSE 8080
 HEALTHCHECK CMD curl --fail http://localhost:8080/actuator/health || exit 1
-CMD ["./custom-jre/bin/java","-jar", "-Dspring.profiles.active=prod","/settlement.jar"]
+CMD ["java","-jar", "-Dspring.profiles.active=prod","/settlement.jar"]
