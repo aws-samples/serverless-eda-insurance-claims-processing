@@ -93,8 +93,7 @@ export class SettlementService extends Construct {
           environment: {
             "SQS_ENDPOINT_URL": queue.queueUrl,
             "EVENTBUS_NAME": props.bus.eventBusName,
-            "DYNAMODB_TABLE_NAME": this.table.tableName,
-            "AWS_REGION": Stack.of(this).region
+            "DYNAMODB_TABLE_NAME": this.table.tableName
           },
           containerPort: 8080,
           logDriver: new ecs.AwsLogDriver({
