@@ -7,7 +7,7 @@ RUN \
     curl -s "https://get.sdkman.io" | bash; \
     bash -c "source $HOME/.sdkman/bin/sdkman-init.sh; \
     sdk install maven; \
-    sdk install java 19.0.2-amzn;"
+    sdk install java 17.0.8-amzn;"
 
 COPY ./pom.xml ./pom.xml
 COPY src ./src/
