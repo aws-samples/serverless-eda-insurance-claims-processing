@@ -1,0 +1,63 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Customer.Submitted"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AWSEvent": {
+        "type": "object",
+        "required": ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"],
+        "x-amazon-events-detail-type": "Customer.Submitted",
+        "x-amazon-events-source": "signup.service",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/Customer.Submitted"
+          },
+          "account": {
+            "type": "string"
+          },
+          "detail-type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Customer.Submitted": {
+        "type": "object",
+        "required": ["cognitoIdentityId", "data"],
+        "properties": {
+          "cognitoIdentityId": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
