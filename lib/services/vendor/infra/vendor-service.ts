@@ -27,6 +27,7 @@ interface VendorServiceProps {
   readonly bus: EventBus;
 }
 
+// Attach policies that are required for read access from AWS Console
 function attachConsoleReadOnlyPolicies(scope: Construct, role: iam.Role) {
   role.addToPolicy(
     new iam.PolicyStatement({
@@ -99,6 +100,7 @@ export class VendorService extends Construct {
 
     this.cluster = cluster;
 
+    // Vendor domain defines the EB rule to trigger vendor service when a SETTLEMENT_FINALIZED event is emitted.
     const ebToSqsConstruct = new EventbridgeToSqs(this, 'sqs-construct', {
       existingEventBusInterface: props.bus,
       eventRuleProps: {
@@ -115,16 +117,19 @@ export class VendorService extends Construct {
 
     const vendorQueue = ebToSqsConstruct.sqsQueue;
 
+    // Vendor service runs a NodeJS Express app in docker container running inside a pod.
     const asset = new ecr_assets.DockerImageAsset(this, "image", {
       directory: path.join(__dirname, "../app"),
     });
 
+    // Service Account is similar to execution roles in Lambda functions. They provide the pod access to other AWS services.
     const vendorServiceAccount = cluster.addServiceAccount('ServiceAccount', {
       name: "vendor-service-account"
     });
     props.bus.grantPutEventsTo(vendorServiceAccount);
     vendorQueue.grantConsumeMessages(vendorServiceAccount);
 
+    // Creating an EKS deployment
     const deployment = cluster.addManifest("appDeployment", {
       apiVersion: "apps/v1",
       kind: "Deployment",
@@ -160,11 +165,15 @@ export class VendorService extends Construct {
 
     deployment.node.addDependency(vendorServiceAccount);
 
+    // Add Helm chart for KEDA.
+    // Learn more about KEDA at https://keda.sh/
     cluster.addHelmChart('keda', {
       repository: 'https://kedacore.github.io/charts',
       chart: 'keda'
     });
 
+    // Keda expects a ScaledObject that ties the event-driven scaling of underlying EKS deployment
+    // based on the scaler of your choice. In this sample, the EKS deployment scales based on the SQS queue depth.
     cluster.addManifest('KedaScaledObject', {
       apiVersion: 'keda.sh/v1alpha1',
       kind: 'ScaledObject',
@@ -182,7 +191,7 @@ export class VendorService extends Construct {
             queueURL: vendorQueue.queueUrl,
             queueLength: '5',
             awsRegion: region,
-            identityOwner: 'pod',
+            identityOwner: 'pod', // Keda models after the pod's authentication role
           },
         }]
       }
