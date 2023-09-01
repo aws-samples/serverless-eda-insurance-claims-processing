@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { JsonPath, LogLevel, StateMachine, StateMachineType, } from "aws-cdk-lib/aws-stepfunctions";
+import { DefinitionBody, JsonPath, LogLevel, StateMachine, StateMachineType, } from "aws-cdk-lib/aws-stepfunctions";
 import { Construct } from "constructs";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { DynamoAttributeValue, DynamoUpdateItem, DynamoUpdateItemProps, } from "aws-cdk-lib/aws-stepfunctions-tasks";
@@ -48,7 +48,7 @@ export class UpdateClaimsStepFunction extends StateMachine {
     );
 
     super(scope, id, {
-      definition: first,
+      definitionBody: DefinitionBody.fromChainable(first),
       stateMachineType: StateMachineType.EXPRESS,
       logs: {
         destination: logGroup,

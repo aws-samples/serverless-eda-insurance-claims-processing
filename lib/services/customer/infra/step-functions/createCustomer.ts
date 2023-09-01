@@ -4,6 +4,7 @@
 import {
   Choice,
   Condition,
+  DefinitionBody,
   InputType,
   JsonPath,
   LogLevel,
@@ -93,7 +94,7 @@ export class CreateCustomerStepFunction extends StateMachine {
     parseDataState.next(saveReqInDBStep);
 
     super(scope, id, {
-      definition: parseDataState,
+      definitionBody: DefinitionBody.fromChainable(parseDataState),
       stateMachineType: StateMachineType.EXPRESS,
       logs: {
         destination: logGroup,

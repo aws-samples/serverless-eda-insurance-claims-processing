@@ -12,6 +12,7 @@ import { BlockPublicAccess, Bucket, BucketEncryption, HttpMethods, } from "aws-c
 import {
   Choice,
   Condition,
+  DefinitionBody,
   Errors,
   Fail,
   JsonPath,
@@ -266,7 +267,7 @@ export class DocumentService extends Construct {
       {
         timeout: Duration.minutes(2),
         stateMachineType: StateMachineType.EXPRESS,
-        definition: definition,
+        definitionBody: DefinitionBody.fromChainable(definition),
         logs: {
           level: LogLevel.ALL,
           destination: documentProcessingLogs,
