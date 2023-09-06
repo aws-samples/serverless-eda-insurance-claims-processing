@@ -200,6 +200,13 @@ export class NotificationsService extends Construct {
           endpointType: "iot:Data-ATS",
         },
       },
+      onUpdate: {
+        service: "Iot",
+        action: "describeEndpoint",
+        parameters: {
+          endpointType: "iot:Data-ATS",
+        },
+      },
       policy: AwsCustomResourcePolicy.fromSdkCalls({
         resources: AwsCustomResourcePolicy.ANY_RESOURCE,
       }),
