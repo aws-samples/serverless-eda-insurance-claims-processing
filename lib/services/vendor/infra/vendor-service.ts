@@ -8,6 +8,7 @@ import {
   aws_ec2 as ec2,
   aws_ecr_assets as ecr_assets,
   ArnFormat,
+  CfnOutput,
 } from "aws-cdk-lib";
 import { EventBus } from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
@@ -71,15 +72,10 @@ export class VendorService extends Construct {
 
     const region = Stack.of(this).region;
 
-    const clusterAdmin = new iam.Role(this, "AdminRole", {
-      assumedBy: new iam.AccountRootPrincipal(),
-    });
-
     const cluster = new eks.Cluster(this, "vendor-cluster", {
       clusterName: "vendor",
       version: eks.KubernetesVersion.V1_27,
       kubectlLayer: new KubectlV27Layer(this, "kubectl"),
-      mastersRole: clusterAdmin,
       defaultCapacity: 2,
       outputMastersRoleArn:true,
       clusterLogging: [
@@ -90,7 +86,18 @@ export class VendorService extends Construct {
         eks.ClusterLoggingTypes.SCHEDULER,
       ]
     });
-    attachConsoleReadOnlyPolicies(this, clusterAdmin);
+
+    // Create a dev role which will have read-only access to AWS Console
+    const devRole = new iam.Role(this, "DevRole", {
+      assumedBy: new iam.AccountRootPrincipal(),
+    });
+
+    attachConsoleReadOnlyPolicies(this, devRole);
+    cluster.awsAuth.addMastersRole(devRole);
+
+    new CfnOutput(this, "UpdateEKSConfigWithDevRoleArn", { 
+      value: `aws eks update-kubeconfig --region ${region} --name ${cluster.clusterName} --role-arn ${devRole.roleArn}` 
+    });
 
     cluster.addNodegroupCapacity("spot-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large"), new ec2.InstanceType("m5a.large")],
