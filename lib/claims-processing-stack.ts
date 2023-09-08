@@ -20,6 +20,7 @@ import { FraudService } from "./services/fraud/infra/fraud-service";
 import { NotificationsService } from "./services/notifications/infra/notifications-service";
 import { SettlementEvents, SettlementService } from "./services/settlement/infra/settlement-service";
 import { CfnDiscoverer } from "aws-cdk-lib/aws-eventschemas";
+import { VendorEvents, VendorService } from "./services/vendor/infra/vendor-service";
 
 export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -71,6 +72,10 @@ export class ClaimsProcessingStack extends Stack {
       bus,
     });
 
+    const vendorService = new VendorService(this, "VendorService", {
+      bus
+    });
+
     new NotificationsService(this, "NotificationsService", {
       bus,
       customerTable,
@@ -83,7 +88,8 @@ export class ClaimsProcessingStack extends Stack {
           DocumentsEvents.DOCUMENT_PROCESSED,
           FraudEvents.FRAUD_DETECTED,
           FraudEvents.FRAUD_NOT_DETECTED,
-          SettlementEvents.SETTLEMENT_FINALIZED
+          SettlementEvents.SETTLEMENT_FINALIZED,
+          VendorEvents.VENDOR_FINALIZED
         ],
       },
     });
@@ -119,6 +125,7 @@ export class ClaimsProcessingStack extends Stack {
           DocumentsEvents.SOURCE,
           FraudEvents.SOURCE,
           SettlementEvents.SOURCE,
+          VendorEvents.SOURCE,
           "aws.s3",
         ],
       },
@@ -135,7 +142,8 @@ export class ClaimsProcessingStack extends Stack {
         claimsService.claimsMetricsWidget,
         fraudService.fraudMetricsWidget,
         documentService.documentsMetricsWidget,
-        settlementService.settlementMetricsWidget
+        settlementService.settlementMetricsWidget,
+        vendorService.vendorMetricsWidget,
       ],
     });
   }

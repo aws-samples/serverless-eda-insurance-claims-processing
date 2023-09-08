@@ -485,6 +485,29 @@ The event payload would look like:
 }
 ```
 
+### Vendor
+Vendor domain subscribes to `Settlement.Finalized` event. When a settlement is finalized, the vendor domain figures out a temporary rental car for the insurer. Ideally, the vendor domain/service would call 3rd party car rental service APIs to get quote on the rental cost. Based on its business logic, it decides which rental car option will be optimal for the insurer.
+Vendor service is built using a NodeJS Express application running on an EKS Spot cluster. EKS pods scale up and down based on an SQS queue depth using [KEDA](https://keda.sh/docs/2.11/scalers/aws-sqs/) scaler. This shows that event-driven applications can be integrated with container workloads seamlessly that can run on EKS too.
+
+The event payload from vendor service would look as below once a rental car company has been finalized:
+
+```json
+{
+ "version": "0",
+ "id": "8ec4555c-e726-9518-eaf8-7f3bdabfcf72",
+ "detail-type": "Vendor.Finalized",
+ "source": "vendor.service",
+ "account": "1234567890",
+ "time": "2023-09-06T16:04:14Z",
+ "region": "us-east-2",
+ "resources": [],
+ "detail": {
+  "customerId": "08bee3df-0e2a-4873-8c91-46e55d2460a6",
+  "vendorMessage": "Multiple car rental vendors were contacted for claim with id b33af013-763c-4da7-94ba-37cdaace999e. Enterprise Rental car has been finalized for you to temporarily use until your car is repaired."
+ }
+}
+```
+
 ### Clear Events
 
 To clear events on the web page, click on `Clear` button above the list of events. This will only clear the area on the web page where events log is displayed.

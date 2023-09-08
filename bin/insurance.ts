@@ -80,4 +80,23 @@ NagSuppressions.addStackSuppressions(mStack, [
     id: 'AwsSolutions-EC23',
     reason: 'Will be modified after initial testing'
   },
-]);
+], true);
+
+NagSuppressions.addResourceSuppressions(mStack, [
+  {
+    id: "AwsSolutions-EKS1",
+    reason: "Default VPC is used for demo purposes.",
+  },
+  {
+    id: "AwsSolutions-IAM4",
+    reason: "Default Lambda Execution Role for Lambda functions created by EKS Cluster.",
+    appliesTo: [
+      'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+    ]
+  },
+  {
+    id: "AwsSolutions-IAM5",
+    reason: "Resources created by EKS clusters",
+    appliesTo: ['Action::s3:*']
+  }
+], true);
