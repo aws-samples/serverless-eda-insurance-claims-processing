@@ -174,14 +174,15 @@ export class VendorService extends Construct {
 
     // Add Helm chart for KEDA.
     // Learn more about KEDA at https://keda.sh/
-    cluster.addHelmChart('keda', {
+    const kedaHelmChart = cluster.addHelmChart('keda', {
       repository: 'https://kedacore.github.io/charts',
-      chart: 'keda'
+      chart: 'keda',
+      version: '2.11.2'
     });
 
     // Keda expects a ScaledObject that ties the event-driven scaling of underlying EKS deployment
     // based on the scaler of your choice. In this sample, the EKS deployment scales based on the SQS queue depth.
-    cluster.addManifest('KedaScaledObject', {
+    const kedaScaledObject = cluster.addManifest('KedaScaledObject', {
       apiVersion: 'keda.sh/v1alpha1',
       kind: 'ScaledObject',
       metadata: {
@@ -203,6 +204,8 @@ export class VendorService extends Construct {
         }]
       }
     });
+
+    kedaScaledObject.node.addDependency(kedaHelmChart);
 
     this.vendorMetricsWidget = createGraphWidget("Vendor Summary", [
       createMetric(
