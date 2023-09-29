@@ -426,7 +426,7 @@ function createParseDataState(scope: Construct): Pass {
     parameters: {
       "PK.$": "$.id",
       "SK.$": "$.detail-type",
-      "data.$": "States.StringToJson($.detail.data)",
+      "data.$": "$.detail.data",
       "cognitoIdentityId.$": "$.detail.cognitoIdentityId",
     },
   });
