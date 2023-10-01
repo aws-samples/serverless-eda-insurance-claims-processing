@@ -1,3 +1,7 @@
+html, body {
+  overflow: hidden;
+}
+
 .App {
   text-align: center;
 }
@@ -35,4 +39,8 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.timeline-date-time {
+  color: black;
 }
