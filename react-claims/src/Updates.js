@@ -6,9 +6,12 @@ import { Button, Flex, ScrollView } from "@aws-amplify/ui-react";
 import { PubSub, Auth, API, Amplify } from "aws-amplify";
 import { AWSIoTProvider } from "@aws-amplify/pubsub";
 import awsmobile from "./aws-exports";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { getEndpointUrl } from "./utils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXmark, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
+import 'react-vertical-timeline-component/style.min.css';
+import "./App.css"
 
 class UpdateArea extends React.Component {
   updateParent;
@@ -33,15 +36,16 @@ class UpdateArea extends React.Component {
 
   async updateMessages(data) {
     let messages = this.state.messages;
-    messages.push(JSON.stringify(data.value, null, " "));
+    messages.push(data.value);
     this.setState({
       messages: messages,
     });
 
     const respData = data.value.detail;
 
-    if (data.value["detail-type"] === "Fraud.Not.Detected" || data.value["detail-type"] === "Claim.Accepted")
+    if (data.value["detail-type"] === "Fraud.Not.Detected" || data.value["detail-type"] === "Claim.Accepted") {
       this.updateParent("nextStep", true);
+    }
     
     if (data.value["detail-type"] === "Customer.Accepted") {
       this.updateParent("nextStep", true);
@@ -66,6 +70,10 @@ class UpdateArea extends React.Component {
   }
 
   render() {
+    if (this.state.messages.length === 0) {
+      return;
+    }
+
     return (
       <div>
         <Flex
@@ -77,7 +85,7 @@ class UpdateArea extends React.Component {
           >
 
           <Button onClick={this.resetMessages}>Clear</Button>
-          <ScrollView width="90%" height="400px" maxWidth="580px">
+          <ScrollView width="100%" height="700px">
             <Notifications messages={this.state.messages}></Notifications>
           </ScrollView>
         </Flex>
@@ -132,6 +140,18 @@ async function updateCustomer() {
 }
 
 class Notifications extends React.Component {
+  messagesEndRef = React.createRef();
+
+  componentDidMount () {
+    this.scrollToBottom()
+  }
+  componentDidUpdate () {
+    this.scrollToBottom()
+  }
+  scrollToBottom = () => {
+    this.messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   constructor(props) {
     super(props);
     this.state = { messages: props.messages ? props.messages : [] };
@@ -144,24 +164,134 @@ class Notifications extends React.Component {
     };
   }
 
+  extractInformation(message) {
+    const detailType = message["detail-type"];
+    const detail = message.detail;
+
+    let information = "";
+
+    function documentInformation(detail) {
+      let docInfo = "";
+
+      if (detail.documentType === 'CAR') {
+        docInfo = `Car detected with Color: ${detail.analyzedFieldAndValues.color.Name}`;
+
+        if (detail.analyzedFieldAndValues.type === "claims") {
+          docInfo += ` Damage: ${detail.analyzedFieldAndValues.damage.Name}`;
+        }
+      }
+
+      if (detail.documentType === 'DRIVERS_LICENSE') {
+        docInfo = "Driver's License processed successfully";
+      }
+
+      return docInfo;
+    }
+
+    switch (detailType) {
+      case "Document.Processed":
+        information = documentInformation(detail);
+        break;
+      case "Settlement.Finalized":
+        information = detail.settlementMessage;
+        break;
+      case "Vendor.Finalized":
+        information = detail.vendorMessage;
+        break;                
+      default:
+        break;
+    }
+
+    return information;
+  }
+
+  extractErrorMessage(message) {
+    const detailType = message["detail-type"];
+    const detail = message.detail;
+
+    let errorMessage = "";
+
+    switch (detailType) {
+      case "Fraud.Detected":
+        errorMessage = detail.fraudReason;
+        break;
+      case "Customer.Rejected":
+        errorMessage = detail.message;
+        break;
+      case "Claim.Rejected":
+        errorMessage = detail.message;
+        break;                
+      default:
+        break;
+    }
+
+    return errorMessage;
+  }
+
   render() {
     let texts = [];
     const messages = this.state.messages;
     let i = 0;
+
     if (messages && messages.length > 0) {
       messages.forEach((message) => {
+        let iconStyleValue, contentStyleValue, iconValue, contentArrowStyleValue, errorMessage, information;
+
+        if(
+          (message["detail-type"].endsWith(".Detected") && !message["detail-type"].endsWith("Not.Detected")) || 
+          message["detail-type"].endsWith(".Rejected")
+        ) {
+          iconStyleValue = { background: 'rgb(233, 30, 99)', color: '#fff' };
+          contentStyleValue = { background: 'rgb(233, 30, 99)', color: '#fff' };
+          contentArrowStyleValue = { borderRight: '7px solid  rgb(233, 30, 99)' };
+          errorMessage = this.extractErrorMessage(message);
+          iconValue = <FontAwesomeIcon icon={faXmark} />;
+        } else {
+          iconStyleValue = { background: 'rgb(33, 150, 243)', color: '#fff' };
+          contentStyleValue = { background: 'rgb(33, 150, 243)', color: '#fff' };
+          contentArrowStyleValue = { borderRight: '7px solid  rgb(33, 150, 243)' };
+          information = this.extractInformation(message);
+          iconValue = <FontAwesomeIcon icon={faCheck} />;
+        }
+
+        const date = new Date(message.time).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+
+        const time = new Date(message.time).toLocaleTimeString('en-US', { 
+          hour: "2-digit", 
+          minute: "2-digit" 
+        });
+        const dateTime = `${date} ${time}`;
+
         texts.push(
-          <SyntaxHighlighter
+          <VerticalTimelineElement
             key={++i}
-            language="json"
-            style={docco}
-            wrapLongLines={true}
+            visible={true}
+            className="vertical-timeline-element"
+            contentStyle={contentStyleValue}
+            contentArrowStyle={contentArrowStyleValue}
+            date={dateTime}
+            dateClassName="timeline-date-time"
+            iconStyle={iconStyleValue}
+            icon={iconValue}
           >
-            {message}
-          </SyntaxHighlighter>
+            <h3 className="vertical-timeline-element-title">{message["detail-type"]}</h3>
+            <h6 className="vertical-timeline-element-subtitle">{message.detail.customerId}</h6>
+            <p>{errorMessage}</p>
+            <p>{information}</p>
+          </VerticalTimelineElement>
         );
       });
     }
-    return texts.reverse();
+
+    return (
+      <VerticalTimeline lineColor="blue">
+        {texts}
+        <div ref={this.messagesEndRef} />
+      </VerticalTimeline>
+    );
   }
 }

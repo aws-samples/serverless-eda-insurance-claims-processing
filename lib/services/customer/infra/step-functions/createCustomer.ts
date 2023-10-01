@@ -297,7 +297,8 @@ function createAcceptCustomerChoice(
       entries: [
         {
           detail: TaskInput.fromObject({
-            error: "Address or Identity Validation Failed",
+            "cognitoIdentityId.$": "$.cognitoIdentityId",
+            message: "Address or Identity Validation Failed",
           }),
           eventBus: props.eventBus,
           detailType: "Customer.Rejected",
