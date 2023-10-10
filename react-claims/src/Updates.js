@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import React from "react";
-import { Button, Flex, ScrollView } from "@aws-amplify/ui-react";
+import { Button, Flex, ScrollView, Heading } from "@aws-amplify/ui-react";
 import { PubSub, Auth, API, Amplify } from "aws-amplify";
 import { AWSIoTProvider } from "@aws-amplify/pubsub";
 import awsmobile from "./aws-exports";
@@ -84,7 +84,20 @@ class UpdateArea extends React.Component {
           gap="1rem"
           >
 
-          <Button onClick={this.resetMessages}>Clear</Button>
+          <Flex
+            width="100"
+            direction="row" 
+            justifyContent="center"
+            alignItems="stretch"
+            alignContent="center"
+            wrap="nowrap"
+            gap="5rem">
+              <Button onClick={this.resetMessages}>Clear</Button>                
+              <Heading width='100%' level={4}>
+                Events received from backend services asynchronously
+              </Heading>
+          </Flex>
+
           <ScrollView width="100%" height="700px">
             <Notifications messages={this.state.messages}></Notifications>
           </ScrollView>
