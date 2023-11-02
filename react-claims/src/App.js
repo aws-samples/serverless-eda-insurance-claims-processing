@@ -10,16 +10,17 @@ import { API, Auth } from "aws-amplify";
 import StepWizard from "react-step-wizard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
-import { faNewspaper, faCircleXmark, faCarBurst } from '@fortawesome/free-solid-svg-icons';
+import { faNewspaper, faRightFromBracket, faCarBurst } from '@fortawesome/free-solid-svg-icons';
 import {
   Divider,
-  Grid, 
+  Grid,
   Link,
   Card,
   Button,
   Flex,
   Heading,
-  withAuthenticator } from "@aws-amplify/ui-react";
+  withAuthenticator
+} from "@aws-amplify/ui-react";
 
 import dl_AZ from "./DL/dl_AZ.jpg";
 import dl_MA from "./DL/dl_MA.jpg";
@@ -39,7 +40,7 @@ class App extends React.Component {
     this.wizard = null;
 
     this.setWizardRef = (element) => {
-       this.wizard = element;
+      this.wizard = element;
     }
   }
 
@@ -49,10 +50,13 @@ class App extends React.Component {
       const customer = await this.getCustomer();
       this.setState({ customer: customer });
     }
-    if(key === "nextStep" && value === true){
-      this.state.stepCompleted++;
-      this.wizard.nextStep()
-    } 
+    if (key === "nextStep" && value === true) {
+      this.setState({
+        ...this.state,
+        stepCompleted: this.state.stepCompleted + 1
+      });
+      this.wizard.nextStep();
+    }
   }
 
   getCustomer() {
@@ -76,11 +80,11 @@ class App extends React.Component {
     Auth.signOut();
   }
 
-  checkBtnVisibility(){
-    if(this.wizard.currentStep < this.state.stepCompleted){
-      this.setState({btnVisibility: "block"});
+  checkBtnVisibility() {
+    if (this.wizard.currentStep < this.state.stepCompleted) {
+      this.setState({ btnVisibility: "block" });
     } else {
-      this.setState({btnVisibility: "none"});
+      this.setState({ btnVisibility: "none" });
     }
   }
 
@@ -88,36 +92,44 @@ class App extends React.Component {
     return (
       <>
         <Grid
-          columnGap="0.5rem"
-          rowGap="0.5rem"
-          templateColumns="65% 0% 35%"
+          columnGap="0.25rem"
+          rowGap="1rem"
+          templateColumns="55% 0% 45%"
           templateRows="1fr"
         >
-          <Card columnStart="1" columnEnd="-1"  backgroundColor='hsl(130, 33%, 37%)'>
-            <Flex width="100%">
-              <Heading width='90%' level={3} color='hsl(130, 60%, 95%)'>
-                <Flex><FontAwesomeIcon icon={faCarBurst} size="lg"/>Insurance claim form</Flex>
+          <Card columnStart="1" columnEnd="-1" backgroundColor='hsl(130, 33%, 37%)'>
+            <Flex width="100%" alignItems="center" alignContent="center">
+              <Heading width='80%' level={3} color='hsl(130, 60%, 95%)'>
+                <Flex><FontAwesomeIcon icon={faCarBurst} size="lg" />Insurance claim form</Flex>
               </Heading>
+              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing/" target="_blank">
+                <Flex><FontAwesomeIcon icon={faGithub} size="lg" />GitHub</Flex>
+              </Link>
+              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing#blogs" target="_blank">
+                <Flex><FontAwesomeIcon icon={faNewspaper} size="lg" />Blogs</Flex>
+              </Link>
               <Button backgroundColor="lightgrey" color="black" onClick={this.signOut}>
-                <Flex><FontAwesomeIcon icon={faCircleXmark} size="lg"/> Sign Out </Flex> 
+                <Flex alignItems="center">
+                  <FontAwesomeIcon icon={faRightFromBracket} size="lg" />Sign Out
+                </Flex>
               </Button>
             </Flex>
           </Card>
 
-          <Card columnStart="1" columnEnd="2" key={this.state.key}>
+          <Card columnStart="1" columnEnd="1" key={this.state.key}>
             <StepWizard
               ref={this.setWizardRef}
               onStepChange={this.checkBtnVisibility}>
-                <>
+              <>
                 <SignupForm
                   updateState={this.updateState}
                   getCustomer={this.getCustomer}
-                  completedReg={this.state.completedReg}/>
-                <br/>
+                  completedReg={this.state.completedReg} />
+                <br />
                 <Flex>
                   <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
                 </Flex>
-                </>
+              </>
 
               <>
                 <UploadFile
@@ -126,20 +138,20 @@ class App extends React.Component {
                   images={[{ path: dl_AZ }, { path: dl_MA }, { path: dl_OH }]}
                   title="Upload Drivers License"
                 />
-                <br/>
+                <br />
                 <Flex>
                   <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
                   <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
                 </Flex>
               </>
-              
+
               <>
                 <UploadFile
                   s3URL={this.state.carImageUrl}
                   images={[{ path: red_car }, { path: green_car }]}
                   title="Upload Vehicle Image"
                 />
-                <br/>
+                <br />
                 <Flex>
                   <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
                   <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
@@ -150,7 +162,7 @@ class App extends React.Component {
                 <ClaimForm
                   customer={this.state.customer}
                 />
-                <br/>
+                <br />
                 <Flex>
                   <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
                   <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
@@ -168,7 +180,7 @@ class App extends React.Component {
                   ]}
                   title="Upload Vehicle Image"
                 />
-                <br/>
+                <br />
                 <Flex>
                   <Button variation="secondary" onClick={() => this.wizard.previousStep()}>Previous</Button>
                   <Button display={this.state.btnVisibility} variation="secondary" onClick={() => this.wizard.nextStep()}>Next</Button>
@@ -177,33 +189,20 @@ class App extends React.Component {
               <>
                 <h1>Claim Submitted!</h1>
                 <Button variation="secondary" onClick={() => {
-                    this.wizard.firstStep();
-                    this.setState({stepCompleted: 1, btnVisibility: "none"})
-                  }}>Start again</Button>
+                  this.wizard.firstStep();
+                  this.setState({ stepCompleted: 1, btnVisibility: "none" })
+                }}>Start again</Button>
               </>
-
             </StepWizard>
-          
           </Card>
 
-
-          <Card columnStart="3" columnEnd="-1" variation="outlined" marginRight='15px'>
+          <Card columnStart="2" columnEnd="-1" >
             <UpdateArea updateState={this.updateState}/>
           </Card>
           <Divider orientation="vertical" />
 
-          <Card columnStart="1" columnEnd="-1" backgroundColor='hsl(130, 33%, 37%)'>
-            <Flex direction="column" alignItems="flex-start">
-              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing/">
-                <Flex><FontAwesomeIcon icon={faGithub} size="lg"/> Github repository </Flex>
-              </Link>
-              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing#blogs">
-                <Flex><FontAwesomeIcon icon={faNewspaper} size="lg"/> Blog series </Flex>
-              </Link>
-            </Flex>
-          </Card>
         </Grid>
-        </>
+      </>
     );
   }
 }

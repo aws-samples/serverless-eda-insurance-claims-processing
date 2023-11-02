@@ -297,7 +297,8 @@ function createAcceptCustomerChoice(
       entries: [
         {
           detail: TaskInput.fromObject({
-            error: "Address or Identity Validation Failed",
+            "cognitoIdentityId.$": "$.cognitoIdentityId",
+            message: "Address or Identity Validation Failed",
           }),
           eventBus: props.eventBus,
           detailType: "Customer.Rejected",
@@ -426,7 +427,7 @@ function createParseDataState(scope: Construct): Pass {
     parameters: {
       "PK.$": "$.id",
       "SK.$": "$.detail-type",
-      "data.$": "States.StringToJson($.detail.data)",
+      "data.$": "$.detail.data",
       "cognitoIdentityId.$": "$.detail.cognitoIdentityId",
     },
   });
