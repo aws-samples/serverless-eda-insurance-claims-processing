@@ -3,7 +3,7 @@
 
 import React from "react";
 import { Flex, Button, Text, Image } from "@aws-amplify/ui-react";
-import * as axios from "axios";
+import axios from "axios";
 
 class UploadFile extends React.Component {
 
