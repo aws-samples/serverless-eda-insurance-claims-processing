@@ -25,15 +25,16 @@ Refer this [link](https://www.eventcatalog.dev/docs/guides/deployment) for more 
 
 ## Host event-catalog app using AWS Amplify 
 1. Build zip file -
-From the project root, run the following commands. This will bundle the html output into **event-catalog.zip** file 
+From the project root, run the following commands. This will bundle the html output into `event-catalog.zip` file 
   
    `cd event-catalog/out`
    
    `zip -r event-catalog.zip *` 
    
-2. Download **event-catalog.zip** file into local directory
-3. AWS Amplify Hosting - Refer this [Amplify Drag and drop manual deploy](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html) link and deploy **event-catalog.zip** file
-4. After the successful deployment, launch Application and review event catalog 
+2. Download `event-catalog.zip` file into local directory
+3. AWS Amplify Hosting - Deploy `event-catalog.zip` using Manual deploy option. Refer this [Amplify Drag and drop manual deploy](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html) documention for detailed steps.
+4. After the successful deployment, launch the application to visualize events for Insurance Claim Application.
+
 ![Event Catalog for Insurance Claim Application](./event-catalog-ui.png)
 
 ## Updating Event Catalog 
