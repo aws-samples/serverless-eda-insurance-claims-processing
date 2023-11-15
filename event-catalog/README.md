@@ -23,7 +23,7 @@ EventCatalog exports your catalog to static HTML which means you can deploy your
 The below section provide the steps for deploying static htnml into AWS Amplify. 
 Refer this [link](https://www.eventcatalog.dev/docs/guides/deployment) for more hosting options 
 
-## Host event-catalog static app using AWS Amplify 
+## Host event-catalog app using AWS Amplify 
 1. Build zip file -
 From the project root, run the following commands. This will bundle the html output into **event-catalog.zip** file 
   
@@ -36,20 +36,23 @@ From the project root, run the following commands. This will bundle the html out
 4. After the successful deployment you will get `domain url` for event-catalog. 
 5. Launch Application to review event catalog 
 
-## Adding new Events
+## Updating Event Catalog 
+### 1. Adding new Events
 You will find all events within the /events directory. To add a new event you will need to create a new folder with your `event` name and an `index.md` file inside that folder.
 Fill in the details of your event and run the Catalog. You will see all your events and will be able to navigate around and explore them!
 
     `/events/{Event Name}/index.md`
 
-## Adding new Service
+### 2. Adding new Service
 You will find all events within the /services directory. To add a new service you will need to create a new folder with your `service` name and an `index.md` file inside that folder.
 Fill in the details of your service and run the Catalog. You will see all your services and will be able to navigate around and explore them!
 
     `/services/{Service Name}/index.md`
 
-## Adding new Domains
+### 3. Adding new Domains
 You will find all domains within the /domains directory. To add a new domain you will need to create a new folder within the `domains` folder in your Catalog and then you will need to create a an `index.md` file inside that folder.
 Fill in the details of your domain and run the Catalog. You will see all your domains and will be able to navigate around and explore them!
     
     `/domains/{Domain Name}/index.md`
+
+For more details on the configuration refer [event-catalog](https://www.eventcatalog.dev/docs/configuration) documentation. 
