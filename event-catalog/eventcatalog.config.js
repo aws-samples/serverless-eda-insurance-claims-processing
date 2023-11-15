@@ -3,7 +3,7 @@ module.exports = {
   tagline: 'Discover, Explore and Document your Event Driven Architectures',
   organizationName: 'Amazon Web Services',
   projectName: 'Event Catalog',
-  editUrl: 'https://github.com/boyney123/eventcatalog-demo/edit/master',
+  editUrl: 'https://github.com/mythilias/serverless-eda-insurance-claims-processing/tree/event-catalog-new/event-catalog',
   trailingSlash: true,
   primaryCTA: {
     label: 'Explore Events',
@@ -31,13 +31,13 @@ module.exports = {
     { label: 'Services', href: '/services' },
     { label: 'Visualiser', href: '/visualiser' },
     { label: '3D Node Graph', href: '/overview' },
-    { label: 'GitHub', href: 'https://github.com/boyney123/eventcatalog-demo/edit/master' }
+    { label: 'GitHub', href: 'https://github.com/mythilias/serverless-eda-insurance-claims-processing/tree/event-catalog-new/event-catalog' }
   ],
   users: [
     {
       id: 'dhiraj',
       name: 'Dhiraj Mahapatro',
-      avatarUrl: 'https://randomuser.me/api/portraits/lego/3.jpg',
+      avatarUrl: 'https://randomuser.me/api/portraits/lego/5.jpg',
       role: 'Principal SSA',
     },
     {
