@@ -32,7 +32,7 @@ From the project root, run the following commands. This will bundle the html out
    `zip -r event-catalog.zip *` 
    
 2. Download **event-catalog.zip** file into local directory
-3. AWS Amplify Hosting - Drag and drop manual deploy. Refer this link [AWS Amplify manual deployment](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html) and deploy **event-catalog.zip** file
+3. AWS Amplify Hosting - Refer this link [Drag and drop manual deploy](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html) and deploy **event-catalog.zip** file
 4. After the successful deployment you will get `domain url` for event-catalog. 
 5. Launch Application to review event catalog 
 
