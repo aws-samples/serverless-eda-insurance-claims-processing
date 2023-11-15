@@ -1,0 +1,173 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Claim.Requested"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AWSEvent": {
+        "type": "object",
+        "required": ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"],
+        "x-amazon-events-detail-type": "Claim.Requested",
+        "x-amazon-events-source": "fnol.service",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/Claim.Requested"
+          },
+          "account": {
+            "type": "string"
+          },
+          "detail-type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Claim.Requested": {
+        "type": "object",
+        "required": ["otherParty", "personalInformation", "policeReport", "incident", "policy"],
+        "properties": {
+          "incident": {
+            "$ref": "#/components/schemas/Incident"
+          },
+          "otherParty": {
+            "$ref": "#/components/schemas/OtherParty"
+          },
+          "personalInformation": {
+            "$ref": "#/components/schemas/PersonalInformation"
+          },
+          "policeReport": {
+            "$ref": "#/components/schemas/PoliceReport"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/Policy"
+          }
+        }
+      },
+      "Incident": {
+        "type": "object",
+        "required": ["description", "fnolDateTime", "location", "occurrenceDateTime"],
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fnolDateTime": {
+            "type": "string",
+            "format": "date"
+          },
+          "occurrenceDateTime": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "OtherParty": {
+        "type": "object",
+        "required": ["firstName", "lastName", "insuranceId", "insuranceCompany"],
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "insuranceCompany": {
+            "type": "string"
+          },
+          "insuranceId": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          }
+        }
+      },
+      "PersonalInformation": {
+        "type": "object",
+        "required": ["isInsurerDriver", "driversLicenseNumber", "licensePlateNumber", "customerId", "numberOfPassengers"],
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "driversLicenseNumber": {
+            "type": "string"
+          },
+          "isInsurerDriver": {
+            "type": "boolean"
+          },
+          "licensePlateNumber": {
+            "type": "string"
+          },
+          "numberOfPassengers": {
+            "type": "string"
+          }
+        }
+      },
+      "PoliceReport": {
+        "type": "object",
+        "required": ["reportOrReceiptAvailable", "isFiled"],
+        "properties": {
+          "isFiled": {
+            "type": "boolean"
+          },
+          "reportOrReceiptAvailable": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Policy": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "Location": {
+        "type": "object",
+        "required": ["zip", "country", "city", "road", "state"],
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "road": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "zip": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
