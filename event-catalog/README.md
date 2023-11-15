@@ -33,8 +33,8 @@ From the project root, run the following commands. This will bundle the html out
    
 2. Download **event-catalog.zip** file into local directory
 3. AWS Amplify Hosting - Refer this [Amplify Drag and drop manual deploy](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html) link and deploy **event-catalog.zip** file
-4. After the successful deployment you will get `domain url` for event-catalog. 
-5. Launch Application to review event catalog 
+4. After the successful deployment, launch Application and review event catalog 
+![Event Catalog for Insurance Claim Application](./event-catalog-ui.png)
 
 ## Updating Event Catalog 
 ### 1. Adding new Events
