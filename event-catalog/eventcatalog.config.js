@@ -9,6 +9,10 @@ module.exports = {
     label: 'Explore Events',
     href: '/events'
   },
+  //: {
+  //  label: 'Getting Started',
+  //  href:"https://www.eventcatalog.dev/"
+  //},
   logo: {
     alt: 'EventCatalog Logo',
     // found in the public dir
