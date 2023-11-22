@@ -1,0 +1,69 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Settlement.Finalized"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AWSEvent": {
+        "type": "object",
+        "required": ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"],
+        "x-amazon-events-detail-type": "Settlement.Finalized",
+        "x-amazon-events-source": "settlement.service",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/Settlement.Finalized"
+          },
+          "account": {
+            "type": "string"
+          },
+          "detail-type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Settlement.Finalized": {
+        "type": "object",
+        "required": ["customerId", "claimId", "settlementId", "settlementMessage"],
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "settlementId": {
+            "type": "string"
+          },
+          "settlementMessage": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "ObjectCreated"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AWSEvent": {
+        "type": "object",
+        "required": ["account", "detail", "detail-type", "id", "region", "resources", "source", "time", "version"],
+        "x-amazon-events-detail-type": "Object Created",
+        "x-amazon-events-source": "aws.s3",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "detail": {
+            "$ref": "#/components/schemas/ObjectCreated"
+          },
+          "detail-type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ObjectCreated": {
+        "type": "object",
+        "required": ["bucket", "object", "reason", "requester", "request-id", "source-ip-address", "version"],
+        "properties": {
+          "bucket": {
+            "$ref": "#/components/schemas/Bucket"
+          },
+          "object": {
+            "$ref": "#/components/schemas/Object"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "request-id": {
+            "type": "string"
+          },
+          "requester": {
+            "type": "string"
+          },
+          "source-ip-address": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Bucket": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Object": {
+        "type": "object",
+        "required": ["etag", "key", "sequencer", "size"],
+        "properties": {
+          "etag": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "sequencer": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "version-id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
