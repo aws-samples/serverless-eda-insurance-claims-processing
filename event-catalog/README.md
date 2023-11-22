@@ -1,5 +1,10 @@
 # Event Catalog - Insurance Claim Processing Application
-This section contains the code to generate the event catalog for Insurance Claim Processing Application
+This section contains the code to generate the event catalog for Insurance Claim Processing Application that streamlines event exploration and visualization via search options and filters. EventCatalog allows you to:
+- Document Events, Schemas, Code Examples, and additional details.
+- Visual representation of connections between upstream and downstream services using the Events.
+- Support for documentation versioning and changelogs.
+- Assign ownership of events and services to specific teams, enabling clear identification of domain ownership within your organization.
+
 
 ## Build Event Catalog
 * Clone the repository

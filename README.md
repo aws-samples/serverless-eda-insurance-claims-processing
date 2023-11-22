@@ -555,6 +555,10 @@ These metrics are used to create a CloudWatch dashboard to present business KPIs
 
 In AWS Console, navigate to CloudWatch > Dashboards > Claims-Processing-Dashboard to review this dashboard.
 
+## Events Catalog
+
+The EventCatalog has been integrated into the Insurance Claim Processing Application, producing an event catalog that streamlines event exploration and visualization via search options and filters. For guidance on generating the event catalog and deploying it as web application using Amplify, please follow this [link](https://github.com/aws-samples/serverless-eda-insurance-claims-processing/tree/main/event-catalog) for detailed instructions.
+
 ## Cleanup
 
 In order to clean up the infrastructure follow below sections:
