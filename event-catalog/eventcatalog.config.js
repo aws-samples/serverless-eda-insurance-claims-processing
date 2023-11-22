@@ -9,13 +9,8 @@ module.exports = {
     label: 'Explore Events',
     href: '/events'
   },
-  //: {
-  //  label: 'Getting Started',
-  //  href:"https://www.eventcatalog.dev/"
-  //},
   logo: {
     alt: 'EventCatalog Logo',
-    // found in the public dir
     src: 'logo.svg',
   },
   headerLinks: [
@@ -38,7 +33,7 @@ module.exports = {
       id: 'dhiraj',
       name: 'Dhiraj Mahapatro',
       avatarUrl: 'https://randomuser.me/api/portraits/lego/5.jpg',
-      role: 'Principal SSA',
+      role: 'Principal Specialist Solutions Architect, Serverless',
     },
     {
       id: 'mythili',
