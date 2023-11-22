@@ -1,0 +1,69 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Fraud.Detected"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AWSEvent": {
+        "type": "object",
+        "required": ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"],
+        "x-amazon-events-detail-type": "Fraud.Detected",
+        "x-amazon-events-source": "fraud.service",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/Fraud.Detected"
+          },
+          "account": {
+            "type": "string"
+          },
+          "detail-type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Fraud.Detected": {
+        "type": "object",
+        "required": ["documentType", "customerId", "fraudType", "fraudReason"],
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string"
+          },
+          "fraudReason": {
+            "type": "string"
+          },
+          "fraudType": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

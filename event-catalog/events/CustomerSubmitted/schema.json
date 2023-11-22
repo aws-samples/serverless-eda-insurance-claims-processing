@@ -1,0 +1,144 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Customer.Submitted"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AWSEvent": {
+        "type": "object",
+        "required": ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"],
+        "x-amazon-events-detail-type": "Customer.Submitted",
+        "x-amazon-events-source": "signup.service",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/Customer.Submitted"
+          },
+          "account": {
+            "type": "string"
+          },
+          "detail-type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Customer.Submitted": {
+        "type": "object",
+        "required": ["cognitoIdentityId", "data"],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Data"
+          },
+          "cognitoIdentityId": {
+            "type": "string"
+          }
+        }
+      },
+      "Data": {
+        "type": "object",
+        "required": ["cars", "firstname", "address", "identity", "lastname"],
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "cars": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataItem"
+            }
+          },
+          "firstname": {
+            "type": "string"
+          },
+          "lastname": {
+            "type": "string"
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "required": ["zip", "city", "street", "state"],
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "zip": {
+            "type": "string"
+          }
+        }
+      },
+      "Identity": {
+        "type": "object",
+        "required": ["email", "ssn"],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "ssn": {
+            "type": "string"
+          }
+        }
+      },
+      "DataItem": {
+        "type": "object",
+        "required": ["color", "year", "model", "vin", "type", "make", "mileage"],
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "make": {
+            "type": "string"
+          },
+          "mileage": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "vin": {
+            "type": "string"
+          },
+          "year": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

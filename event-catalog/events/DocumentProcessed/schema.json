@@ -1,0 +1,167 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Document.Processed"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AWSEvent": {
+        "type": "object",
+        "required": ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"],
+        "x-amazon-events-detail-type": "Document.Processed",
+        "x-amazon-events-source": "document.service",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/Document.Processed"
+          },
+          "account": {
+            "type": "string"
+          },
+          "detail-type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Document.Processed": {
+        "type": "object",
+        "required": ["analyzedFieldAndValues", "documentType", "customerId"],
+        "properties": {
+          "analyzedFieldAndValues": {
+            "$ref": "#/components/schemas/AnalyzedFieldAndValues"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string"
+          },
+          "recordId": {
+            "type": "string"
+          }
+        }
+      },
+      "AnalyzedFieldAndValues": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "$ref": "#/components/schemas/Color"
+          },
+          "damage": {
+            "$ref": "#/components/schemas/Damage"
+          },
+          "ADDRESS": {
+            "type": "string"
+          },
+          "CITY_IN_ADDRESS": {
+            "type": "string"
+          },
+          "CLASS": {
+            "type": "string"
+          },
+          "COUNTY": {
+            "type": "string"
+          },
+          "DATE_OF_BIRTH": {
+            "type": "string"
+          },
+          "DATE_OF_ISSUE": {
+            "type": "string"
+          },
+          "DOCUMENT_NUMBER": {
+            "type": "string"
+          },
+          "ENDORSEMENTS": {
+            "type": "string"
+          },
+          "EXPIRATION_DATE": {
+            "type": "string"
+          },
+          "FIRST_NAME": {
+            "type": "string"
+          },
+          "ID_TYPE": {
+            "type": "string"
+          },
+          "MIDDLE_NAME": {
+            "type": "string"
+          },
+          "MRZ_CODE": {
+            "type": "string"
+          },
+          "PLACE_OF_BIRTH": {
+            "type": "string"
+          },
+          "RESTRICTIONS": {
+            "type": "string"
+          },
+          "STATE_IN_ADDRESS": {
+            "type": "string"
+          },
+          "STATE_NAME": {
+            "type": "string"
+          },
+          "SUFFIX": {
+            "type": "string"
+          },
+          "VETERAN": {
+            "type": "string"
+          },
+          "ZIP_CODE_IN_ADDRESS": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "Color": {
+        "type": "object",
+        "properties": {
+          "Confidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "Name": {
+            "type": "string"
+          }
+        }
+      },
+      "Damage": {
+        "type": "object",
+        "properties": {
+          "Confidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "Name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
