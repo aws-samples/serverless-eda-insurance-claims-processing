@@ -7,7 +7,7 @@ RUN \
     curl -s "https://get.sdkman.io" | bash; \
     bash -c "source $HOME/.sdkman/bin/sdkman-init.sh; \
     sdk install maven; \
-    sdk install java 17.0.8-amzn;"
+    sdk install java 17.0.10-amzn;"
 
 COPY ./pom.xml ./pom.xml
 COPY src ./src/
@@ -16,7 +16,7 @@ SHELL ["/bin/bash", "-c"]
 
 RUN . $HOME/.sdkman/bin/sdkman-init.sh && mvn -Dmaven.test.skip=true clean package
 
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17.0.7-al2023-headless
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17.0.10-al2023-headless
 
 COPY --from=builder target/settlement-0.0.1-SNAPSHOT.jar settlement.jar
 
