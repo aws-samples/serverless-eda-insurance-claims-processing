@@ -80,6 +80,14 @@ NagSuppressions.addStackSuppressions(mStack, [
     id: 'AwsSolutions-EC23',
     reason: 'Will be modified after initial testing'
   },
+  {
+    id: 'AwsSolutions-SF1',
+    reason: 'Logging not necessary for demo purposes'
+  },
+  {
+    id: 'AwsSolutions-SF2',
+    reason: 'X-Ray will be added eventually'
+  }
 ], true);
 
 NagSuppressions.addResourceSuppressions(mStack, [
