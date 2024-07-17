@@ -20,6 +20,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@eventcatalog/core": "1.1.1"
+    "@eventcatalog/core": "2.0.23"
   }
 }
