@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.0.6</version>
+    <version>3.3.1</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>com.amazon</groupId>
@@ -29,7 +29,7 @@
       <dependency>
         <groupId>io.awspring.cloud</groupId>
         <artifactId>spring-cloud-aws-dependencies</artifactId>
-        <version>3.0.1</version>
+        <version>3.1.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

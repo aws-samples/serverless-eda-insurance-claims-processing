@@ -1,32 +1,21 @@
-FROM public.ecr.aws/lts/ubuntu:22.04 AS builder
-LABEL maintainer="Sascha Möllering <smoell@amazon.de>"
-
-RUN apt-get update --fix-missing && apt-get install zip curl -y
-
-RUN \
-    curl -s "https://get.sdkman.io" | bash; \
-    bash -c "source $HOME/.sdkman/bin/sdkman-init.sh; \
-    sdk install maven; \
-    sdk install java 17.0.8-amzn;"
+FROM public.ecr.aws/docker/library/maven:3-amazoncorretto-21-al2023 AS builder
 
 COPY ./pom.xml ./pom.xml
+RUN mvn dependency:go-offline -f ./pom.xml
+
 COPY src ./src/
+RUN mvn -Dmaven.test.skip=true clean package
+RUN rm -rf ~/.m2/repository
 
-SHELL ["/bin/bash", "-c"]
-
-RUN . $HOME/.sdkman/bin/sdkman-init.sh && mvn -Dmaven.test.skip=true clean package
-
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17.0.7-al2023-headless
+FROM public.ecr.aws/docker/library/amazoncorretto:21-al2023
+RUN yum install -y shadow-utils
 
 COPY --from=builder target/settlement-0.0.1-SNAPSHOT.jar settlement.jar
 
-RUN yum install -y shadow-utils
+RUN groupadd --system spring -g 1000
+RUN adduser spring -u 1000 -g 1000
 
-RUN groupadd --system spring
-RUN adduser spring -g spring
-
-USER spring:spring
+USER 1000:1000
 
 EXPOSE 8080
-HEALTHCHECK CMD curl --fail http://localhost:8080/actuator/health || exit 1
 CMD ["java","-jar", "-Dspring.profiles.active=prod","/settlement.jar"]
