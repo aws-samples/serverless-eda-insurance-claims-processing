@@ -13,7 +13,7 @@ import {
 import { EventBus } from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
 import * as path from "path";
-import { KubectlV27Layer } from "@aws-cdk/lambda-layer-kubectl-v27";
+import { KubectlV34Layer } from "@aws-cdk/lambda-layer-kubectl-v34";
 import { EventbridgeToSqs } from "@aws-solutions-constructs/aws-eventbridge-sqs";
 import { SettlementEvents } from "../../settlement/infra/settlement-service";
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
@@ -74,9 +74,9 @@ export class VendorService extends Construct {
 
     const cluster = new eks.Cluster(this, "vendor-cluster", {
       clusterName: "vendor",
-      version: eks.KubernetesVersion.V1_27,
-      kubectlLayer: new KubectlV27Layer(this, "kubectl"),
-      defaultCapacity: 2,
+      version: eks.KubernetesVersion.V1_34,
+      kubectlLayer: new KubectlV34Layer(this, "kubectl"),
+      defaultCapacity: 0, // Disable default capacity, use nodegroup with AL2023 instead
       outputMastersRoleArn:true,
       clusterLogging: [
         eks.ClusterLoggingTypes.API,
@@ -99,10 +99,23 @@ export class VendorService extends Construct {
       value: `aws eks update-kubeconfig --region ${region} --name ${cluster.clusterName} --role-arn ${devRole.roleArn}` 
     });
 
+    // Add on-demand nodegroup with AL2023 (required for K8s 1.34)
+    cluster.addNodegroupCapacity("on-demand-ng", {
+      instanceTypes: [new ec2.InstanceType("m5.large")],
+      minSize: 2,
+      maxSize: 4,
+      desiredSize: 2,
+      capacityType: eks.CapacityType.ON_DEMAND,
+      amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
+    });
+
+    // Add spot nodegroup with AL2023 (required for K8s 1.34)
     cluster.addNodegroupCapacity("spot-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large"), new ec2.InstanceType("m5a.large")],
       minSize: 2,
+      maxSize: 10,
       capacityType: eks.CapacityType.SPOT,
+      amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
     });
 
     this.cluster = cluster;
@@ -127,6 +140,7 @@ export class VendorService extends Construct {
     // Vendor service runs a NodeJS Express app in docker container running inside a pod.
     const asset = new ecr_assets.DockerImageAsset(this, "image", {
       directory: path.join(__dirname, "../app"),
+      platform: ecr_assets.Platform.LINUX_AMD64, // Force x86_64 build to match EKS node architecture
     });
 
     // Service Account is similar to execution roles in Lambda functions. They provide the pod access to other AWS services.
@@ -177,7 +191,7 @@ export class VendorService extends Construct {
     const kedaHelmChart = cluster.addHelmChart('keda', {
       repository: 'https://kedacore.github.io/charts',
       chart: 'keda',
-      version: '2.11.2'
+      version: '2.16.1'
     });
 
     // Keda expects a ScaledObject that ties the event-driven scaling of underlying EKS deployment

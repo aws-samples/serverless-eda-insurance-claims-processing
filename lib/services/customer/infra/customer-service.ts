@@ -107,9 +107,12 @@ export class CustomerService extends Construct {
       this,
       "SignupLambdaFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "SignupLambdaLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/signup.js`,
         environment: {
@@ -134,9 +137,12 @@ export class CustomerService extends Construct {
       this,
       "CustomerUpdateLambdaFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "CustomerUpdateLambdaLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/update.js`,
         role: customerLambdaRole,
@@ -151,9 +157,12 @@ export class CustomerService extends Construct {
     this.customerTable.grantWriteData(customerUpdateLambdaFunction);
 
     const validatorFunction = new NodejsFunction(scope, "ValidatorFunction", {
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_22_X,
       memorySize: 512,
-      logRetention: RetentionDays.ONE_WEEK,
+      logGroup: new LogGroup(this, "ValidatorFunctionLogGroup", {
+        retention: RetentionDays.ONE_WEEK,
+        removalPolicy: RemovalPolicy.DESTROY,
+      }),
       handler: "handler",
       entry: `${__dirname}/../app/handlers/validator.js`,
     });
@@ -162,9 +171,12 @@ export class CustomerService extends Construct {
       scope,
       "PutPolicyRequestsFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "PutPolicyRequestsFunctionLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/putPolicyRequests.js`,
       }
@@ -174,9 +186,12 @@ export class CustomerService extends Construct {
       scope,
       "PreSignedURLGenerator",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "PreSignedURLGeneratorLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/preSignedURLGenerator.js`,
       }
@@ -211,9 +226,12 @@ export class CustomerService extends Construct {
       scope,
       "GetCustomerFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "GetCustomerFunctionLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/get.js`,
         environment: {

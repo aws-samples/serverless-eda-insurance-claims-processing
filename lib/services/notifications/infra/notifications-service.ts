@@ -113,9 +113,12 @@ export class NotificationsService extends Construct {
       this,
       "NotificationLambdaFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "NotificationLambdaLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/notifications.js`,
         environment: {
@@ -149,9 +152,12 @@ export class NotificationsService extends Construct {
       scope,
       "UpdateIOTPolicyFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "UpdateIOTPolicyLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/iot.index.js`,
         environment: {

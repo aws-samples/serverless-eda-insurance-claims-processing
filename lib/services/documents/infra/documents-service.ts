@@ -151,9 +151,12 @@ export class DocumentService extends Construct {
       this,
       "TextractResponseTransformerLambda",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 128,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "TextractResponseTransformerLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/textractResponseTransformer.js`,
         timeout: Duration.seconds(10),
@@ -203,8 +206,11 @@ export class DocumentService extends Construct {
       this,
       "analyzeCarImageFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
-        logRetention: RetentionDays.ONE_WEEK,
+        runtime: Runtime.NODEJS_22_X,
+        logGroup: new LogGroup(this, "AnalyzeCarImageLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/analyzeCarImage.js`,
         environment: {

@@ -7,5 +7,6 @@
     "amplify/#current-cloud-backend": true,
     "amplify/backend/amplify-meta.json": true,
     "amplify/backend/awscloudformation": true
-  }
+  },
+  "kiroAgent.configureMCP": "Enabled"
 }
