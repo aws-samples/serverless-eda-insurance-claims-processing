@@ -1,6 +1,6 @@
 {
   "auth": {
-    "reactclaims6a6543fe": {
+    "reactclaims08a592eb": {
       "customAuth": false,
       "dependsOn": [],
       "frontendAuthConfig": {
@@ -16,29 +16,13 @@
           "EMAIL"
         ],
         "socialProviders": [],
-        "usernameAttributes": [
-          "EMAIL"
-        ],
+        "usernameAttributes": [],
         "verificationMechanisms": [
           "EMAIL"
         ]
       },
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
-    },
-    "userPoolGroups": {
-      "dependsOn": [
-        {
-          "attributes": [
-            "UserPoolId",
-            "AppClientIDWeb",
-            "AppClientID",
-            "IdentityPoolId"
-          ],
-          "category": "auth",
-          "resourceName": "reactclaims6a6543fe"
-        }
-      ]
     }
   },
   "custom": {
