@@ -1,9 +1,10 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
+import { RemovalPolicy } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { EventSourceMapping, Runtime } from "aws-cdk-lib/aws-lambda";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { ManagedPolicy, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
@@ -33,8 +34,11 @@ export default function createMetricsQueueWithLambdaSubscription(
     scope,
     "CreateMetricsFunction",
     {
-      runtime: Runtime.NODEJS_18_X,
-      logRetention: RetentionDays.ONE_WEEK,
+      runtime: Runtime.NODEJS_22_X,
+      logGroup: new LogGroup(scope, "CreateMetricsLogGroup", {
+        retention: RetentionDays.ONE_WEEK,
+        removalPolicy: RemovalPolicy.DESTROY,
+      }),
       handler: "handler",
       entry: `${__dirname}/../app/handlers/create.js`,
       role: metricsLambdaRole,

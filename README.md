@@ -18,6 +18,44 @@ This sample application comprises:
 
 The backend infrastructure is set up at the root folder of the repository. Code for frontend is under `/react-claims` directory.
 
+## Technology Stack
+
+### Current Versions
+- **Node.js**: 22.x (all Lambda functions)
+- **AWS CDK**: 2.235.1
+- **AWS SDK v3**: 3.900.0
+- **React**: 18.3.1
+- **AWS Amplify**: 5.3.20 (frontend)
+- **Spring Boot**: 3.3.13 (Settlement Service)
+- **EKS**: Kubernetes 1.34 with AL2023 AMI (Vendor Service)
+- **KEDA**: 2.16.1 (EKS autoscaling)
+
+### Container Services
+- **Settlement Service**: Spring Boot application on ECS Fargate (x86_64)
+- **Vendor Service**: Node.js Express application on EKS Spot cluster (x86_64)
+
+### Recent Upgrades (January 2026)
+
+**Critical Updates:**
+- Node.js upgraded from 18.x to 22.x across all 15 Lambda functions (Node 18 EOL April 2025)
+- EKS upgraded from Kubernetes 1.27 to 1.34 with AL2023 AMI (1.27 EOL July 2025)
+- AWS SDK v3 updated to 3.900.0 for latest security patches
+- Migrated from deprecated CDK alpha packages to stable releases
+
+**Infrastructure Fixes:**
+- Fixed Lambda log retention deprecation by migrating from `logRetention` to `logGroup` pattern across all functions
+- Resolved Docker platform architecture issues by adding explicit x86_64 platform specifications for Settlement (ECS) and Vendor (EKS) services
+- Fixed CDK deployment warnings including Custom Resources SDK installation and ECS deployment configuration
+- Added zero-downtime deployment configuration for Settlement service (minHealthyPercent: 100, maxHealthyPercent: 200)
+
+**Frontend Updates:**
+- React upgraded to 18.3.1 with updated testing libraries
+- AWS Amplify remains on v5.3.20 (stable) - v6 migration evaluated and deferred due to high refactoring risk for real-time PubSub/IoT functionality
+
+**Backend Services:**
+- Spring Boot upgraded to 3.3.13 with AWS SDK BOM 2.30.29 and Spring Cloud AWS 3.2.1
+- KEDA upgraded to 2.16.1 for EKS autoscaling
+
 ## Overall Architecture
 
 ![Overall Architecture](images/overall_architecture.png)
@@ -37,15 +75,15 @@ This overall architecture consists of below domains. Visit each one of them for 
 
 ### Prerequisites
 
-> :fire: **NOTE**
-> Below setup will not work on M1 Macs. Use [AWS Cloud9](https://aws.amazon.com/cloud9/) instead.
-
-- Install [NodeJS v18](https://nodejs.org/en/download/)
+- Install [NodeJS v22](https://nodejs.org/en/download/) (Node.js 18 reached EOL in April 2025)
 - [Set up AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
 - [Set up AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)
 - [Install Amplify CLI](https://docs.amplify.aws/cli/start/install/)
 - Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+> :information_source: **M1/M2/M3 Mac Users**
+> The application now includes explicit Docker platform specifications for x86_64 architecture. Docker will automatically build images for the correct platform regardless of your host architecture. Ensure Docker Desktop is running before deployment.
 
 ### Fake Image Recognition APIs
 
@@ -127,6 +165,9 @@ Once you have updated the `config.ts` file with fake API endpoints, you can save
 Wait until the stack is deployed.
 
 ### Deploy Amplify App (Frontend)
+
+> :information_source: **AWS Amplify Version**
+> This application uses AWS Amplify v5.3.20 (stable). Migration to v6 evaluated and deferred - would require refactoring 5 components with 150+ lines of code changes and poses risk to mission-critical real-time PubSub/IoT functionality.
 
 In order to deploy the frontend:
 
@@ -557,6 +598,39 @@ In AWS Console, navigate to CloudWatch > Dashboards > Claims-Processing-Dashboar
 
 ## Events Catalog
 Event driven architectures like this Insurance claims processing application use events as the first class citizen. Similar to APIs, that uses schemas or specifications like OpenAPI spec for contract based communications, EDA we will also need a mechanism to define a schema and showcase which entities are event producers and consumers. This will provide a better visibility around the events that flow in and out of systems. Event Catalog provides that for this applications. For guidance on generating the event catalog and deploying it as web application using Amplify, please follow this [link](https://github.com/aws-samples/serverless-eda-insurance-claims-processing/tree/main/event-catalog) for detailed instructions.
+
+## Troubleshooting
+
+### Common Issues
+
+**Docker Platform Errors**
+- Ensure Docker Desktop is running before deployment
+- Application automatically builds images for x86_64 architecture regardless of host platform
+- Both Settlement (ECS) and Vendor (EKS) services include explicit platform specifications
+
+**CDK Deployment Warnings**
+- Custom Resources SDK installation warnings resolved via context flag in cdk.json
+- ECS deployment configuration updated with minHealthyPercent: 100 for zero-downtime deployments
+- SQS encryption warnings are informational only (using KMS encryption)
+
+**ECS Cluster Inactive Error**
+- Occurs when ECS cluster is deleted but CloudFormation still references it
+- Solution: Delete and recreate stack, or implement shared VPC architecture to avoid resource conflicts
+
+**React App Compilation Errors**
+- Application uses AWS Amplify v5.3.20 (stable)
+- If encountering import errors, verify package.json has correct Amplify versions
+- Run `npm install` in react-claims directory to ensure dependencies are correct
+
+**Internet Gateway Quota Exceeded**
+- AWS accounts have default limit of 5 IGWs per region
+- Consider implementing shared VPC architecture across multiple stacks
+- Request quota increase via AWS Service Quotas console if needed
+
+**EKS AMI Compatibility**
+- Kubernetes 1.33+ requires Amazon Linux 2023 (AL2023)
+- Amazon Linux 2 (AL2) only supported up to Kubernetes 1.32
+- Vendor service configured with AL2023_X86_64_STANDARD AMI type
 
 ## Cleanup
 

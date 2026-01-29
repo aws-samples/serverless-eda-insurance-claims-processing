@@ -1,10 +1,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import { Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -151,9 +152,12 @@ export class DocumentService extends Construct {
       this,
       "TextractResponseTransformerLambda",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 128,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "TextractResponseTransformerLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/textractResponseTransformer.js`,
         timeout: Duration.seconds(10),
@@ -203,24 +207,36 @@ export class DocumentService extends Construct {
       this,
       "analyzeCarImageFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
-        logRetention: RetentionDays.ONE_WEEK,
+        runtime: Runtime.NODEJS_22_X,
+        logGroup: new LogGroup(this, "AnalyzeCarImageLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/analyzeCarImage.js`,
-        environment: {
-          COLOR_DETECT_API: config.COLOR_DETECT_API,
-          DAMAGE_DETECT_API: config.DAMAGE_DETECT_API,
-        },
         timeout: Duration.seconds(30),
       }
     );
 
     this.documentsBucket.grantRead(analyzeCarImageFunction);
+    
+    // Grant Bedrock permissions for Nova 2 Lite inference profile
+    analyzeCarImageFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["bedrock:InvokeModel"],
+        resources: [
+          `arn:aws:bedrock:*::foundation-model/amazon.nova-2-lite-v1:0`,
+          `arn:aws:bedrock:${Stack.of(this).region}:${Stack.of(this).account}:inference-profile/us.amazon.nova-2-lite-v1:0`
+        ],
+      })
+    );
 
     const analyzeCarImage = new LambdaInvoke(this, "Analyze Car Image", {
       lambdaFunction: analyzeCarImageFunction,
       resultPath: JsonPath.stringAt("$.analyzedFieldAndValues"),
       resultSelector: {
+        "vehicle_type.$": "$.Payload.analyzedFieldAndValues.vehicle_type",
         "color.$": "$.Payload.analyzedFieldAndValues.color",
         "damage.$": "$.Payload.analyzedFieldAndValues.damage",
         "type.$": "$.Payload.type",

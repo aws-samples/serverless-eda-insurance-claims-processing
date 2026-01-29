@@ -51,9 +51,12 @@ export class CleanupService extends Construct {
       scope,
       "ClearAllDataFunction",
       {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_22_X,
         memorySize: 512,
-        logRetention: RetentionDays.ONE_WEEK,
+        logGroup: new LogGroup(this, "ClearAllDataLogGroup", {
+          retention: RetentionDays.ONE_WEEK,
+          removalPolicy: RemovalPolicy.DESTROY,
+        }),
         handler: "handler",
         entry: `${__dirname}/../app/handlers/delete.js`,
         environment: {

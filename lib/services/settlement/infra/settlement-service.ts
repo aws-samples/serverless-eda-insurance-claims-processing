@@ -1,26 +1,20 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import {
-  HttpApi,
-  HttpMethod,
-  HttpRoute,
-  HttpRouteKey,
-  VpcLink
-} from "@aws-cdk/aws-apigatewayv2-alpha";
-import { HttpAlbIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { EventbridgeToSqs } from "@aws-solutions-constructs/aws-eventbridge-sqs";
 import {
   CfnOutput,
   Duration,
   RemovalPolicy,
   Stack,
+  aws_apigatewayv2 as apigwv2,
   aws_dynamodb as dynamodb,
   aws_ec2 as ec2,
   aws_ecr_assets as ecr_assets,
   aws_ecs as ecs,
   aws_ecs_patterns as ecs_patterns
 } from 'aws-cdk-lib';
+import { HttpAlbIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { EventBus } from "aws-cdk-lib/aws-events";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -81,6 +75,7 @@ export class SettlementService extends Construct {
 
     const asset = new ecr_assets.DockerImageAsset(this, "image", {
       directory: path.join(__dirname, "../app"),
+      platform: ecr_assets.Platform.LINUX_AMD64, // Force x86_64 build to avoid architecture mismatch
     });
 
     const loadBalancedFargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
@@ -106,7 +101,9 @@ export class SettlementService extends Construct {
         cpu: 1024,
         publicLoadBalancer: false,
         desiredCount: 2,
-        listenerPort: 8080
+        listenerPort: 8080,
+        minHealthyPercent: 100, // Keep all tasks running during deployments
+        maxHealthyPercent: 200, // Allow double capacity during deployments
       });
 
     this.table.grantReadWriteData(loadBalancedFargateService.taskDefinition.taskRole);
@@ -125,8 +122,8 @@ export class SettlementService extends Construct {
     });
 
     const listener = loadBalancedFargateService.loadBalancer.listeners[0];    
-    const httpApi = new HttpApi(this, "settlement-http-api", {});
-    const vpcLink = new VpcLink(this, "settlement-vpc-link", {
+    const httpApi = new apigwv2.HttpApi(this, "settlement-http-api", {});
+    const vpcLink = new apigwv2.VpcLink(this, "settlement-vpc-link", {
       vpc,
     });
     
@@ -134,14 +131,14 @@ export class SettlementService extends Construct {
       "http-alb-integration",
       listener,
       {
-        method: HttpMethod.POST,
+        method: apigwv2.HttpMethod.POST,
         vpcLink,
       }
     );
     
-    new HttpRoute(this, "http-route", {
+    new apigwv2.HttpRoute(this, "http-route", {
       httpApi,
-      routeKey: HttpRouteKey.with("/settlement", HttpMethod.POST),
+      routeKey: apigwv2.HttpRouteKey.with("/settlement", apigwv2.HttpMethod.POST),
       integration,
     });
 
