@@ -1,37 +1,48 @@
-"use strict";
 /**
  * TranscriptionDisplay Component
- *
+ * 
  * Displays live transcription text from the voice conversation.
  * Auto-scrolls to show the latest transcription.
- *
+ * 
  * Requirements: 9.3
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TranscriptionDisplay = void 0;
-const react_1 = require("react");
+
+import React, { useEffect, useRef } from 'react';
+
 /**
  * TranscriptionDisplay component shows live transcription text
  * in a scrollable container with auto-scroll to latest content.
+ * 
+ * @param {Object} props - Component props
+ * @param {string} props.transcription - Current transcription text
  */
-const TranscriptionDisplay = ({ transcription }) => {
-    const containerRef = (0, react_1.useRef)(null);
-    // Auto-scroll to bottom when transcription updates
-    (0, react_1.useEffect)(() => {
-        if (containerRef.current) {
-            containerRef.current.scrollTop = containerRef.current.scrollHeight;
-        }
-    }, [transcription]);
-    // Don't render if no transcription
-    if (!transcription || transcription.trim() === '') {
-        return null;
+export const TranscriptionDisplay = ({ transcription }) => {
+  const containerRef = useRef(null);
+
+  // Auto-scroll to bottom when transcription updates
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-    return (<div className="transcription-display">
+  }, [transcription]);
+
+  // Don't render if no transcription
+  if (!transcription || transcription.trim() === '') {
+    return null;
+  }
+
+  return (
+    <div className="transcription-display">
       <h3>Live Transcription</h3>
-      <div ref={containerRef} className="transcription-content" role="log" aria-live="polite" aria-atomic="false">
+      <div 
+        ref={containerRef}
+        className="transcription-content"
+        role="log"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         <p>{transcription}</p>
       </div>
-    </div>);
+    </div>
+  );
 };
-exports.TranscriptionDisplay = TranscriptionDisplay;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiVHJhbnNjcmlwdGlvbkRpc3BsYXkuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJUcmFuc2NyaXB0aW9uRGlzcGxheS50c3giXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IjtBQUFBOzs7Ozs7O0dBT0c7OztBQUVILGlDQUFpRDtBQU9qRDs7O0dBR0c7QUFDSSxNQUFNLG9CQUFvQixHQUF3QyxDQUFDLEVBQ3hFLGFBQWEsRUFDZCxFQUFFLEVBQUU7SUFDSCxNQUFNLFlBQVksR0FBRyxJQUFBLGNBQU0sRUFBaUIsSUFBSSxDQUFDLENBQUM7SUFFbEQsbURBQW1EO0lBQ25ELElBQUEsaUJBQVMsRUFBQyxHQUFHLEVBQUU7UUFDYixJQUFJLFlBQVksQ0FBQyxPQUFPLEVBQUUsQ0FBQztZQUN6QixZQUFZLENBQUMsT0FBTyxDQUFDLFNBQVMsR0FBRyxZQUFZLENBQUMsT0FBTyxDQUFDLFlBQVksQ0FBQztRQUNyRSxDQUFDO0lBQ0gsQ0FBQyxFQUFFLENBQUMsYUFBYSxDQUFDLENBQUMsQ0FBQztJQUVwQixtQ0FBbUM7SUFDbkMsSUFBSSxDQUFDLGFBQWEsSUFBSSxhQUFhLENBQUMsSUFBSSxFQUFFLEtBQUssRUFBRSxFQUFFLENBQUM7UUFDbEQsT0FBTyxJQUFJLENBQUM7SUFDZCxDQUFDO0lBRUQsT0FBTyxDQUNMLENBQUMsR0FBRyxDQUFDLFNBQVMsQ0FBQyx1QkFBdUIsQ0FDcEM7TUFBQSxDQUFDLEVBQUUsQ0FBQyxrQkFBa0IsRUFBRSxFQUFFLENBQzFCO01BQUEsQ0FBQyxHQUFHLENBQ0YsR0FBRyxDQUFDLENBQUMsWUFBWSxDQUFDLENBQ2xCLFNBQVMsQ0FBQyx1QkFBdUIsQ0FDakMsSUFBSSxDQUFDLEtBQUssQ0FDVixTQUFTLENBQUMsUUFBUSxDQUNsQixXQUFXLENBQUMsT0FBTyxDQUVuQjtRQUFBLENBQUMsQ0FBQyxDQUFDLENBQUMsYUFBYSxDQUFDLEVBQUUsQ0FBQyxDQUN2QjtNQUFBLEVBQUUsR0FBRyxDQUNQO0lBQUEsRUFBRSxHQUFHLENBQUMsQ0FDUCxDQUFDO0FBQ0osQ0FBQyxDQUFDO0FBL0JXLFFBQUEsb0JBQW9CLHdCQStCL0IiLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIFRyYW5zY3JpcHRpb25EaXNwbGF5IENvbXBvbmVudFxuICogXG4gKiBEaXNwbGF5cyBsaXZlIHRyYW5zY3JpcHRpb24gdGV4dCBmcm9tIHRoZSB2b2ljZSBjb252ZXJzYXRpb24uXG4gKiBBdXRvLXNjcm9sbHMgdG8gc2hvdyB0aGUgbGF0ZXN0IHRyYW5zY3JpcHRpb24uXG4gKiBcbiAqIFJlcXVpcmVtZW50czogOS4zXG4gKi9cblxuaW1wb3J0IFJlYWN0LCB7IHVzZUVmZmVjdCwgdXNlUmVmIH0gZnJvbSAncmVhY3QnO1xuXG5pbnRlcmZhY2UgVHJhbnNjcmlwdGlvbkRpc3BsYXlQcm9wcyB7XG4gIC8qKiBDdXJyZW50IHRyYW5zY3JpcHRpb24gdGV4dCAqL1xuICB0cmFuc2NyaXB0aW9uOiBzdHJpbmc7XG59XG5cbi8qKlxuICogVHJhbnNjcmlwdGlvbkRpc3BsYXkgY29tcG9uZW50IHNob3dzIGxpdmUgdHJhbnNjcmlwdGlvbiB0ZXh0XG4gKiBpbiBhIHNjcm9sbGFibGUgY29udGFpbmVyIHdpdGggYXV0by1zY3JvbGwgdG8gbGF0ZXN0IGNvbnRlbnQuXG4gKi9cbmV4cG9ydCBjb25zdCBUcmFuc2NyaXB0aW9uRGlzcGxheTogUmVhY3QuRkM8VHJhbnNjcmlwdGlvbkRpc3BsYXlQcm9wcz4gPSAoe1xuICB0cmFuc2NyaXB0aW9uXG59KSA9PiB7XG4gIGNvbnN0IGNvbnRhaW5lclJlZiA9IHVzZVJlZjxIVE1MRGl2RWxlbWVudD4obnVsbCk7XG5cbiAgLy8gQXV0by1zY3JvbGwgdG8gYm90dG9tIHdoZW4gdHJhbnNjcmlwdGlvbiB1cGRhdGVzXG4gIHVzZUVmZmVjdCgoKSA9PiB7XG4gICAgaWYgKGNvbnRhaW5lclJlZi5jdXJyZW50KSB7XG4gICAgICBjb250YWluZXJSZWYuY3VycmVudC5zY3JvbGxUb3AgPSBjb250YWluZXJSZWYuY3VycmVudC5zY3JvbGxIZWlnaHQ7XG4gICAgfVxuICB9LCBbdHJhbnNjcmlwdGlvbl0pO1xuXG4gIC8vIERvbid0IHJlbmRlciBpZiBubyB0cmFuc2NyaXB0aW9uXG4gIGlmICghdHJhbnNjcmlwdGlvbiB8fCB0cmFuc2NyaXB0aW9uLnRyaW0oKSA9PT0gJycpIHtcbiAgICByZXR1cm4gbnVsbDtcbiAgfVxuXG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJ0cmFuc2NyaXB0aW9uLWRpc3BsYXlcIj5cbiAgICAgIDxoMz5MaXZlIFRyYW5zY3JpcHRpb248L2gzPlxuICAgICAgPGRpdiBcbiAgICAgICAgcmVmPXtjb250YWluZXJSZWZ9XG4gICAgICAgIGNsYXNzTmFtZT1cInRyYW5zY3JpcHRpb24tY29udGVudFwiXG4gICAgICAgIHJvbGU9XCJsb2dcIlxuICAgICAgICBhcmlhLWxpdmU9XCJwb2xpdGVcIlxuICAgICAgICBhcmlhLWF0b21pYz1cImZhbHNlXCJcbiAgICAgID5cbiAgICAgICAgPHA+e3RyYW5zY3JpcHRpb259PC9wPlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gICk7XG59O1xuIl19

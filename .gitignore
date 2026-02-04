@@ -57,3 +57,8 @@ ENV/
 .venv/
 
 .kiro
+test-websocket-presigned.py
+test-websocket-requirements.txt
+generate-wscat-url.py
+cdk.context.json
+lib/services/voice-fnol-agent/LOCAL_TESTING_GUIDE.md

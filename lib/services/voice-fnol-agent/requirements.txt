@@ -7,7 +7,10 @@ bedrock-agentcore>=0.1.0       # Amazon Bedrock AgentCore Runtime SDK with WebSo
 aws-opentelemetry-distro>=0.1.0  # AWS Distro for OpenTelemetry (ADOT)
 
 # Core Agent Framework
-strands-agents[otel]>=0.1.0    # Strands BidiAgent with OpenTelemetry instrumentation
+strands-agents-tools>=0.2.19
+strands-agents>=0.2.19
+strands-agents[otel]>=0.2.19    # Strands BidiAgent with OpenTelemetry instrumentation
+strands-agents[bidi-all]>=0.2.19
 prompt-toolkit>=3.0.0          # Terminal interaction library (required by Strands)
 
 # Web Framework (Note: BedrockAgentCoreApp provides FastAPI integration)
@@ -25,8 +28,9 @@ httpx>=0.25.0                  # Async HTTP client for FNOL API calls
 # AWS SDK
 boto3>=1.34.0                  # AWS SDK for Python (Bedrock, SigV4 auth)
 botocore>=1.34.0               # Low-level AWS service access
+aws-sdk-bedrock-runtime>=0.1.0 # AWS SDK for Bedrock Runtime (required by Strands BidiNovaSonicModel)
 
-# Audio Processing
+# Audio Processing (required by Strands BidiAgent even for WebSocket streaming)
 numpy>=1.26.0                  # Numerical computing for audio data manipulation
 soundfile>=0.12.0              # Audio file I/O (PCM encoding/decoding)
 pyaudio>=0.2.14                # Audio I/O library (required by Strands BidiAudioIO)

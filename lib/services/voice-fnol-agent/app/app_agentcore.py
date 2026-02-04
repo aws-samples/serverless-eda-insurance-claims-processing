@@ -12,9 +12,16 @@ import logging
 import json
 from typing import AsyncGenerator
 
+from fastapi import WebSocket, WebSocketDisconnect
+
 from bedrock_agentcore import BedrockAgentCoreApp
 from app.agent import get_agent, get_interruption_tracker
 from app.context import get_conversation_context, save_conversation_context
+
+from strands_tools import calculator
+from strands.experimental.bidi.models.nova_sonic import BidiNovaSonicModel
+from strands.experimental.bidi.agent import BidiAgent
+from strands.experimental.bidi.types.events import BidiInterruptionEvent as BidiInterruptionHookEvent
 
 # Configure logging
 logging.basicConfig(
@@ -25,6 +32,45 @@ logger = logging.getLogger(__name__)
 
 app = BedrockAgentCoreApp()
 
+# @app.websocket
+# async def websocket_handler(websocket: WebSocket, context):
+#     await websocket.accept()
+
+#     voice_id = websocket.query_params.get("voice_id", "matthew")
+#     logger.info(f"Connection from {websocket.client}, voice: {voice_id}")
+
+#     try:
+#         model = BidiNovaSonicModel(
+#             region="us-east-1",
+#             model_id="amazon.nova-sonic-v1:0",
+#             provider_config={
+#                 "audio": {
+#                     "input_sample_rate": 16000,
+#                     "output_sample_rate": 16000,
+#                     "voice": voice_id,
+#                 }
+#             },
+#             tools=[calculator],
+#         )
+
+#         agent = BidiAgent(
+#             model=model,
+#             tools=[calculator],
+#             system_prompt="You are a helpful assistant with access to a calculator tool.",
+#         )
+
+#         await agent.run(inputs=[websocket.receive_json], outputs=[websocket.send_json])
+
+#     except WebSocketDisconnect:
+#         logger.info("Client disconnected")
+#     except Exception as e:
+#         logger.error(f"Error: {e}")
+#         try:
+#             await websocket.send_json({"type": "error", "message": str(e)})
+#         except Exception:
+#             pass
+#     finally:
+#         logger.info("Connection closed")
 
 @app.websocket
 async def websocket_handler(websocket, context):

@@ -28,3 +28,65 @@ export function getAgentRuntimeId() {
   const voiceFnolStack = cdk_outputs_file["VoiceFnolStack"];
   return voiceFnolStack?.AgentRuntimeId || "";
 }
+
+/**
+ * Generate a presigned WebSocket URL for AgentCore Runtime
+ * @param {string} url - Base WebSocket URL
+ * @returns {Promise<string>} Presigned WebSocket URL with SigV4 authentication
+ */
+export async function generatePresignedWebSocketUrl(url) {
+  const { SignatureV4 } = await import('@aws-sdk/signature-v4');
+  const { Sha256 } = await import('@aws-crypto/sha256-js');
+  const { HttpRequest } = await import('@aws-sdk/protocol-http');
+  const { Auth } = await import('aws-amplify');
+  
+  // Get credentials
+  const credentials = await Auth.currentCredentials();
+  if (!credentials?.authenticated) {
+    throw new Error('Not authenticated');
+  }
+  
+  // Parse URL and encode path
+  const urlObj = new URL(url);
+  const encodedPath = urlObj.pathname.split('/').map(segment => {
+    if (segment === '' || segment === 'runtimes' || segment === 'ws') return segment;
+    return encodeURIComponent(segment);
+  }).join('/');
+  
+  // Generate session ID
+  const sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  
+  // Create request with session ID
+  const request = new HttpRequest({
+    method: 'GET',
+    protocol: 'https:',
+    hostname: urlObj.hostname,
+    path: encodedPath,
+    query: {
+      'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': sessionId
+    },
+    headers: { host: urlObj.hostname }
+  });
+  
+  // Sign request
+  const signer = new SignatureV4({
+    credentials: {
+      accessKeyId: credentials.accessKeyId,
+      secretAccessKey: credentials.secretAccessKey,
+      sessionToken: credentials.sessionToken
+    },
+    region: credentials.region || 'us-east-1',
+    service: 'bedrock-agentcore',
+    sha256: Sha256,
+    applyChecksum: false,
+    uriEscapePath: true
+  });
+  
+  const signedRequest = await signer.presign(request, { expiresIn: 300 });
+  
+  // Build full URL with query parameters
+  const queryParams = new URLSearchParams(signedRequest.query || {});
+  const signedUrl = `wss://${signedRequest.hostname}${signedRequest.path}?${queryParams.toString()}`;
+  
+  return signedUrl;
+}

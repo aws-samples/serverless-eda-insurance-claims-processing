@@ -14,7 +14,7 @@ from typing import Optional
 
 from strands.experimental.bidi.models.nova_sonic import BidiNovaSonicModel
 from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.hooks.events import BidiInterruptionEvent as BidiInterruptionHookEvent
+from strands.experimental.bidi.types.events import BidiInterruptionEvent as BidiInterruptionHookEvent
 
 # Import all tools
 from app.tools.safety_check import assess_safety
