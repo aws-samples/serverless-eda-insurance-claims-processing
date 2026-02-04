@@ -10,3 +10,21 @@ export function getEndpointUrl(searchBy) {
     ? stackOutput[result[0]]
     : "";
 }
+
+/**
+ * Get the WebSocket endpoint URL from VoiceFnolStack outputs
+ * @returns {string} WebSocket endpoint ARN or empty string if not found
+ */
+export function getWebSocketEndpoint() {
+  const voiceFnolStack = cdk_outputs_file["VoiceFnolStack"];
+  return voiceFnolStack?.WebSocketEndpoint || "";
+}
+
+/**
+ * Get the Agent Runtime ID from VoiceFnolStack outputs
+ * @returns {string} Agent Runtime ID or empty string if not found
+ */
+export function getAgentRuntimeId() {
+  const voiceFnolStack = cdk_outputs_file["VoiceFnolStack"];
+  return voiceFnolStack?.AgentRuntimeId || "";
+}

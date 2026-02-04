@@ -6,6 +6,7 @@ import UpdateArea from "./Updates";
 import UploadFile from "./UploadFile";
 import React from "react";
 import ClaimForm from "./Claim";
+import ClaimWithVoice from "./ClaimWithVoice";
 import { API, Auth } from "aws-amplify";
 import StepWizard from "react-step-wizard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -159,7 +160,7 @@ class App extends React.Component {
               </>
 
               <>
-                <ClaimForm
+                <ClaimWithVoice
                   customer={this.state.customer}
                 />
                 <br />

@@ -234,6 +234,27 @@
               ]
             },
             {
+              "Effect": "Allow",
+              "Action": [
+                "bedrock-agentcore:InvokeAgentRuntimeWithWebSocketStream"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": [
+                    "arn:aws:bedrock-agentcore:${region}:${account}:runtime/*",
+                    {
+                      "region": {
+                        "Ref": "AWS::Region"
+                      },
+                      "account": {
+                        "Ref": "AWS::AccountId"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "Action": "iot:Connect",
               "Resource": {
                 "Fn::Sub": "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:*"
