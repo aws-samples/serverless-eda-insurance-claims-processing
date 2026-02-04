@@ -9,7 +9,14 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy": "cdk deploy --outputs-file react-claims/src/cdk-outputs.json --all",
+    "deploy:claims": "cdk deploy ClaimsProcessingStack --outputs-file react-claims/src/cdk-outputs.json --require-approval never",
+    "deploy:voice": "cdk deploy VoiceFnolStack --outputs-file react-claims/src/cdk-outputs.json --require-approval never",
+    "deploy:all": "npm run deploy:claims && npm run deploy:voice",
+    "deploy": "npm run deploy:all",
+    "destroy:claims": "cdk destroy ClaimsProcessingStack",
+    "destroy:voice": "cdk destroy VoiceFnolStack",
+    "destroy:all": "npm run destroy:voice && npm run destroy:claims",
+    "destroy": "npm run destroy:all",
     "format": "npx prettier --write ."
   },
   "devDependencies": {

@@ -36,3 +36,24 @@ cdk-outputs.json
 /.idea/
 /lib/services/settlement/app/target/
 aggregated_results.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+venv/
+env/
+ENV/
+.venv/
+
+.kiro

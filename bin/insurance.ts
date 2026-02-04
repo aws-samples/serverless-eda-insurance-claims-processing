@@ -3,8 +3,9 @@
 
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
-import { Aspects } from "aws-cdk-lib";
+import { Aspects, Fn } from "aws-cdk-lib";
 import { ClaimsProcessingStack } from "../lib/claims-processing-stack";
+import { VoiceFnolStack } from "../lib/voice-fnol-stack";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 
 const app = new cdk.App();
@@ -12,9 +13,28 @@ const app = new cdk.App();
 // Add the cdk-nag AwsSolutions Pack with extra verbose logging enabled.
 Aspects.of(app).add(new AwsSolutionsChecks({verbose: true}));
 
-const mStack = new ClaimsProcessingStack(app, "ClaimsProcessingStack", {});
+// Create Claims Processing Stack first
+const claimsStack = new ClaimsProcessingStack(app, "ClaimsProcessingStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
 
-NagSuppressions.addStackSuppressions(mStack, [
+// Create Voice FNOL Stack with dependency on Claims Stack
+const voiceFnolStack = new VoiceFnolStack(app, "VoiceFnolStack", {
+  fnolApiEndpoint: Fn.importValue("ClaimsProcessingStack-FnolApiEndpoint"),
+  fnolApiId: Fn.importValue("ClaimsProcessingStack-FnolApiId"),
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
+
+// Explicit dependency: Voice FNOL Stack depends on Claims Processing Stack
+voiceFnolStack.addDependency(claimsStack);
+
+NagSuppressions.addStackSuppressions(claimsStack, [
   {
     id: "AwsSolutions-S1",
     reason: "Server access logging not required for demo.",
@@ -90,7 +110,7 @@ NagSuppressions.addStackSuppressions(mStack, [
   }
 ], true);
 
-NagSuppressions.addResourceSuppressions(mStack, [
+NagSuppressions.addResourceSuppressions(claimsStack, [
   {
     id: "AwsSolutions-EKS1",
     reason: "Default VPC is used for demo purposes.",
@@ -106,5 +126,26 @@ NagSuppressions.addResourceSuppressions(mStack, [
     id: "AwsSolutions-IAM5",
     reason: "Resources created by EKS clusters",
     appliesTo: ['Action::s3:*']
+  }
+], true);
+
+// NAG Suppressions for Voice FNOL Stack
+NagSuppressions.addStackSuppressions(voiceFnolStack, [
+  {
+    id: "AwsSolutions-IAM4",
+    reason: "Managed policies required for Lambda VPC execution and AgentCore.",
+  },
+  {
+    id: "AwsSolutions-IAM5",
+    reason: "Wildcard permissions required for Bedrock model access and CloudWatch logs.",
+  },
+  {
+    id: "AwsSolutions-EC23",
+    reason: "Security group allows all outbound traffic for AgentCore Runtime to access Bedrock and FNOL API.",
+  },
+  {
+    id: "AwsSolutions-L1",
+    reason:
+      "Only functions that are left are AwsCustomResource related functions, and there's no way to specify runtime for them. These should be fixed in time automatically.  ",
   }
 ], true);

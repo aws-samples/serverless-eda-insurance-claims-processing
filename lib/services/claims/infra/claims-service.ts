@@ -51,6 +51,7 @@ interface ClaimsServiceProps {
 export class ClaimsService extends Construct {
   public readonly claimsTable: Table;
   public readonly claimsMetricsWidget: GraphWidget;
+  public readonly fnolApi: RestApi;
 
   constructor(scope: Construct, id: string, props: ClaimsServiceProps) {
     super(scope, id);
@@ -110,7 +111,7 @@ export class ClaimsService extends Construct {
     firstNoticeOfLossLambda.addToRolePolicy(lambdaToPutEventsPolicy);
 
     // Create Claims FNOL POST API
-    const fnolApi = new RestApi(this, "FnolApi", {
+    this.fnolApi = new RestApi(this, "FnolApi", {
       endpointConfiguration: {
         types: [EndpointType.REGIONAL],
       },
@@ -124,15 +125,15 @@ export class ClaimsService extends Construct {
       },
     });
 
-    const fnolResource = fnolApi.root.addResource("fnol");
+    const fnolResource = this.fnolApi.root.addResource("fnol");
     fnolResource.addMethod(
       "POST",
       new LambdaIntegration(firstNoticeOfLossLambda),
       { authorizationType: AuthorizationType.IAM }
     );
 
-    addDefaultGatewayResponse(fnolApi);
-    addWebAcl(this, fnolApi.deploymentStage.stageArn, "FnolApiWebACL");
+    addDefaultGatewayResponse(this.fnolApi);
+    addWebAcl(this, this.fnolApi.deploymentStage.stageArn, "FnolApiWebACL");
 
     const claimsLambdaRole = new Role(this, "ClaimsQueueConsumerFunctionRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),

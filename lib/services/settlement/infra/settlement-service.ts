@@ -17,7 +17,7 @@ import {
 import { HttpAlbIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { EventBus } from "aws-cdk-lib/aws-events";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from 'constructs';
 import * as path from "path";
 import { createGraphWidget, createMetric } from "../../../observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
@@ -94,7 +94,10 @@ export class SettlementService extends Construct {
           logDriver: new ecs.AwsLogDriver({
             streamPrefix: "settlement-service",
             mode: ecs.AwsLogDriverMode.NON_BLOCKING,
-            logRetention: RetentionDays.FIVE_DAYS,
+            logGroup: new LogGroup(this, "SettlementServiceLogGroup", {
+              retention: RetentionDays.FIVE_DAYS,
+              removalPolicy: RemovalPolicy.DESTROY,
+            }),
           })
         },
         memoryLimitMiB: 2048,
