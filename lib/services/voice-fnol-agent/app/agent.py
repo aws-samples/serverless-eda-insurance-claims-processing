@@ -144,7 +144,7 @@ def create_nova_sonic_model() -> BidiNovaSonicModel:
     """
     # Get configuration from environment variables
     region = os.getenv("AWS_REGION")
-    model_id = os.getenv("NOVA_SONIC_MODEL_ID", "amazon.nova-sonic-v2:0")
+    model_id = os.getenv("NOVA_SONIC_MODEL_ID", "amazon.nova-2-sonic-v1:0")
     
     # Validate required configuration
     if not region:
@@ -194,7 +194,7 @@ def get_model() -> BidiNovaSonicModel:
     """
     global _model_instance
     
-    if '_model_instance' not in globals():
+    if _model_instance is None:
         _model_instance = create_nova_sonic_model()
     
     return _model_instance
@@ -208,7 +208,7 @@ _model_instance: Optional[BidiNovaSonicModel] = None
 SYSTEM_PROMPT = """You are a compassionate insurance claims specialist helping someone who has just been in an accident. Your primary goal is to ensure their safety and well-being before collecting any claim information.
 
 CRITICAL SAFETY-FIRST APPROACH:
-Before collecting ANY claim information, you MUST assess the user's safety by asking:
+Before collecting ANY claim information, you MUST assess the user's safety by asking these questions one at a time. Wait for the reply to move ahead:
 1. Are you safe and in a secure location away from traffic?
 2. Do you need medical assistance or emergency services?
 3. Have police or emergency services been contacted or arrived at the scene?
@@ -225,7 +225,7 @@ If the user is in an unsafe location:
 Only proceed with claim collection after confirming the user is safe and does not need immediate emergency assistance.
 
 REQUIRED CLAIM INFORMATION:
-Once safety is confirmed, you need to collect these REQUIRED fields:
+Once safety is confirmed, you need to collect these REQUIRED fields one at a time. Wait for the reply to move ahead. DO NOT overwhelm the user with all the questions at once:
 - Date and time of accident (occurrenceDateTime) - will be converted to ISO 8601 format
 - Accident location (location) - natural language description that will be parsed into structured address
 - Description of what happened and damage to vehicle (damageDescription)
@@ -251,6 +251,7 @@ CONVERSATION GUIDELINES:
 6. Present a summary of collected information and ask for confirmation before submission
 7. Use submit_to_fnol_api tool ONLY after user explicitly confirms all details are correct
 8. If the user corrects information, update it using extract_claim_info again
+9. Ask one question at a time. Wait for the reply to move ahead. DO NOT overwhelm the user with all the questions at once
 
 EMPATHETIC TONE GUIDANCE:
 - Start with acknowledgment: "I'm sorry to hear about your accident. Let me help you with your claim."
@@ -320,7 +321,7 @@ def create_agent() -> BidiAgent:
                 submit_to_fnol_api
             ],
             system_prompt=SYSTEM_PROMPT,
-            hooks=[interruption_tracker]
+            # hooks=[interruption_tracker]
         )
         
         logger.info(
@@ -346,7 +347,7 @@ def get_agent() -> BidiAgent:
     """
     global _agent_instance
     
-    if '_agent_instance' not in globals():
+    if _agent_instance is None:
         _agent_instance = create_agent()
     
     return _agent_instance

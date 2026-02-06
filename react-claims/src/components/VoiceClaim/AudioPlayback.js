@@ -2,174 +2,160 @@
  * AudioPlayback - Handles audio playback using Web Audio API
  * 
  * This class manages:
- * - Decoding PCM audio data at 24kHz
- * - Playing audio through speakers
- * - Queueing audio chunks for sequential playback
+ * - Simple AudioBufferSourceNode playback (proven to work)
+ * - Scheduled playback to avoid gaps
+ * - Dynamic sample rate handling
  * 
- * Requirements: 9.5
+ * Requirements: 11.2, 11.3, 13.1
  */
 export class AudioPlayback {
   constructor() {
-    // Initialize AudioContext
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    this.audioContext = new AudioContextClass({
-      sampleRate: 24000 // Output sample rate for Nova Sonic
-    });
-    
-    this.playbackQueue = [];
-    this.isPlaying = false;
-    this.currentSource = null;
+    this.initialized = false;
+    this.audioContext = null;
+    this.nextPlayTime = 0;
+  }
+
+  /**
+   * Initialize audio playback
+   * @param {number} sampleRate - Sample rate (default: 24000 for Nova Sonic output)
+   */
+  async initialize(sampleRate = 24000) {
+    if (this.initialized) {
+      console.log('AudioPlayback already initialized');
+      return;
+    }
+
+    try {
+      console.log(`Initializing AudioPlayback with sample rate: ${sampleRate}Hz`);
+      
+      // Create AudioContext with specified sample rate
+      this.audioContext = new AudioContext({ sampleRate });
+      this.nextPlayTime = this.audioContext.currentTime;
+
+      this.initialized = true;
+
+      // Ensure AudioContext is running
+      if (this.audioContext.state !== 'running') {
+        console.log('Resuming AudioContext...');
+        await this.audioContext.resume();
+      }
+
+      console.log('AudioPlayback initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize AudioPlayback:', error);
+      this.cleanup();
+      throw error;
+    }
   }
 
   /**
    * Play audio chunk
-   * @param {ArrayBuffer} audioChunk - PCM audio data at 24kHz as ArrayBuffer
+   * @param {string} base64Audio - Base64-encoded PCM audio data
+   * @param {number} sampleRate - Sample rate of the audio (default: 24000)
    */
-  async playAudio(audioChunk) {
-    if (!this.audioContext) {
-      console.error('AudioContext not initialized');
+  async playAudio(base64Audio, sampleRate = 24000) {
+    if (!this.initialized) {
+      console.log('AudioPlayback not initialized, initializing now...');
+      await this.initialize(sampleRate);
+    }
+
+    // Resume AudioContext if suspended
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
+
+    // Validate audio data
+    if (!base64Audio) {
+      console.warn('Received empty audio chunk');
       return;
     }
-
-    // Add to queue
-    this.playbackQueue.push(audioChunk);
-
-    // Start playback if not already playing
-    if (!this.isPlaying) {
-      await this.processQueue();
-    }
-  }
-
-  /**
-   * Process the playback queue
-   */
-  async processQueue() {
-    if (this.playbackQueue.length === 0) {
-      this.isPlaying = false;
-      return;
-    }
-
-    this.isPlaying = true;
 
     try {
-      const audioChunk = this.playbackQueue.shift();
-      if (!audioChunk || !this.audioContext) {
-        this.isPlaying = false;
-        return;
+      // Decode base64 to binary
+      const binaryString = atob(base64Audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
       }
-
-      // Decode PCM audio data
-      const audioBuffer = await this.decodePCM(audioChunk);
       
-      if (!audioBuffer) {
-        // Continue with next chunk if decoding failed
-        await this.processQueue();
-        return;
+      // Convert PCM16 to Float32
+      const pcm16 = new Int16Array(bytes.buffer);
+      const float32 = new Float32Array(pcm16.length);
+      for (let i = 0; i < pcm16.length; i++) {
+        float32[i] = pcm16[i] / 32768.0;  // Convert to -1.0 to 1.0 range
       }
-
-      // Create audio source
-      this.currentSource = this.audioContext.createBufferSource();
-      this.currentSource.buffer = audioBuffer;
-      this.currentSource.connect(this.audioContext.destination);
-
-      // Set up callback for when playback ends
-      this.currentSource.onended = () => {
-        this.currentSource = null;
-        // Process next chunk in queue
-        this.processQueue();
-      };
-
-      // Start playback
-      this.currentSource.start(0);
+      
+      // Create audio buffer
+      const audioBuffer = this.audioContext.createBuffer(
+        1,  // mono
+        float32.length,
+        sampleRate
+      );
+      audioBuffer.getChannelData(0).set(float32);
+      
+      // Schedule playback
+      const source = this.audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(this.audioContext.destination);
+      
+      // Schedule at the next available time
+      const currentTime = this.audioContext.currentTime;
+      const startTime = Math.max(currentTime, this.nextPlayTime);
+      source.start(startTime);
+      
+      // Update next play time
+      this.nextPlayTime = startTime + audioBuffer.duration;
+      
     } catch (error) {
       console.error('Failed to play audio:', error);
-      this.isPlaying = false;
-      // Try to continue with next chunk
-      await this.processQueue();
     }
   }
 
   /**
-   * Decode PCM audio data to AudioBuffer
-   * @param {ArrayBuffer} pcmData - PCM audio data as ArrayBuffer (16-bit signed integers)
-   * @returns {Promise<AudioBuffer|null>} AudioBuffer ready for playback
+   * Barge-in: Clear scheduled audio on interruption
+   * This is called when the user interrupts the agent
    */
-  async decodePCM(pcmData) {
-    try {
-      if (!this.audioContext) {
-        return null;
-      }
-
-      // Convert Int16Array to Float32Array
-      const int16Array = new Int16Array(pcmData);
-      const float32Array = new Float32Array(int16Array.length);
-      
-      for (let i = 0; i < int16Array.length; i++) {
-        // Convert from [-32768, 32767] to [-1, 1]
-        float32Array[i] = int16Array[i] / (int16Array[i] < 0 ? 0x8000 : 0x7FFF);
-      }
-
-      // Create AudioBuffer
-      const audioBuffer = this.audioContext.createBuffer(
-        1, // mono channel
-        float32Array.length,
-        24000 // 24kHz sample rate
-      );
-
-      // Copy data to AudioBuffer
-      audioBuffer.getChannelData(0).set(float32Array);
-
-      return audioBuffer;
-    } catch (error) {
-      console.error('Failed to decode PCM audio:', error);
-      return null;
+  bargeIn() {
+    if (!this.initialized) {
+      return;
     }
+
+    console.log('Barge-in: Resetting playback schedule');
+    // Reset next play time to current time to clear any scheduled audio
+    this.nextPlayTime = this.audioContext.currentTime;
   }
 
   /**
-   * Stop playback and clear queue
+   * Stop and cleanup audio playback
+   */
+  cleanup() {
+    if (!this.initialized) {
+      return;
+    }
+
+    console.log('Cleaning up AudioPlayback');
+
+    if (this.audioContext) {
+      this.audioContext.close();
+    }
+
+    this.initialized = false;
+    this.audioContext = null;
+    this.nextPlayTime = 0;
+  }
+
+  /**
+   * Alias for cleanup() - for compatibility
    */
   stop() {
-    // Stop current playback
-    if (this.currentSource) {
-      try {
-        this.currentSource.stop();
-      } catch (error) {
-        // Ignore errors if already stopped
-      }
-      this.currentSource = null;
-    }
-
-    // Clear queue
-    this.playbackQueue = [];
-    this.isPlaying = false;
-  }
-
-  /**
-   * Get the number of chunks in the playback queue
-   * @returns {number} Number of chunks in queue
-   */
-  getQueueLength() {
-    return this.playbackQueue.length;
+    this.cleanup();
   }
 
   /**
    * Check if audio is currently playing
-   * @returns {boolean} True if playing audio
+   * @returns {boolean}
    */
-  isPlaybackActive() {
-    return this.isPlaying;
-  }
-
-  /**
-   * Cleanup resources
-   */
-  cleanup() {
-    this.stop();
-    
-    if (this.audioContext) {
-      this.audioContext.close();
-      this.audioContext = null;
-    }
+  isPlaying() {
+    return this.initialized && this.audioContext && this.audioContext.state === 'running';
   }
 }

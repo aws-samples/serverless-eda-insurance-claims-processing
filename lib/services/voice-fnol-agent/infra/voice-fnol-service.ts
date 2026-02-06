@@ -170,10 +170,10 @@ export class VoiceFnolService extends Construct {
         effect: iam.Effect.ALLOW,
         actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
         resources: [
-          // Nova Sonic model ARN
-          `arn:aws:bedrock:${region}::foundation-model/amazon.nova-sonic-v2:0`,
+          // Nova Sonic v2 model ARN
+          `arn:aws:bedrock:${region}::foundation-model/amazon.nova-2-sonic-v1:0`,
           // Inference profile ARN (for cross-region inference)
-          `arn:aws:bedrock:${region}:${account}:inference-profile/us.amazon.nova-sonic-v2:0`,
+          `arn:aws:bedrock:${region}:${account}:inference-profile/us.amazon.nova-2-sonic-v1:0`,
           // Allow all foundation models
           `arn:aws:bedrock:*::foundation-model/*`,
         ],
@@ -235,7 +235,7 @@ export class VoiceFnolService extends Construct {
     // Environment variables for the AgentCore service
     const environment = {
       FNOL_API_ENDPOINT: props.fnolApiEndpoint,
-      NOVA_SONIC_MODEL_ID: "amazon.nova-sonic-v2:0",
+      NOVA_SONIC_MODEL_ID: "amazon.nova-2-sonic-v1:0",
       AWS_REGION: region,
       LOG_LEVEL: "INFO",
     };

@@ -62,3 +62,7 @@ test-websocket-requirements.txt
 generate-wscat-url.py
 cdk.context.json
 lib/services/voice-fnol-agent/LOCAL_TESTING_GUIDE.md
+lib/services/voice-fnol-agent/run-local.sh
+lib/services/voice-fnol-agent/serve-test.sh
+lib/services/voice-fnol-agent/test-local.html
+lib/services/voice-fnol-agent/watch-logs.sh

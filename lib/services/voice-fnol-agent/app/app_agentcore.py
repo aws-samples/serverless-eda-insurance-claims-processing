@@ -85,61 +85,47 @@ async def websocket_handler(websocket, context):
     await websocket.accept()
     
     try:
-        # Initialize conversation context
-        conversation_context = get_conversation_context(session_id)
+        # # Initialize conversation context
+        # conversation_context = get_conversation_context(session_id)
         
-        # Extract metadata from custom headers or first message
-        customer_id = None
-        policy_id = None
+        # # Extract metadata from custom headers or first message
+        # customer_id = None
+        # policy_id = None
         
-        if hasattr(context, 'headers'):
-            customer_id = context.headers.get('x-amzn-bedrock-agentcore-runtime-custom-customerid')
-            policy_id = context.headers.get('x-amzn-bedrock-agentcore-runtime-custom-policyid')
+        # if hasattr(context, 'headers'):
+        #     customer_id = context.headers.get('x-amzn-bedrock-agentcore-runtime-custom-customerid')
+        #     policy_id = context.headers.get('x-amzn-bedrock-agentcore-runtime-custom-policyid')
         
-        if not customer_id or not policy_id:
-            try:
-                first_message = await websocket.receive_text()
-                metadata = json.loads(first_message)
-                if metadata.get('type') == 'metadata':
-                    customer_id = customer_id or metadata.get('data', {}).get('customerId')
-                    policy_id = policy_id or metadata.get('data', {}).get('policyId')
-            except Exception as e:
-                logger.warning(f"No metadata received: {e}")
+        # if not customer_id or not policy_id:
+        #     try:
+        #         first_message = await websocket.receive_text()
+        #         metadata = json.loads(first_message)
+        #         if metadata.get('type') == 'metadata':
+        #             customer_id = customer_id or metadata.get('data', {}).get('customerId')
+        #             policy_id = policy_id or metadata.get('data', {}).get('policyId')
+        #     except Exception as e:
+        #         logger.warning(f"No metadata received: {e}")
         
-        if customer_id:
-            conversation_context.customer_id = customer_id
-        if policy_id:
-            conversation_context.policy_id = policy_id
+        # if customer_id:
+        #     conversation_context.customer_id = customer_id
+        # if policy_id:
+        #     conversation_context.policy_id = policy_id
         
-        save_conversation_context(conversation_context)
+        # save_conversation_context(conversation_context)
         
-        # Configure interruption tracker
-        interruption_tracker = get_interruption_tracker()
-        if interruption_tracker:
-            interruption_tracker.set_session_id(session_id)
+        # # Configure interruption tracker
+        # interruption_tracker = get_interruption_tracker()
+        # if interruption_tracker:
+        #     interruption_tracker.set_session_id(session_id)
         
         # Get agent
         agent = get_agent()
         
-        # Audio input stream (16kHz PCM)
-        async def receive_audio() -> AsyncGenerator[bytes, None]:
-            try:
-                while True:
-                    audio_chunk = await websocket.receive_bytes()
-                    yield audio_chunk
-            except Exception as e:
-                logger.info(f"Audio stream ended: {e}")
-                return
-        
-        # Audio output stream (24kHz PCM)
-        async def send_audio(audio_chunk: bytes) -> None:
-            await websocket.send_bytes(audio_chunk)
-        
         # Run agent with bidirectional audio
         logger.info(f"Starting agent - Session: {session_id}")
         await agent.run(
-            inputs=[receive_audio()],
-            outputs=[send_audio]
+            inputs=[websocket.receive_json],
+            outputs=[websocket.send_json]
         )
         
         logger.info(f"Agent completed - Session: {session_id}")
@@ -152,7 +138,7 @@ async def websocket_handler(websocket, context):
             pass
     
     finally:
-        save_conversation_context(conversation_context)
+        # save_conversation_context(conversation_context)
         logger.info(f"Session closed - Session: {session_id}")
 
 
