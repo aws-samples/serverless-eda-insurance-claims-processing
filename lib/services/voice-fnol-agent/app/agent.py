@@ -14,7 +14,7 @@ from typing import Optional
 
 from strands.experimental.bidi.models.nova_sonic import BidiNovaSonicModel
 from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.types.events import BidiInterruptionEvent as BidiInterruptionHookEvent
+from strands_tools import current_time
 
 # Import all tools
 from app.tools.safety_check import assess_safety
@@ -27,98 +27,6 @@ from app.context import get_conversation_context, save_conversation_context
 
 # Configure logging
 logger = logging.getLogger(__name__)
-
-
-class InterruptionTracker:
-    """
-    Hook to track user interruptions during agent speech.
-    
-    This hook monitors interruption events and updates the conversation context
-    to maintain a record of interruptions. This helps the agent understand
-    conversation flow and user engagement patterns.
-    
-    Requirements:
-        - 13.1: User interruption handling with immediate stop and listen
-    """
-    
-    def __init__(self):
-        """Initialize the interruption tracker."""
-        self.interruption_count = 0
-        self.session_id: Optional[str] = None
-    
-    def set_session_id(self, session_id: str) -> None:
-        """
-        Set the current session ID for context tracking.
-        
-        Args:
-            session_id: The WebSocket session identifier
-        """
-        self.session_id = session_id
-        self.interruption_count = 0
-        logger.info(f"InterruptionTracker initialized for session {session_id}")
-    
-    async def on_interruption(self, event: BidiInterruptionHookEvent) -> None:
-        """
-        Handle interruption events from the BidiAgent.
-        
-        When a user interrupts the agent's speech, this callback:
-        1. Increments the interruption counter
-        2. Logs the interruption for monitoring
-        3. Updates the conversation context to track the interruption
-        
-        The Nova Sonic model automatically:
-        - Stops speaking immediately when interrupted
-        - Clears the audio buffer
-        - Begins listening to the user's new input
-        
-        Args:
-            event: The interruption event containing reason and metadata
-            
-        Requirements:
-            - 13.1: Stop agent speech when user interrupts
-            - 13.1: Ensure agent immediately begins listening after interruption
-            - 13.1: Update conversation context to track interruptions
-        """
-        self.interruption_count += 1
-        
-        logger.info(
-            f"Interruption #{self.interruption_count} detected: {event.reason}"
-        )
-        
-        # Update conversation context if session is active
-        if self.session_id:
-            try:
-                context = get_conversation_context(self.session_id)
-                
-                # Track interruption in conversation history
-                interruption_record = {
-                    "type": "interruption",
-                    "reason": event.reason,
-                    "count": self.interruption_count,
-                    "timestamp": event.timestamp if hasattr(event, 'timestamp') else None
-                }
-                
-                context.conversation_history.append(interruption_record)
-                
-                # Save updated context
-                save_conversation_context(context)
-                
-                logger.debug(
-                    f"Updated context for session {self.session_id} with interruption"
-                )
-                
-            except Exception as e:
-                # Don't fail the conversation if context update fails
-                logger.error(
-                    f"Failed to update context with interruption: {str(e)}",
-                    exc_info=True
-                )
-        
-        # Note: The BidiAgent and Nova Sonic model automatically handle:
-        # - Stopping the current response immediately
-        # - Clearing the audio buffer
-        # - Resuming listening for new user input
-        # No additional action needed here for the core interruption behavior
 
 
 def create_nova_sonic_model() -> BidiNovaSonicModel:
@@ -208,21 +116,16 @@ _model_instance: Optional[BidiNovaSonicModel] = None
 SYSTEM_PROMPT = """You are a compassionate insurance claims specialist helping someone who has just been in an accident. Your primary goal is to ensure their safety and well-being before collecting any claim information.
 
 CRITICAL SAFETY-FIRST APPROACH:
-Before collecting ANY claim information, you MUST assess the user's safety by asking these questions one at a time. Wait for the reply to move ahead:
+Before collecting ANY claim information, you assess the user's safety by asking these questions one at a time. Wait for the reply for each question before moving ahead:
 1. Are you safe and in a secure location away from traffic?
 2. Do you need medical assistance or emergency services?
-3. Have police or emergency services been contacted or arrived at the scene?
 
 If the user indicates they need emergency assistance:
 - Provide emergency contact information (911 in the US)
 - Strongly encourage them to call emergency services immediately
 - Offer to help with the claim AFTER they receive assistance
 
-If the user is in an unsafe location:
-- Advise them to move to a safe location away from traffic
-- Wait for them to confirm they are safe before proceeding
-
-Only proceed with claim collection after confirming the user is safe and does not need immediate emergency assistance.
+If the user insists on filing the claim directly, politely proceed to gathering claim information.
 
 REQUIRED CLAIM INFORMATION:
 Once safety is confirmed, you need to collect these REQUIRED fields one at a time. Wait for the reply to move ahead. DO NOT overwhelm the user with all the questions at once:
@@ -237,10 +140,19 @@ Once safety is confirmed, you need to collect these REQUIRED fields one at a tim
 - Whether a police report was filed (policeFiled)
 - If police report was filed, whether they have the report/receipt (policeReceiptAvailable)
 
-OPTIONAL BUT HELPFUL INFORMATION:
-- Other party's name (first and last)
-- Other party's insurance company
-- Other party's insurance ID
+OPTIONAL HELPFUL DETAILS:
+- Other party's name and insurance information
+
+CONVERSATION EXAMPLES:
+
+User: I just had an accident!
+Assistant: I'm sorry to hear that. First, are you safe right now and away from any traffic?
+
+User: Yes, I'm safe. I pulled over to the side.
+Assistant: Good, I'm glad you're safe. Can you tell me what happened and where the accident occurred?
+
+User: Someone hit me at Main and 5th Street about 20 minutes ago.
+Assistant: Okay, Main and 5th Street about 20 minutes ago. Can you describe the damage to your vehicle?
 
 CONVERSATION GUIDELINES:
 1. Be empathetic and patient - the user has just been through a stressful experience
@@ -261,12 +173,12 @@ EMPATHETIC TONE GUIDANCE:
 - Express care: "I'm glad you're safe", "Your safety is what matters most"
 
 TOOL USAGE:
-- assess_safety: Use FIRST to check user safety before any claim collection
-- extract_claim_info: Use to structure and store claim information as user provides it
-- validate_required_fields: Use to check if all required fields are collected
-- submit_to_fnol_api: Use ONLY after validation passes and user confirms details
+- assess_safety: Use FIRST to check user safety
+- extract_claim_info: Structure details as they share them
+- validate_required_fields: Check completeness
+- submit_to_fnol_api: Use ONLY after user confirms all details are correct
 
-Remember: Safety first, empathy always, accuracy in data collection."""
+Be patient and empathetic. If they're unsure about something, that's okay. Let them know we can come back to it."""
 
 
 def create_agent() -> BidiAgent:
@@ -278,7 +190,6 @@ def create_agent() -> BidiAgent:
     - Safety assessment, claim extraction, validation, and submission tools
     - Comprehensive system prompt emphasizing safety-first approach
     - Conversation context management
-    - Interruption tracking hook for monitoring user interruptions
     
     Nova Sonic provides built-in interruption handling through Voice Activity Detection (VAD):
     - Automatically detects when user starts speaking during agent output
@@ -302,31 +213,26 @@ def create_agent() -> BidiAgent:
         - 8.5: Tool results incorporated into ongoing conversation
         - 13.1: User interruption handling with immediate stop and listen
     """
-    logger.info("Creating BidiAgent with tools, system prompt, and interruption tracking")
+    logger.info("Creating BidiAgent with tools and system prompt")
     
     try:
         # Get the configured Nova Sonic model
         model = get_model()
         
-        # Create interruption tracker hook
-        interruption_tracker = InterruptionTracker()
-        
-        # Initialize BidiAgent with model, tools, system prompt, and hooks
+        # Initialize BidiAgent with model, tools, and system prompt
         agent = BidiAgent(
             model=model,
             tools=[
+                current_time,
                 assess_safety,
                 extract_claim_info,
                 validate_required_fields,
                 submit_to_fnol_api
             ],
-            system_prompt=SYSTEM_PROMPT,
-            # hooks=[interruption_tracker]
+            system_prompt=SYSTEM_PROMPT
         )
         
-        logger.info(
-            "BidiAgent created successfully with 4 tools and interruption tracking"
-        )
+        logger.info("BidiAgent created successfully with 5 tools")
         return agent
         
     except Exception as e:
@@ -351,28 +257,6 @@ def get_agent() -> BidiAgent:
         _agent_instance = create_agent()
     
     return _agent_instance
-
-
-def get_interruption_tracker() -> Optional[InterruptionTracker]:
-    """
-    Get the InterruptionTracker hook from the current agent instance.
-    
-    This allows the WebSocket handler to set the session ID on the tracker
-    so that interruptions can be properly recorded in the conversation context.
-    
-    Returns:
-        InterruptionTracker: The interruption tracker hook, or None if not found
-    """
-    agent = get_agent()
-    
-    # Find the InterruptionTracker in the agent's hooks
-    if hasattr(agent, '_hooks'):
-        for hook in agent._hooks:
-            if isinstance(hook, InterruptionTracker):
-                return hook
-    
-    logger.warning("InterruptionTracker not found in agent hooks")
-    return None
 
 
 # Module-level agent instance (lazy initialization)

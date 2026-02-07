@@ -15,13 +15,8 @@ from typing import AsyncGenerator
 from fastapi import WebSocket, WebSocketDisconnect
 
 from bedrock_agentcore import BedrockAgentCoreApp
-from app.agent import get_agent, get_interruption_tracker
+from app.agent import get_agent
 from app.context import get_conversation_context, save_conversation_context
-
-from strands_tools import calculator
-from strands.experimental.bidi.models.nova_sonic import BidiNovaSonicModel
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.types.events import BidiInterruptionEvent as BidiInterruptionHookEvent
 
 # Configure logging
 logging.basicConfig(
@@ -31,46 +26,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = BedrockAgentCoreApp()
-
-# @app.websocket
-# async def websocket_handler(websocket: WebSocket, context):
-#     await websocket.accept()
-
-#     voice_id = websocket.query_params.get("voice_id", "matthew")
-#     logger.info(f"Connection from {websocket.client}, voice: {voice_id}")
-
-#     try:
-#         model = BidiNovaSonicModel(
-#             region="us-east-1",
-#             model_id="amazon.nova-sonic-v1:0",
-#             provider_config={
-#                 "audio": {
-#                     "input_sample_rate": 16000,
-#                     "output_sample_rate": 16000,
-#                     "voice": voice_id,
-#                 }
-#             },
-#             tools=[calculator],
-#         )
-
-#         agent = BidiAgent(
-#             model=model,
-#             tools=[calculator],
-#             system_prompt="You are a helpful assistant with access to a calculator tool.",
-#         )
-
-#         await agent.run(inputs=[websocket.receive_json], outputs=[websocket.send_json])
-
-#     except WebSocketDisconnect:
-#         logger.info("Client disconnected")
-#     except Exception as e:
-#         logger.error(f"Error: {e}")
-#         try:
-#             await websocket.send_json({"type": "error", "message": str(e)})
-#         except Exception:
-#             pass
-#     finally:
-#         logger.info("Connection closed")
 
 @app.websocket
 async def websocket_handler(websocket, context):
@@ -85,39 +40,6 @@ async def websocket_handler(websocket, context):
     await websocket.accept()
     
     try:
-        # # Initialize conversation context
-        # conversation_context = get_conversation_context(session_id)
-        
-        # # Extract metadata from custom headers or first message
-        # customer_id = None
-        # policy_id = None
-        
-        # if hasattr(context, 'headers'):
-        #     customer_id = context.headers.get('x-amzn-bedrock-agentcore-runtime-custom-customerid')
-        #     policy_id = context.headers.get('x-amzn-bedrock-agentcore-runtime-custom-policyid')
-        
-        # if not customer_id or not policy_id:
-        #     try:
-        #         first_message = await websocket.receive_text()
-        #         metadata = json.loads(first_message)
-        #         if metadata.get('type') == 'metadata':
-        #             customer_id = customer_id or metadata.get('data', {}).get('customerId')
-        #             policy_id = policy_id or metadata.get('data', {}).get('policyId')
-        #     except Exception as e:
-        #         logger.warning(f"No metadata received: {e}")
-        
-        # if customer_id:
-        #     conversation_context.customer_id = customer_id
-        # if policy_id:
-        #     conversation_context.policy_id = policy_id
-        
-        # save_conversation_context(conversation_context)
-        
-        # # Configure interruption tracker
-        # interruption_tracker = get_interruption_tracker()
-        # if interruption_tracker:
-        #     interruption_tracker.set_session_id(session_id)
-        
         # Get agent
         agent = get_agent()
         
@@ -130,15 +52,20 @@ async def websocket_handler(websocket, context):
         
         logger.info(f"Agent completed - Session: {session_id}")
         
+    except WebSocketDisconnect as e:
+        # Normal disconnect (code 1000) is not an error
+        if hasattr(e, 'code') and e.code == 1000:
+            logger.info(f"Client disconnected normally - Session: {session_id}")
+        else:
+            logger.warning(f"Client disconnected - Session: {session_id}, code: {getattr(e, 'code', 'unknown')}")
     except Exception as e:
         logger.error(f"Error - Session: {session_id}: {e}", exc_info=True)
         try:
             await websocket.close(code=1011)  # Internal error
         except Exception:
             pass
-    
     finally:
-        # save_conversation_context(conversation_context)
+        # Agent is a singleton - keep it running for subsequent connections
         logger.info(f"Session closed - Session: {session_id}")
 
 

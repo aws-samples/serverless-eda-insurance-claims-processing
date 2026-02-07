@@ -13,6 +13,7 @@ export class AudioPlayback {
     this.initialized = false;
     this.audioContext = null;
     this.nextPlayTime = 0;
+    this.activeSources = [];  // Track active audio sources for interruption
   }
 
   /**
@@ -98,13 +99,30 @@ export class AudioPlayback {
       source.buffer = audioBuffer;
       source.connect(this.audioContext.destination);
       
-      // Schedule at the next available time
+      // Track this source for potential interruption
+      this.activeSources.push(source);
+      
+      // Remove from active sources when it ends
+      source.onended = () => {
+        const index = this.activeSources.indexOf(source);
+        if (index > -1) {
+          this.activeSources.splice(index, 1);
+        }
+      };
+      
+      // Schedule at the next available time with small buffer to prevent gaps
       const currentTime = this.audioContext.currentTime;
-      const startTime = Math.max(currentTime, this.nextPlayTime);
-      source.start(startTime);
+      
+      // If nextPlayTime is in the past, add a small buffer to current time
+      // This prevents choppy audio when chunks arrive with slight delays
+      if (this.nextPlayTime < currentTime) {
+        this.nextPlayTime = currentTime + 0.05; // 50ms buffer
+      }
+      
+      source.start(this.nextPlayTime);
       
       // Update next play time
-      this.nextPlayTime = startTime + audioBuffer.duration;
+      this.nextPlayTime += audioBuffer.duration;
       
     } catch (error) {
       console.error('Failed to play audio:', error);
@@ -120,9 +138,23 @@ export class AudioPlayback {
       return;
     }
 
-    console.log('Barge-in: Resetting playback schedule');
+    console.log('Barge-in: Stopping all active audio sources');
+    
+    // Stop all currently playing/scheduled audio sources
+    const stoppedCount = this.activeSources.length;
+    this.activeSources.forEach(source => {
+      try {
+        source.stop();
+      } catch (e) {
+        // Source might have already ended, ignore
+      }
+    });
+    this.activeSources = [];
+    
     // Reset next play time to current time to clear any scheduled audio
     this.nextPlayTime = this.audioContext.currentTime;
+    
+    console.log(`Barge-in complete: ${stoppedCount} sources stopped`);
   }
 
   /**
@@ -134,6 +166,16 @@ export class AudioPlayback {
     }
 
     console.log('Cleaning up AudioPlayback');
+
+    // Stop all active sources before closing context
+    this.activeSources.forEach(source => {
+      try {
+        source.stop();
+      } catch (e) {
+        // Source might have already ended
+      }
+    });
+    this.activeSources = [];
 
     if (this.audioContext) {
       this.audioContext.close();

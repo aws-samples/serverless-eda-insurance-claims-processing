@@ -7,10 +7,15 @@ handling location parsing, payload construction, and API communication.
 
 import os
 import re
+import logging
 from typing import Optional
 from datetime import datetime
 import httpx
 from strands.tools import tool
+import boto3
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
+import json
 
 from app.models.claim_schema import (
     FNOLPayload,
@@ -22,6 +27,9 @@ from app.models.claim_schema import (
     OtherParty
 )
 from app.context import get_conversation_context
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 def parse_location(location_description: str) -> dict:
@@ -75,23 +83,65 @@ def parse_location(location_description: str) -> dict:
     return location
 
 
-def get_service_token() -> str:
+def get_sigv4_headers(url: str, method: str, body: str, region: str) -> dict:
     """
-    Get service authentication token for FNOL API calls.
+    Generate AWS SigV4 signed headers for API Gateway requests.
     
-    In production, this would:
-    - Use AWS SigV4 signing for service-to-service auth
-    - Retrieve credentials from AWS Secrets Manager
-    - Use IAM role-based authentication
+    This function uses the Lambda execution role's credentials to sign requests
+    with AWS Signature Version 4, enabling service-to-service authentication
+    with IAM-protected API Gateway endpoints.
     
-    For now, returns a placeholder that would be replaced with actual auth.
+    The signing process:
+    1. Gets credentials from the Lambda execution role (via boto3 session)
+    2. Creates an AWSRequest with the HTTP method, URL, headers, and body
+    3. Signs the request using SigV4Auth with 'execute-api' service
+    4. Returns the signed headers including Authorization and X-Amz-* headers
+    
+    This matches how AWS Amplify API.post() works in the React frontend,
+    but uses the Lambda's IAM role instead of Cognito user credentials.
+    
+    Args:
+        url: Full API endpoint URL (e.g., https://api.example.com/fnol)
+        method: HTTP method (e.g., 'POST')
+        body: Request body as JSON string
+        region: AWS region (e.g., 'us-east-1')
     
     Returns:
-        Service authentication token
+        Dictionary of signed headers to include in the HTTP request
+        
+    Raises:
+        Exception: If credentials cannot be obtained or signing fails
     """
-    # TODO: Implement proper service authentication
-    # This would use boto3 to get SigV4 signed headers or retrieve OAuth token
-    return os.getenv("SERVICE_AUTH_TOKEN", "service-token-placeholder")
+    logger.info(f"Generating SigV4 headers for {method} {url}")
+    
+    # Get credentials from the Lambda execution role
+    # boto3 automatically uses the Lambda's IAM role credentials
+    session = boto3.Session()
+    credentials = session.get_credentials()
+    
+    if not credentials:
+        logger.error("Unable to get AWS credentials for SigV4 signing")
+        raise Exception("Unable to get AWS credentials for SigV4 signing")
+    
+    # Create AWS request object
+    request = AWSRequest(
+        method=method,
+        url=url,
+        data=body,
+        headers={
+            'Content-Type': 'application/json',
+            'Host': url.split('/')[2]  # Extract host from URL
+        }
+    )
+    
+    # Sign the request with SigV4
+    # Use 'execute-api' as the service name for API Gateway
+    SigV4Auth(credentials, 'execute-api', region).add_auth(request)
+    
+    logger.debug("SigV4 headers generated successfully")
+    
+    # Return the signed headers
+    return dict(request.headers)
 
 
 @tool
@@ -213,31 +263,55 @@ async def submit_to_fnol_api(
     # Get FNOL API endpoint from environment
     fnol_endpoint = os.getenv("FNOL_API_ENDPOINT")
     if not fnol_endpoint:
+        logger.error("FNOL_API_ENDPOINT environment variable not set")
         return {
             "success": False,
             "error": "FNOL API endpoint not configured",
             "message": "System configuration error. Please contact support."
         }
     
-    # Get service authentication token
-    auth_token = get_service_token()
+    logger.info(f"Submitting claim to FNOL API: {fnol_endpoint}")
+    
+    # Get AWS region from environment
+    region = os.getenv("AWS_REGION", "us-east-1")
+    
+    # Prepare request body
+    request_body = json.dumps(fnol_payload.model_dump(by_alias=True))
+    
+    # Generate SigV4 signed headers
+    # This matches how AWS Amplify API.post() works in the React frontend
+    try:
+        signed_headers = get_sigv4_headers(
+            url=fnol_endpoint,
+            method="POST",
+            body=request_body,
+            region=region
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate SigV4 headers: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": f"Failed to generate authentication headers: {str(e)}",
+            "message": "Authentication error. Please contact support."
+        }
     
     # Make async HTTP POST request to FNOL API
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 fnol_endpoint,
-                json=fnol_payload.model_dump(by_alias=True),
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {auth_token}"
-                }
+                content=request_body,
+                headers=signed_headers
             )
+            
+            logger.info(f"FNOL API response status: {response.status_code}")
             
             # Handle successful response (200)
             if response.status_code == 200:
                 # Try to extract claim reference from response
                 response_data = response.json()
+                
+                logger.info(f"FNOL API success response: {response_data}")
                 
                 # The FNOL API may return a claim ID or reference number
                 # Check common field names
@@ -251,6 +325,8 @@ async def submit_to_fnol_api(
                 # If no reference in response, generate a temporary one
                 if not reference_number:
                     reference_number = f"FNOL-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+                
+                logger.info(f"Claim submitted successfully with reference: {reference_number}")
                 
                 return {
                     "success": True,
@@ -267,6 +343,8 @@ async def submit_to_fnol_api(
                 except:
                     error_detail = response.text or f"HTTP {response.status_code}"
                 
+                logger.error(f"FNOL API error response: {error_detail}")
+                
                 return {
                     "success": False,
                     "error": f"FNOL API returned error: {error_detail}",
@@ -274,6 +352,7 @@ async def submit_to_fnol_api(
                 }
     
     except httpx.TimeoutException:
+        logger.error("FNOL API request timeout")
         return {
             "success": False,
             "error": "Request timeout",
@@ -281,6 +360,7 @@ async def submit_to_fnol_api(
         }
     
     except httpx.RequestError as e:
+        logger.error(f"FNOL API network error: {str(e)}", exc_info=True)
         return {
             "success": False,
             "error": f"Network error: {str(e)}",
@@ -288,6 +368,7 @@ async def submit_to_fnol_api(
         }
     
     except Exception as e:
+        logger.error(f"Unexpected error during FNOL submission: {str(e)}", exc_info=True)
         return {
             "success": False,
             "error": f"Unexpected error: {str(e)}",

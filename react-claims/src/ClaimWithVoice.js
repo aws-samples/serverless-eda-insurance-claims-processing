@@ -74,11 +74,11 @@ const ClaimWithVoice = ({ customer }) => {
 
   // Show choice screen
   if (mode === 'choice') {
-    console.log('Rendering choice screen');
-    console.log('WebSocket URL:', webSocketUrl);
-    console.log('Auth Token:', authToken ? 'Present' : 'Not present');
-    console.log('Customer ID:', customerId);
-    console.log('Policy ID:', policyId);
+    // console.log('Rendering choice screen');
+    // console.log('WebSocket URL:', webSocketUrl);
+    // console.log('Auth Token:', authToken ? 'Present' : 'Not present');
+    // console.log('Customer ID:', customerId);
+    // console.log('Policy ID:', policyId);
     
     return (
       <Flex
