@@ -6,9 +6,7 @@ handling location parsing, payload construction, and API communication.
 """
 
 import os
-import re
 import logging
-from typing import Optional
 from datetime import datetime
 import httpx
 from strands.tools import tool
@@ -17,70 +15,8 @@ from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 import json
 
-from app.models.claim_schema import (
-    FNOLPayload,
-    Incident,
-    Location,
-    Policy,
-    PersonalInformation,
-    PoliceReport,
-    OtherParty
-)
-from app.context import get_conversation_context
-
 # Configure logging
 logger = logging.getLogger(__name__)
-
-
-def parse_location(location_description: str) -> dict:
-    """
-    Parse natural language location into structured address components.
-    
-    This is a simplified implementation that extracts basic components using
-    regex patterns. In production, this would integrate with a geocoding service
-    like Google Maps API or AWS Location Service for more accurate parsing.
-    
-    Extraction strategy:
-    - ZIP code: 5-digit pattern
-    - State: 2-letter uppercase abbreviation
-    - Road: Full description used as road field
-    
-    Args:
-        location_description: Natural language location description
-        
-    Returns:
-        Dictionary with location components: country, state, city, zip, road
-    """
-    location = {
-        "country": "USA",  # Default to USA
-        "state": "",
-        "city": "",
-        "zip": "",
-        "road": location_description  # Use full description as road
-    }
-    
-    # Extract ZIP code if present (5-digit pattern)
-    zip_match = re.search(r'\b\d{5}\b', location_description)
-    if zip_match:
-        location["zip"] = zip_match.group()
-    
-    # Extract state abbreviation (2 uppercase letters)
-    # Look for patterns like "CA", "NY", "TX" that are likely state codes
-    state_match = re.search(r'\b([A-Z]{2})\b', location_description)
-    if state_match:
-        location["state"] = state_match.group(1)
-    
-    # Try to extract city name (word before state or before zip)
-    # This is a simple heuristic - production would use geocoding
-    if location["state"]:
-        city_match = re.search(
-            rf'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*,?\s*{location["state"]}',
-            location_description
-        )
-        if city_match:
-            location["city"] = city_match.group(1)
-    
-    return location
 
 
 def get_sigv4_headers(url: str, method: str, body: str, region: str) -> dict:
@@ -144,121 +80,125 @@ def get_sigv4_headers(url: str, method: str, body: str, region: str) -> dict:
     return dict(request.headers)
 
 
-@tool
+@tool(
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "incident": {
+                "type": "object",
+                "description": "Incident details including when, where, and what happened",
+                "properties": {
+                    "occurrenceDateTime": {
+                        "type": "string",
+                        "description": "Date and time of accident in YYYY-MM-DD format"
+                    },
+                    "fnolDateTime": {
+                        "type": "string",
+                        "description": "Date and time of FNOL submission in YYYY-MM-DD format"
+                    },
+                    "location": {
+                        "type": "object",
+                        "description": "Location where accident occurred",
+                        "properties": {
+                            "country": {"type": "string", "description": "Country (e.g., US)"},
+                            "state": {"type": "string", "description": "State abbreviation (e.g., AZ, CA)"},
+                            "city": {"type": "string", "description": "City name"},
+                            "zip": {"type": "string", "description": "ZIP code"},
+                            "road": {"type": "string", "description": "Street address or road name"}
+                        },
+                        "required": ["country", "state", "city", "zip", "road"]
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of what happened and damage to vehicle"
+                    }
+                },
+                "required": ["occurrenceDateTime", "fnolDateTime", "location", "description"]
+            },
+            "policy": {
+                "type": "object",
+                "description": "Policy information",
+                "properties": {
+                    "id": {"type": "string", "description": "Policy ID"}
+                },
+                "required": ["id"]
+            },
+            "personalInformation": {
+                "type": "object",
+                "description": "Personal information of the insured",
+                "properties": {
+                    "customerId": {"type": "string", "description": "Customer ID"},
+                    "driversLicenseNumber": {"type": "string", "description": "Driver's license number"},
+                    "isInsurerDriver": {"type": "boolean", "description": "Whether the insured was driving"},
+                    "licensePlateNumber": {"type": "string", "description": "License plate number"},
+                    "numberOfPassengers": {"type": "integer", "description": "Number of passengers in vehicle"}
+                },
+                "required": ["customerId", "driversLicenseNumber", "isInsurerDriver", "licensePlateNumber", "numberOfPassengers"]
+            },
+            "policeReport": {
+                "type": "object",
+                "description": "Police report information",
+                "properties": {
+                    "isFiled": {"type": "boolean", "description": "Whether police report was filed"},
+                    "reportOrReceiptAvailable": {"type": "boolean", "description": "Whether report or receipt is available"}
+                },
+                "required": ["isFiled", "reportOrReceiptAvailable"]
+            },
+            "otherParty": {
+                "type": "object",
+                "description": "Information about the other party involved",
+                "properties": {
+                    "insuranceId": {"type": "string", "description": "Other party's insurance ID"},
+                    "insuranceCompany": {"type": "string", "description": "Other party's insurance company"},
+                    "firstName": {"type": "string", "description": "Other party's first name"},
+                    "lastName": {"type": "string", "description": "Other party's last name"}
+                }
+            }
+        },
+        "required": ["incident", "policy", "personalInformation", "policeReport", "otherParty"]
+    }
+)
 async def submit_to_fnol_api(
-    customer_id: str,
-    session_id: str = "default"
+    incident: dict,
+    policy: dict,
+    personalInformation: dict,
+    policeReport: dict,
+    otherParty: dict
 ) -> dict:
     """
     Submit claim to existing FNOL API endpoint.
     
-    This tool retrieves the complete claim data from the conversation context,
-    constructs a properly formatted FNOL payload matching the existing API schema,
-    and submits it via HTTP POST request.
-    
-    The tool handles:
-    - Location parsing from natural language to structured address
-    - Payload construction with all required fields
-    - ISO 8601 datetime formatting
-    - HTTP request with authentication
-    - Success and error response handling
+    This tool accepts a complete FNOL payload in the exact format expected by the API.
+    Nova Sonic will construct the payload based on the conversation, and this tool
+    will submit it directly to the FNOL API with AWS SigV4 authentication.
     
     Args:
-        customer_id: Customer ID from authenticated session
-        session_id: Session identifier for context retrieval
+        incident: Incident details (occurrenceDateTime, fnolDateTime, location, description)
+        policy: Policy information (id)
+        personalInformation: Personal info (customerId, driversLicenseNumber, isInsurerDriver, licensePlateNumber, numberOfPassengers)
+        policeReport: Police report info (isFiled, reportOrReceiptAvailable)
+        otherParty: Other party info (insuranceId, insuranceCompany, firstName, lastName)
     
     Returns:
         Dictionary containing:
         - success (bool): Whether submission was successful
-        - reference_number (str): Claim reference number (if successful)
+        - claimNumber (str): Claim reference number (if successful)
+        - payload (dict): The submitted payload for user review
         - message (str): User-friendly confirmation or error message
         - error (str): Error details (if failed)
     """
-    # Retrieve complete claim data from conversation context
-    context = get_conversation_context(session_id)
+    logger.info("Submitting FNOL claim with provided payload")
     
-    # Validate that we have all required data
-    if not all([
-        context.occurrence_date_time,
-        context.location_description,
-        context.damage_description,
-        context.policy_id,
-        context.drivers_license,
-        context.license_plate,
-        context.number_of_passengers is not None,
-        context.was_driving is not None,
-        context.police_filed is not None
-    ]):
-        return {
-            "success": False,
-            "error": "Missing required claim information. Please ensure all required fields are collected before submission.",
-            "message": "Unable to submit claim due to missing information."
-        }
+    # Construct the complete payload
+    fnol_payload = {
+        "incident": incident,
+        "policy": policy,
+        "personalInformation": personalInformation,
+        "policeReport": policeReport,
+        "otherParty": otherParty
+    }
     
-    # Parse location description into structured address
-    location = parse_location(context.location_description)
-    
-    # Build Location object
-    location_obj = Location(
-        country=location.get("country", "USA"),
-        state=location.get("state", ""),
-        city=location.get("city", ""),
-        zip=location.get("zip", ""),
-        road=location.get("road", context.location_description)
-    )
-    
-    # Build Incident object
-    incident = Incident(
-        occurrenceDateTime=context.occurrence_date_time,
-        fnolDateTime=datetime.utcnow().isoformat() + "Z",
-        location=location_obj,
-        description=context.damage_description
-    )
-    
-    # Build Policy object
-    policy = Policy(id=context.policy_id)
-    
-    # Build PersonalInformation object
-    personal_info = PersonalInformation(
-        customerId=customer_id,
-        driversLicenseNumber=context.drivers_license,
-        isInsurerDriver=context.was_driving,
-        licensePlateNumber=context.license_plate,
-        numberOfPassengers=context.number_of_passengers
-    )
-    
-    # Build PoliceReport object
-    police_report = PoliceReport(
-        isFiled=context.police_filed,
-        reportOrReceiptAvailable=context.police_receipt or False
-    )
-    
-    # Build OtherParty object
-    # Parse name into first and last if available
-    other_party_first = None
-    other_party_last = None
-    if context.other_party_name:
-        name_parts = context.other_party_name.split()
-        if len(name_parts) > 0:
-            other_party_first = name_parts[0]
-        if len(name_parts) > 1:
-            other_party_last = " ".join(name_parts[1:])
-    
-    other_party = OtherParty(
-        insuranceId=None,  # Not collected in current flow
-        insuranceCompany=context.other_party_insurance,
-        firstName=other_party_first,
-        lastName=other_party_last
-    )
-    
-    # Build complete FNOL payload
-    fnol_payload = FNOLPayload(
-        incident=incident,
-        policy=policy,
-        personalInformation=personal_info,
-        policeReport=police_report,
-        otherParty=other_party
-    )
+    logger.info(f"FNOL Payload: {json.dumps(fnol_payload, indent=2)}")
     
     # Get FNOL API endpoint from environment
     fnol_endpoint = os.getenv("FNOL_API_ENDPOINT")
@@ -276,7 +216,7 @@ async def submit_to_fnol_api(
     region = os.getenv("AWS_REGION", "us-east-1")
     
     # Prepare request body
-    request_body = json.dumps(fnol_payload.model_dump(by_alias=True))
+    request_body = json.dumps(fnol_payload)
     
     # Generate SigV4 signed headers
     # This matches how AWS Amplify API.post() works in the React frontend
@@ -330,7 +270,8 @@ async def submit_to_fnol_api(
                 
                 return {
                     "success": True,
-                    "reference_number": reference_number,
+                    "claimNumber": reference_number,
+                    "payload": fnol_payload,
                     "message": f"Your claim has been submitted successfully. Your reference number is {reference_number}. You'll receive a confirmation email with your official claim number shortly."
                 }
             

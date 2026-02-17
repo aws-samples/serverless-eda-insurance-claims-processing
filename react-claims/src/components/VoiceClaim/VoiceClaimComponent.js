@@ -51,6 +51,8 @@ export const VoiceClaimComponent = ({
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [submissionPayload, setSubmissionPayload] = useState(null);
+  const [showPayloadModal, setShowPayloadModal] = useState(false);
   const maxReconnectAttempts = 3;
 
   // Refs for managing audio and WebSocket clients
@@ -218,6 +220,13 @@ export const VoiceClaimComponent = ({
           // If extract_claim_info tool is being used, update claim data
           if (toolUse.name === 'extract_claim_info' && toolUse.input) {
             setClaimData(prevData => ({ ...prevData, ...toolUse.input }));
+          }
+          
+          // If submit_to_fnol_api tool is being used, capture the payload
+          if (toolUse.name === 'submit_to_fnol_api' && toolUse.input) {
+            console.log('Capturing FNOL submission payload:', toolUse.input);
+            setSubmissionPayload(toolUse.input);
+            setShowPayloadModal(true);
           }
         });
 
@@ -519,6 +528,39 @@ export const VoiceClaimComponent = ({
           event={selectedEvent}
           onClose={() => setShowEventModal(false)}
         />
+      )}
+
+      {/* Submission Payload Modal */}
+      {showPayloadModal && submissionPayload && (
+        <div className="modal-overlay" onClick={() => setShowPayloadModal(false)}>
+          <div className="modal-content payload-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>FNOL Submission Payload</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowPayloadModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="payload-description">
+                This is the data being submitted to the FNOL API:
+              </p>
+              <pre className="payload-json">
+                {JSON.stringify(submissionPayload, null, 2)}
+              </pre>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn-modal-close"
+                onClick={() => setShowPayloadModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
