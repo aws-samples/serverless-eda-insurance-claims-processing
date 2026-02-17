@@ -18,12 +18,14 @@ import './styles.css';
  * - Event debugging UI for development
  * - localStorage state persistence
  * - Barge-in support for interruptions
+ * - Integration with event-driven architecture via IoT Core
  * 
  * Requirements: 2.1, 9.1
  * 
  * @param {Object} props - Component props
  * @param {Function} props.onClaimSubmitted - Callback when claim is successfully submitted (receives claimNumber)
  * @param {Function} props.onFallbackToForm - Callback when user wants to use form instead
+ * @param {Function} props.onNextStep - Callback to advance to next step in wizard (called when claim is accepted)
  * @param {string} props.webSocketUrl - WebSocket URL for AgentCore connection
  * @param {string} props.authToken - Authentication token
  * @param {string} props.customerId - Customer ID
@@ -33,6 +35,7 @@ import './styles.css';
 export const VoiceClaimComponent = ({
   onClaimSubmitted,
   onFallbackToForm,
+  onNextStep,
   webSocketUrl,
   customerId,
   policyId,
@@ -53,7 +56,10 @@ export const VoiceClaimComponent = ({
   const [showEventModal, setShowEventModal] = useState(false);
   const [submissionPayload, setSubmissionPayload] = useState(null);
   const [showPayloadModal, setShowPayloadModal] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'submitting', 'waiting', 'accepted', 'rejected'
+  const [waitingTimeout, setWaitingTimeout] = useState(null);
   const maxReconnectAttempts = 3;
+  const maxWaitingTime = 30000; // 30 seconds
 
   // Refs for managing audio and WebSocket clients
   const wsClientRef = useRef(null);
@@ -125,6 +131,10 @@ export const VoiceClaimComponent = ({
       if (audioPlaybackRef.current) {
         audioPlaybackRef.current.stop();
       }
+      // Clear waiting timeout
+      if (waitingTimeout) {
+        clearTimeout(waitingTimeout);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
@@ -138,6 +148,17 @@ export const VoiceClaimComponent = ({
       return () => clearInterval(interval);
     }
   }, [connectionStatus, saveStateToStorage]);
+
+  /**
+   * Listen for claim acceptance from parent component
+   * This is triggered by IoT Core events handled in Updates.js
+   */
+  useEffect(() => {
+    // When we're in waiting state and parent signals next step, it means claim was accepted
+    if (submissionStatus === 'waiting' && onNextStep) {
+      console.log('Voice claim component ready to advance on claim acceptance');
+    }
+  }, [submissionStatus, onNextStep]);
 
   /**
    * Handle errors with appropriate error type and message
@@ -357,11 +378,12 @@ export const VoiceClaimComponent = ({
 
   /**
    * Handle claim confirmation
-   * Triggers submission of the claim
+   * Triggers submission of the claim and enters waiting state
    */
   const handleConfirmClaim = async () => {
     try {
       setError(null);
+      setSubmissionStatus('submitting');
       
       // Send confirmation message to backend via WebSocket
       // The backend agent will call submit_fnol tool and return the claim number
@@ -369,11 +391,29 @@ export const VoiceClaimComponent = ({
         // Send a text message to trigger submission
         wsClientRef.current.sendText('Yes, please submit my claim');
         console.log('Confirming claim submission:', claimData);
+        
+        // After agent responds, enter waiting state
+        // The agent will say "Your claim has been submitted and a decision will be taken soon"
+        // Then we wait for IoT Core event
+        setTimeout(() => {
+          setSubmissionStatus('waiting');
+          setShowConfirmation(false);
+          
+          // Set timeout for waiting period (30 seconds)
+          const timeout = setTimeout(() => {
+            console.log('Waiting timeout reached - no claim decision received');
+            setSubmissionStatus('idle');
+            handleError('timeout', 'We are still processing your claim. This is taking longer than expected. Please check your email for updates or contact support.');
+          }, maxWaitingTime);
+          
+          setWaitingTimeout(timeout);
+        }, 3000); // Wait 3 seconds for agent to respond
       }
       
     } catch (err) {
       console.error('Failed to submit claim:', err);
       handleError('submission', 'Failed to submit your claim. Please try again or use the form instead.');
+      setSubmissionStatus('idle');
     }
   };
 
@@ -445,7 +485,7 @@ export const VoiceClaimComponent = ({
             </div>
           )}
 
-          {connectionStatus === 'connected' && !showConfirmation && (
+          {connectionStatus === 'connected' && !showConfirmation && submissionStatus !== 'waiting' && (
             <div className="voice-claim-active">
               {/* Waveform animation */}
               {isCapturing && (
@@ -481,6 +521,15 @@ export const VoiceClaimComponent = ({
               >
                 Stop
               </button>
+            </div>
+          )}
+
+          {connectionStatus === 'connected' && submissionStatus === 'waiting' && (
+            <div className="voice-claim-waiting">
+              <div className="spinner"></div>
+              <h3>Processing Your Claim</h3>
+              <p>Please wait while we validate and process your claim submission...</p>
+              <p className="waiting-note">This usually takes just a few seconds.</p>
             </div>
           )}
 

@@ -23,6 +23,18 @@ interface VoiceFnolServiceProps {
   fnolApiId: string;
 
   /**
+   * The Customer API endpoint URL
+   * Example: https://xyz789.execute-api.us-east-1.amazonaws.com/prod/customer
+   */
+  customerApiEndpoint: string;
+
+  /**
+   * The Customer API Gateway REST API ID for IAM permissions
+   * Example: xyz789ghi012
+   */
+  customerApiId: string;
+
+  /**
    * Enable CloudWatch Transaction Search for observability
    * This is a one-time setup per AWS account
    * 
@@ -49,14 +61,18 @@ interface VoiceFnolServiceProps {
  * The service:
  * - Provides a WebSocket endpoint for bidirectional audio streaming
  * - Uses Amazon Nova Sonic model for voice conversation
- * - Integrates with existing FNOL API endpoint
+ * - Retrieves customer data from Customer API to avoid redundant questions
+ * - Integrates with existing FNOL API endpoint for claim submission
  * - Runs in PUBLIC network mode (no VPC required)
  * - Implements lifecycle management with configurable timeouts
  * 
  * @example
  * ```typescript
  * const voiceFnolService = new VoiceFnolService(this, 'VoiceFnolService', {
- *   fnolApi: claimsService.fnolApi,
+ *   fnolApiEndpoint: claimsService.fnolApi.url + '/fnol',
+ *   fnolApiId: claimsService.fnolApi.restApiId,
+ *   customerApiEndpoint: customerService.customerApi.url + '/customer',
+ *   customerApiId: customerService.customerApi.restApiId,
  * });
  * ```
  */
@@ -192,6 +208,18 @@ export class VoiceFnolService extends Construct {
       })
     );
 
+    // Grant access to Customer API endpoint for retrieving customer data
+    this.agentRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["execute-api:Invoke"],
+        resources: [
+          // Allow GET to /customer endpoint
+          `arn:aws:execute-api:${region}:${account}:${props.customerApiId}/*/GET/customer`,
+        ],
+      })
+    );
+
     // Build and push Docker image to ECR
     // CDK will automatically:
     // 1. Build the Docker image from the Dockerfile
@@ -235,6 +263,7 @@ export class VoiceFnolService extends Construct {
     // Environment variables for the AgentCore service
     const environment = {
       FNOL_API_ENDPOINT: props.fnolApiEndpoint,
+      CUSTOMER_API_ENDPOINT: props.customerApiEndpoint,
       NOVA_SONIC_MODEL_ID: "amazon.nova-2-sonic-v1:0",
       AWS_REGION: region,
       LOG_LEVEL: "INFO",

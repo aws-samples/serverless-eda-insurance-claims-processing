@@ -272,7 +272,7 @@ async def submit_to_fnol_api(
                     "success": True,
                     "claimNumber": reference_number,
                     "payload": fnol_payload,
-                    "message": f"Your claim has been submitted successfully. Your reference number is {reference_number}. You'll receive a confirmation email with your official claim number shortly."
+                    "message": f"Your claim has been submitted and a decision will be taken soon. Please wait while we process your claim."
                 }
             
             # Handle error responses

@@ -25,6 +25,8 @@ const claimsStack = new ClaimsProcessingStack(app, "ClaimsProcessingStack", {
 const voiceFnolStack = new VoiceFnolStack(app, "VoiceFnolStack", {
   fnolApiEndpoint: Fn.importValue("ClaimsProcessingStack-FnolApiEndpoint"),
   fnolApiId: Fn.importValue("ClaimsProcessingStack-FnolApiId"),
+  customerApiEndpoint: Fn.importValue("ClaimsProcessingStack-CustomerApiEndpoint"),
+  customerApiId: Fn.importValue("ClaimsProcessingStack-CustomerApiId"),
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,

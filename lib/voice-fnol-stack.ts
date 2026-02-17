@@ -22,6 +22,18 @@ export interface VoiceFnolStackProps extends StackProps {
   fnolApiId: string;
 
   /**
+   * The Customer API endpoint URL from the Claims Processing Stack
+   * Example: https://xyz789.execute-api.us-east-1.amazonaws.com/prod/customer
+   */
+  customerApiEndpoint: string;
+
+  /**
+   * The Customer API Gateway REST API ID for IAM permissions
+   * Example: xyz789ghi012
+   */
+  customerApiId: string;
+
+  /**
    * Enable CloudWatch Transaction Search for observability
    * This is a one-time setup per AWS account
    * 
@@ -42,12 +54,13 @@ export interface VoiceFnolStackProps extends StackProps {
  * Voice-enabled FNOL Stack
  * 
  * This stack deploys the Voice FNOL Agent service using Amazon Bedrock AgentCore Runtime.
- * It depends on the Claims Processing Stack for the FNOL API endpoint.
+ * It depends on the Claims Processing Stack for the FNOL API and Customer API endpoints.
  * 
  * The stack includes:
  * - Voice FNOL Agent with Amazon Nova Sonic for speech-to-speech interaction
  * - WebSocket endpoint for bidirectional audio streaming
- * - Integration with existing FNOL API
+ * - Integration with existing FNOL API for claim submission
+ * - Integration with Customer API for retrieving customer data
  * - CloudWatch observability with Transaction Search
  * 
  * @example
@@ -55,6 +68,8 @@ export interface VoiceFnolStackProps extends StackProps {
  * const voiceFnolStack = new VoiceFnolStack(app, 'VoiceFnolStack', {
  *   fnolApiEndpoint: Fn.importValue('ClaimsProcessingStack-FnolApiEndpoint'),
  *   fnolApiId: Fn.importValue('ClaimsProcessingStack-FnolApiId'),
+ *   customerApiEndpoint: Fn.importValue('ClaimsProcessingStack-CustomerApiEndpoint'),
+ *   customerApiId: Fn.importValue('ClaimsProcessingStack-CustomerApiId'),
  *   env: { account: '123456789012', region: 'us-east-1' },
  * });
  * ```
@@ -72,6 +87,8 @@ export class VoiceFnolStack extends Stack {
     this.voiceFnolService = new VoiceFnolService(this, "VoiceFnolService", {
       fnolApiEndpoint: props.fnolApiEndpoint,
       fnolApiId: props.fnolApiId,
+      customerApiEndpoint: props.customerApiEndpoint,
+      customerApiId: props.customerApiId,
       enableTransactionSearch: props.enableTransactionSearch,
       traceSamplingPercentage: props.traceSamplingPercentage,
     });

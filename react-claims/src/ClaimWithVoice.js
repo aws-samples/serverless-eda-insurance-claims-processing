@@ -14,11 +14,14 @@ import { getWebSocketEndpoint } from "./utils";
  * 1. Voice-enabled claim submission (new feature)
  * 2. Traditional form-based claim submission (existing)
  * 
+ * After voice claim submission, the component waits for IoT Core events
+ * (handled by Updates.js) to determine if claim was accepted or rejected.
+ * On acceptance, the wizard automatically advances to the next step.
+ * 
  * Requirements: 2.1, 2.2
  */
-const ClaimWithVoice = ({ customer }) => {
+const ClaimWithVoice = ({ customer, updateState }) => {
   const [mode, setMode] = useState('choice'); // 'choice', 'voice', 'form'
-  const [claimNumber, setClaimNumber] = useState(null);
 
   // Get WebSocket endpoint from CDK outputs
   // Falls back to environment variable if CDK output is not available
@@ -52,10 +55,25 @@ const ClaimWithVoice = ({ customer }) => {
 
   /**
    * Handle successful voice claim submission
+   * Note: This is called when the claim is submitted to the API,
+   * but we don't advance to next step yet. We wait for IoT Core
+   * to confirm the claim was accepted.
    */
   const handleVoiceClaimSubmitted = (claimRef) => {
-    setClaimNumber(claimRef);
-    setMode('success');
+    console.log('Voice claim submitted with reference:', claimRef);
+    // Don't change mode - stay in voice mode and show waiting state
+    // The VoiceClaimComponent will handle the waiting UI
+  };
+
+  /**
+   * Handle advancing to next step
+   * This is called by Updates.js via updateState when Claim.Accepted event arrives
+   */
+  const handleNextStep = () => {
+    console.log('Claim accepted - advancing to next step');
+    if (updateState) {
+      updateState('nextStep', true);
+    }
   };
 
   /**
@@ -69,7 +87,8 @@ const ClaimWithVoice = ({ customer }) => {
    * Handle form claim submission
    */
   const handleFormClaimSubmitted = () => {
-    setMode('success');
+    // Form submission already triggers nextStep via its own logic
+    console.log('Form claim submitted');
   };
 
   // Show choice screen
@@ -164,6 +183,7 @@ const ClaimWithVoice = ({ customer }) => {
         <VoiceClaimComponent
           onClaimSubmitted={handleVoiceClaimSubmitted}
           onFallbackToForm={handleFallbackToForm}
+          onNextStep={handleNextStep}
           webSocketUrl={webSocketUrl}
           authToken={authToken}
           customerId={customerId}
@@ -188,32 +208,6 @@ const ClaimWithVoice = ({ customer }) => {
           customer={customer}
           onSubmit={handleFormClaimSubmitted}
         />
-      </Flex>
-    );
-  }
-
-  // Show success message
-  if (mode === 'success') {
-    return (
-      <Flex
-        direction="column"
-        justifyContent="center"
-        alignItems="center"
-        gap="2rem"
-        padding="2rem"
-      >
-        <div style={{ fontSize: '4rem' }}>✅</div>
-        <Heading level={3}>Claim Submitted Successfully!</Heading>
-        {claimNumber && (
-          <Text>Your claim reference number is: <strong>{claimNumber}</strong></Text>
-        )}
-        <Text textAlign="center">
-          We've received your claim and will begin processing it shortly. 
-          You'll receive updates via email and in your account dashboard.
-        </Text>
-        <Button variation="primary" onClick={() => setMode('choice')}>
-          Submit Another Claim
-        </Button>
       </Flex>
     );
   }

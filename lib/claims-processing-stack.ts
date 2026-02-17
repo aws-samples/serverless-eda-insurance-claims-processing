@@ -159,5 +159,18 @@ export class ClaimsProcessingStack extends Stack {
       description: "FNOL API Gateway REST API ID",
       exportName: `${this.stackName}-FnolApiId`,
     });
+
+    // Export Customer API details for Voice FNOL Stack
+    new CfnOutput(this, "CustomerApiEndpoint", {
+      value: customerService.customerApi.url,
+      description: "Customer API endpoint URL",
+      exportName: `${this.stackName}-CustomerApiEndpoint`,
+    });
+
+    new CfnOutput(this, "CustomerApiId", {
+      value: customerService.customerApi.restApiId,
+      description: "Customer API Gateway REST API ID",
+      exportName: `${this.stackName}-CustomerApiId`,
+    });
   }
 }

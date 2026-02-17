@@ -104,6 +104,33 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Waiting screen */
+.voice-claim-waiting {
+  text-align: center;
+  width: 100%;
+  padding: 2rem;
+}
+
+.voice-claim-waiting h3 {
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.voice-claim-waiting p {
+  font-size: 1.05rem;
+  color: #666;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.waiting-note {
+  font-size: 0.95rem !important;
+  color: #999 !important;
+  font-style: italic;
+  margin-top: 1rem !important;
+}
+
 /* Active conversation screen */
 .voice-claim-active {
   width: 100%;

@@ -162,6 +162,7 @@ class App extends React.Component {
               <>
                 <ClaimWithVoice
                   customer={this.state.customer}
+                  updateState={this.updateState}
                 />
                 <br />
                 <Flex>
