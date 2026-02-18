@@ -24,7 +24,6 @@ def validate_required_fields(claim_data: Dict[str, Any]) -> dict:
     - damageDescription: Description of damage and incident
     - policyNumber: Insurance policy ID
     - driversLicense: Driver's license number
-    - licensePlate: License plate of insured vehicle
     - numberOfPassengers: Number of passengers in vehicle
     - wasDriving: Whether the insured was driving
     - policeFiled: Whether police report was filed
@@ -56,9 +55,6 @@ def validate_required_fields(claim_data: Dict[str, Any]) -> dict:
     
     if not claim_data.get("driversLicense"):
         missing_fields.append("driversLicense")
-    
-    if not claim_data.get("licensePlate"):
-        missing_fields.append("licensePlate")
     
     if claim_data.get("numberOfPassengers") is None:
         missing_fields.append("numberOfPassengers")

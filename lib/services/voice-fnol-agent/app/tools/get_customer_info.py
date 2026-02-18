@@ -12,6 +12,7 @@ import logging
 import httpx
 import json
 from strands.tools import tool
+from strands import ToolContext
 import boto3
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
@@ -66,19 +67,8 @@ def get_sigv4_headers(url: str, method: str, region: str) -> dict:
     return dict(request.headers)
 
 
-@tool(
-    inputSchema={
-        "type": "object",
-        "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "The customer's unique identifier"
-            }
-        },
-        "required": ["customer_id"]
-    }
-)
-async def get_customer_info(customer_id: str) -> dict:
+@tool(context=True)
+async def get_customer_info(tool_context: ToolContext) -> dict:
     """
     Retrieve customer, policy, and driver's license information from Customer API.
     
@@ -88,9 +78,6 @@ async def get_customer_info(customer_id: str) -> dict:
     
     The tool should be called immediately after the safety check to pre-populate
     known information before collecting incident details.
-    
-    Args:
-        customer_id: The customer's unique identifier (passed via WebSocket metadata)
     
     Returns:
         Dictionary containing:
@@ -126,7 +113,17 @@ async def get_customer_info(customer_id: str) -> dict:
             "message": "I have your information on file. You're John Doe and you're calling about your 2020 green Honda Accord. Now, can you tell me what happened?"
         }
     """
-    logger.info(f"Retrieving customer info for customer_id: {customer_id}")
+    logger.info("Retrieving customer info")
+    
+    # Get Cognito Identity ID from invocation state
+    cognito_identity_id = tool_context.invocation_state['cognito_identity_id']
+    if not cognito_identity_id:
+        logger.error("No Cognito Identity ID in invocation state")
+        return {
+            "success": False,
+            "error": "Authentication context not available",
+            "message": "I'm having trouble retrieving your information. Let me ask you a few questions to get started."
+        }
     
     # Get Customer API endpoint from environment
     customer_api_base = os.getenv("CUSTOMER_API_ENDPOINT")
@@ -144,7 +141,7 @@ async def get_customer_info(customer_id: str) -> dict:
     # Get AWS region
     region = os.getenv("AWS_REGION", "us-east-1")
     
-    logger.info(f"Calling Customer API: {customer_api_endpoint}")
+    logger.info(f"Calling Customer API for identity: {cognito_identity_id}")
     
     try:
         # Generate SigV4 signed headers
@@ -153,6 +150,9 @@ async def get_customer_info(customer_id: str) -> dict:
             method="GET",
             region=region
         )
+        
+        # Add custom header with Cognito Identity ID
+        signed_headers['X-Cognito-Identity-Id'] = cognito_identity_id
         
         # Make async HTTP GET request to Customer API
         async with httpx.AsyncClient(timeout=10.0) as client:

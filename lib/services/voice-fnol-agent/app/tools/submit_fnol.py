@@ -249,29 +249,12 @@ async def submit_to_fnol_api(
             # Handle successful response (200)
             if response.status_code == 200:
                 # Try to extract claim reference from response
-                response_data = response.json()
-                
+                response_data = response.text                
                 logger.info(f"FNOL API success response: {response_data}")
-                
-                # The FNOL API may return a claim ID or reference number
-                # Check common field names
-                reference_number = (
-                    response_data.get("claimId") or
-                    response_data.get("claimNumber") or
-                    response_data.get("referenceNumber") or
-                    response_data.get("id")
-                )
-                
-                # If no reference in response, generate a temporary one
-                if not reference_number:
-                    reference_number = f"FNOL-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
-                
-                logger.info(f"Claim submitted successfully with reference: {reference_number}")
                 
                 return {
                     "success": True,
-                    "claimNumber": reference_number,
-                    "payload": fnol_payload,
+                    "claimStatus": response_data,
                     "message": f"Your claim has been submitted and a decision will be taken soon. Please wait while we process your claim."
                 }
             

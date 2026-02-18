@@ -296,6 +296,13 @@ export class VoiceFnolService extends Construct {
 
       // Protocol configuration for WebSocket
       protocolConfiguration: "HTTP",
+      
+      // Request Header Configuration - Allow Cognito Identity ID to be passed through
+      requestHeaderConfiguration: {
+        requestHeaderAllowlist: [
+          "X-Amzn-Bedrock-AgentCore-Runtime-Custom-CognitoIdentityId"
+        ]
+      }
     });
 
     // Ensure IAM role and policies are created before Runtime

@@ -56,14 +56,18 @@ export async function generatePresignedWebSocketUrl(url) {
   // Generate session ID
   const sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   
-  // Create request with session ID
+  // Get Cognito Identity ID for custom header
+  const cognitoIdentityId = credentials.identityId;
+  
+  // Create request with session ID and custom header (as query parameter)
   const request = new HttpRequest({
     method: 'GET',
     protocol: 'https:',
     hostname: urlObj.hostname,
     path: encodedPath,
     query: {
-      'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': sessionId
+      'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': sessionId,
+      'X-Amzn-Bedrock-AgentCore-Runtime-Custom-CognitoIdentityId': cognitoIdentityId
     },
     headers: { host: urlObj.hostname }
   });
