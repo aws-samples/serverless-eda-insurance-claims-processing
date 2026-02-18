@@ -63,11 +63,6 @@ class PersonalInformation(BaseModel):
         alias="isInsurerDriver",
         description="Whether the insured was driving"
     )
-    license_plate_number: str = Field(
-        ...,
-        alias="licensePlateNumber",
-        description="License plate of insured vehicle"
-    )
     number_of_passengers: int = Field(
         ...,
         alias="numberOfPassengers",
@@ -174,10 +169,6 @@ class ConversationContext(BaseModel):
     drivers_license: Optional[str] = Field(
         None,
         description="Driver's license number"
-    )
-    license_plate: Optional[str] = Field(
-        None,
-        description="License plate of insured vehicle"
     )
     number_of_passengers: Optional[int] = Field(
         None,

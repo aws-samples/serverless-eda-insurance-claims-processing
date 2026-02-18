@@ -48,7 +48,6 @@ def identify_missing_required_fields(context) -> list[str]:
     - damage_description
     - policy_id
     - drivers_license
-    - license_plate
     - number_of_passengers
     - was_driving
     - police_filed
@@ -72,8 +71,6 @@ def identify_missing_required_fields(context) -> list[str]:
         missing.append("policy number")
     if not context.drivers_license:
         missing.append("driver's license number")
-    if not context.license_plate:
-        missing.append("license plate number")
     if context.number_of_passengers is None:
         missing.append("number of passengers")
     if context.was_driving is None:
@@ -93,7 +90,6 @@ def extract_claim_info(
     damage_description: Optional[str] = None,
     policy_id: Optional[str] = None,
     drivers_license_number: Optional[str] = None,
-    license_plate_number: Optional[str] = None,
     number_of_passengers: Optional[int] = None,
     was_driving: Optional[bool] = None,
     police_filed: Optional[bool] = None,
@@ -116,7 +112,6 @@ def extract_claim_info(
         damage_description: Description of damage and what happened
         policy_id: User's insurance policy ID
         drivers_license_number: Driver's license number
-        license_plate_number: License plate of insured vehicle
         number_of_passengers: Number of passengers in vehicle
         was_driving: Whether the insured was driving
         police_filed: Whether police report was filed
@@ -151,10 +146,7 @@ def extract_claim_info(
     
     if drivers_license_number is not None:
         context.drivers_license = drivers_license_number
-    
-    if license_plate_number is not None:
-        context.license_plate = license_plate_number
-    
+        
     if number_of_passengers is not None:
         context.number_of_passengers = number_of_passengers
     
@@ -192,7 +184,6 @@ def extract_claim_info(
             "damage": context.damage_description,
             "policy_id": context.policy_id,
             "drivers_license": context.drivers_license,
-            "license_plate": context.license_plate,
             "passengers": context.number_of_passengers,
             "was_driving": context.was_driving,
             "police_filed": context.police_filed,

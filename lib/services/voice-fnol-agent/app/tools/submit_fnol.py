@@ -94,7 +94,7 @@ def get_sigv4_headers(url: str, method: str, body: str, region: str) -> dict:
                     },
                     "fnolDateTime": {
                         "type": "string",
-                        "description": "Date and time of FNOL submission in YYYY-MM-DD format"
+                        "description": "Date and time of first notice of loss (FNOL) submission in YYYY-MM-DD format"
                     },
                     "location": {
                         "type": "object",
@@ -155,7 +155,7 @@ def get_sigv4_headers(url: str, method: str, body: str, region: str) -> dict:
                 }
             }
         },
-        "required": ["incident", "policy", "personalInformation", "policeReport", "otherParty"]
+        "required": ["incident", "policy", "personalInformation", "policeReport"]
     }
 )
 async def submit_to_fnol_api(

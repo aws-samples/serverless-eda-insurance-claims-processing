@@ -194,7 +194,6 @@ Extracts structured claim information from natural language conversation.
 - `damage_description`: Description of damage and incident
 - `policy_id`: Insurance policy ID
 - `drivers_license_number`: Driver's license number
-- `license_plate_number`: License plate of insured vehicle
 - `number_of_passengers`: Number of passengers in vehicle
 - `was_driving`: Whether the insured was driving
 - `police_filed`: Whether police report was filed

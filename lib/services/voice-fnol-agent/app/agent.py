@@ -234,7 +234,7 @@ def create_agent() -> BidiAgent:
                 assess_safety,
                 get_customer_info,
                 extract_claim_info,
-                validate_required_fields,
+                # validate_required_fields,
                 submit_to_fnol_api
             ],
             system_prompt=SYSTEM_PROMPT

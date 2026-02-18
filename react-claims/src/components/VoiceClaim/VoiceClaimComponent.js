@@ -4,7 +4,6 @@ import { AudioCapture } from './AudioCapture';
 import { AudioPlayback } from './AudioPlayback';
 import { WaveformAnimation } from './WaveformAnimation';
 import { TranscriptionDisplay } from './TranscriptionDisplay';
-import { ClaimFieldsDisplay } from './ClaimFieldsDisplay';
 import { ConfirmationUI } from './ConfirmationUI';
 import { ErrorDisplay } from './ErrorDisplay';
 import { EventDisplay, EventDetailModal } from './EventDisplay';
@@ -150,15 +149,56 @@ export const VoiceClaimComponent = ({
   }, [connectionStatus, saveStateToStorage]);
 
   /**
+   * Stop voice claim interaction
+   * Disconnects WebSocket and stops audio capture
+   */
+  const handleStopVoiceClaim = useCallback(() => {
+    // Save state before stopping
+    saveStateToStorage();
+
+    if (wsClientRef.current) {
+      wsClientRef.current.disconnect();
+    }
+    if (audioCaptureRef.current) {
+      audioCaptureRef.current.stopCapture();
+    }
+    if (audioPlaybackRef.current) {
+      audioPlaybackRef.current.stop();
+    }
+    setIsCapturing(false);
+    setConnectionStatus('disconnected');
+  }, [saveStateToStorage]);
+
+  /**
    * Listen for claim acceptance from parent component
    * This is triggered by IoT Core events handled in Updates.js
+   * When claim is accepted, end the voice session
    */
   useEffect(() => {
-    // When we're in waiting state and parent signals next step, it means claim was accepted
-    if (submissionStatus === 'waiting' && onNextStep) {
-      console.log('Voice claim component ready to advance on claim acceptance');
-    }
-  }, [submissionStatus, onNextStep]);
+    // Create a custom event listener for claim acceptance
+    const handleClaimAccepted = () => {
+      console.log('Claim accepted - ending voice session');
+      setSubmissionStatus('accepted');
+      
+      // Clear waiting timeout
+      if (waitingTimeout) {
+        clearTimeout(waitingTimeout);
+        setWaitingTimeout(null);
+      }
+      
+      // Stop voice session after a brief delay to allow final message
+      setTimeout(() => {
+        handleStopVoiceClaim();
+      }, 2000);
+    };
+
+    // Listen for custom event from parent
+    window.addEventListener('claimAccepted', handleClaimAccepted);
+
+    return () => {
+      window.removeEventListener('claimAccepted', handleClaimAccepted);
+    };
+  }, [waitingTimeout, handleStopVoiceClaim]);
 
   /**
    * Handle errors with appropriate error type and message
@@ -238,16 +278,14 @@ export const VoiceClaimComponent = ({
           // Handle tool usage - extract claim data from tool inputs
           console.log('Tool being used:', toolUse.name);
           
-          // If extract_claim_info tool is being used, update claim data
-          if (toolUse.name === 'extract_claim_info' && toolUse.input) {
-            setClaimData(prevData => ({ ...prevData, ...toolUse.input }));
-          }
-          
-          // If submit_to_fnol_api tool is being used, capture the payload
+          // If submit_to_fnol_api tool is being used, capture the payload and update claim data
           if (toolUse.name === 'submit_to_fnol_api' && toolUse.input) {
             console.log('Capturing FNOL submission payload:', toolUse.input);
             setSubmissionPayload(toolUse.input);
             setShowPayloadModal(true);
+            
+            // Update claim data display with the complete payload
+            setClaimData(toolUse.input);
           }
         });
 
@@ -354,28 +392,6 @@ export const VoiceClaimComponent = ({
       window.removeEventListener('offline', handleOffline);
     };
   }, [connectionStatus, errorType, handleError, handleRetry]);
-
-  /**
-   * Stop voice claim interaction
-   * Disconnects WebSocket and stops audio capture
-   */
-  const handleStopVoiceClaim = () => {
-    // Save state before stopping
-    saveStateToStorage();
-
-    if (wsClientRef.current) {
-      wsClientRef.current.disconnect();
-    }
-    if (audioCaptureRef.current) {
-      audioCaptureRef.current.stopCapture();
-    }
-    if (audioPlaybackRef.current) {
-      audioPlaybackRef.current.stop();
-    }
-    setIsCapturing(false);
-    setConnectionStatus('disconnected');
-  };
-
   /**
    * Handle claim confirmation
    * Triggers submission of the claim and enters waiting state
@@ -497,9 +513,14 @@ export const VoiceClaimComponent = ({
                 <TranscriptionDisplay transcription={transcription} />
               )}
 
-              {/* Claim fields display */}
+              {/* Claim data as JSON */}
               {Object.keys(claimData).length > 0 && (
-                <ClaimFieldsDisplay claimData={claimData} />
+                <div className="claim-json-display">
+                  <h3>Collected Information</h3>
+                  <pre className="claim-json-content">
+                    {JSON.stringify(claimData, null, 2)}
+                  </pre>
+                </div>
               )}
 
               {/* Phase indicator */}
