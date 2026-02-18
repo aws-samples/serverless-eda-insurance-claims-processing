@@ -215,7 +215,6 @@ def create_agent() -> BidiAgent:
         - 1.1: Safety and well-being assessment before claim collection
         - 1.8: Compassionate and supportive tone throughout
         - 8.1: extract_claim_info tool for structuring conversational data
-        - 8.2: validate_required_fields tool for checking mandatory fields
         - 8.3: submit_to_fnol_api tool for calling FNOL endpoint
         - 8.4: Tools invoked with appropriate parameters from conversation
         - 8.5: Tool results incorporated into ongoing conversation

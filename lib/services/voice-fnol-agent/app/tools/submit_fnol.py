@@ -255,7 +255,7 @@ async def submit_to_fnol_api(
                 return {
                     "success": True,
                     "claimStatus": response_data,
-                    "message": f"Your claim has been submitted and a decision will be taken soon. Please wait while we process your claim."
+                    "message": f"Your claim has been submitted and a decision will be taken soon. Provide additional evidence of the damage for a smooth and expedited claims process. Once evidences are received, please wait while we process your claim."
                 }
             
             # Handle error responses
