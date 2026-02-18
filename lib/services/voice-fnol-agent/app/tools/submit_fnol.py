@@ -90,11 +90,11 @@ def get_sigv4_headers(url: str, method: str, body: str, region: str) -> dict:
                 "properties": {
                     "occurrenceDateTime": {
                         "type": "string",
-                        "description": "Date and time of accident in YYYY-MM-DD format"
+                        "description": "Date and time of accident in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)"
                     },
                     "fnolDateTime": {
                         "type": "string",
-                        "description": "Date and time of first notice of loss (FNOL) submission in YYYY-MM-DD format"
+                        "description": "Today's date and time of first notice of loss (FNOL) submission in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)."
                     },
                     "location": {
                         "type": "object",

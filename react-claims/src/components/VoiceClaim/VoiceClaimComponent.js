@@ -189,7 +189,7 @@ export const VoiceClaimComponent = ({
       // Stop voice session after a brief delay to allow final message
       setTimeout(() => {
         handleStopVoiceClaim();
-      }, 2000);
+      }, 20000);
     };
 
     // Listen for custom event from parent

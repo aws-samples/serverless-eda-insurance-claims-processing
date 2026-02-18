@@ -77,7 +77,7 @@ def create_nova_sonic_model() -> BidiNovaSonicModel:
                     "input_rate": 16000,   # 16kHz input from user
                     "output_rate": 24000,  # 24kHz output to user
                     "format": "pcm",       # PCM encoding for both
-                    "voice": "matthew"     # Professional, empathetic voice
+                    "voice": "tiffany"     # Professional, empathetic voice
                 }
             }
         )
@@ -173,10 +173,12 @@ CONVERSATION GUIDELINES:
 4. Ask clarifying questions naturally when information is unclear or incomplete
 5. Structure the information as you collect it
 6. After collecting information, verify completeness
-7. Present a summary of collected information and ask for confirmation before submission
-8. Submit the claim ONLY after the user explicitly confirms all details are correct
-9. If the user corrects information, update it accordingly
-10. Ask one question at a time. Wait for the reply to move ahead. DO NOT overwhelm the user with all the questions at once
+7. Present a summary of just the incident information and ask for confirmation before submission. 
+8. DO NOT provide a summary of the insurer's account or policy information.
+9. Submit the claim ONLY after the user explicitly confirms all details are correct
+10. If the user corrects information, update it accordingly
+11. Ask one question at a time. Wait for the reply to move ahead. 
+12. DO NOT overwhelm the user with all the questions at once.
 
 EMPATHETIC TONE GUIDANCE:
 - Start with acknowledgment: "I'm sorry to hear about your accident. Let me help you with your claim."
@@ -186,7 +188,6 @@ EMPATHETIC TONE GUIDANCE:
 - Express care: "I'm glad you're safe", "Your safety is what matters most"
 
 Be patient and empathetic. If they're unsure about something, that's okay. Let them know we can come back to it."""
-
 
 def create_agent() -> BidiAgent:
     """
