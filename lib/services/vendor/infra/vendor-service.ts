@@ -9,7 +9,11 @@ import {
   aws_ecr_assets as ecr_assets,
   ArnFormat,
   CfnOutput,
+  RemovalPolicy,
+  IAspect,
+  Aspects,
 } from "aws-cdk-lib";
+import { IConstruct } from "constructs";
 import { EventBus } from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
 import * as path from "path";
@@ -22,6 +26,23 @@ import { createGraphWidget, createMetric } from "../../../observability/cw-dashb
 export enum VendorEvents {
   SOURCE = "vendor.service",
   VENDOR_FINALIZED = "Vendor.Finalized",
+}
+
+// Aspect to apply removal policy to all VPC resources
+class VpcRemovalPolicyAspect implements IAspect {
+  public visit(node: IConstruct): void {
+    if (node instanceof ec2.CfnVPC ||
+        node instanceof ec2.CfnSubnet ||
+        node instanceof ec2.CfnRouteTable ||
+        node instanceof ec2.CfnRoute ||
+        node instanceof ec2.CfnInternetGateway ||
+        node instanceof ec2.CfnNatGateway ||
+        node instanceof ec2.CfnEIP ||
+        node instanceof ec2.CfnVPCGatewayAttachment ||
+        node instanceof ec2.CfnSubnetRouteTableAssociation) {
+      node.applyRemovalPolicy(RemovalPolicy.DESTROY);
+    }
+  }
 }
 
 interface VendorServiceProps {
@@ -72,12 +93,34 @@ export class VendorService extends Construct {
 
     const region = Stack.of(this).region;
 
+    // Create VPC with explicit removal policy for proper cleanup
+    const vpc = new ec2.Vpc(this, "VendorVpc", {
+      maxAzs: 2,
+      natGateways: 1,
+      subnetConfiguration: [
+        {
+          cidrMask: 24,
+          name: "Public",
+          subnetType: ec2.SubnetType.PUBLIC,
+        },
+        {
+          cidrMask: 24,
+          name: "Private",
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        },
+      ],
+    });
+
+    // Apply removal policy to all VPC resources for proper cleanup on destroy
+    Aspects.of(vpc).add(new VpcRemovalPolicyAspect());
+
     const cluster = new eks.Cluster(this, "vendor-cluster", {
       clusterName: "vendor",
       version: eks.KubernetesVersion.V1_34,
       kubectlLayer: new KubectlV34Layer(this, "kubectl"),
       defaultCapacity: 0, // Disable default capacity, use nodegroup with AL2023 instead
       outputMastersRoleArn:true,
+      vpc: vpc,
       clusterLogging: [
         eks.ClusterLoggingTypes.API,
         eks.ClusterLoggingTypes.AUDIT,
@@ -103,7 +146,7 @@ export class VendorService extends Construct {
     cluster.addNodegroupCapacity("on-demand-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large")],
       minSize: 2,
-      maxSize: 4,
+      maxSize: 2,
       desiredSize: 2,
       capacityType: eks.CapacityType.ON_DEMAND,
       amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
@@ -113,7 +156,7 @@ export class VendorService extends Construct {
     cluster.addNodegroupCapacity("spot-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large"), new ec2.InstanceType("m5a.large")],
       minSize: 2,
-      maxSize: 10,
+      maxSize: 2,
       capacityType: eks.CapacityType.SPOT,
       amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
     });

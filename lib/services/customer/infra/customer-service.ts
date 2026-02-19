@@ -61,6 +61,7 @@ export class CustomerService extends Construct {
   public customerTable: Table;
   public policyTable: Table;
   public readonly customerMetricsWidget: GraphWidget;
+  public readonly customerApi: RestApi;
 
   constructor(scope: Construct, id: string, props: CustomerServiceProps) {
     super(scope, id);
@@ -289,6 +290,9 @@ export class CustomerService extends Construct {
 
     addDefaultGatewayResponse(customerApi);
     addWebAcl(this, customerApi.deploymentStage.stageArn, "GetCustomerApiWebACL");
+
+    // Store reference for use by other services
+    this.customerApi = customerApi;
 
     new Rule(this, "CreateCustomerEventsRule", {
       eventBus: bus,

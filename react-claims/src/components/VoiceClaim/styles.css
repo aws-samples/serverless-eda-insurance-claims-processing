@@ -1,0 +1,1181 @@
+/**
+ * Styles for Voice Claim Component
+ * 
+ * Requirements: 2.1, 9.1, 9.2
+ */
+
+.voice-claim-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+.voice-claim-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.voice-claim-header h2 {
+  font-size: 1.75rem;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.voice-claim-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.voice-claim-content {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Start screen */
+.voice-claim-start {
+  text-align: center;
+  width: 100%;
+}
+
+.btn-start-voice-claim {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-start-voice-claim:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-start-voice-claim:active {
+  transform: translateY(0);
+}
+
+.microphone-icon {
+  font-size: 1.25rem;
+}
+
+.voice-claim-help-text {
+  margin-top: 1rem;
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Connecting screen */
+.voice-claim-connecting {
+  text-align: center;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Waiting screen */
+.voice-claim-waiting {
+  text-align: center;
+  width: 100%;
+  padding: 2rem;
+}
+
+.voice-claim-waiting h3 {
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.voice-claim-waiting p {
+  font-size: 1.05rem;
+  color: #666;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.waiting-note {
+  font-size: 0.95rem !important;
+  color: #999 !important;
+  font-style: italic;
+  margin-top: 1rem !important;
+}
+
+/* Active conversation screen */
+.voice-claim-active {
+  width: 100%;
+}
+
+.waveform-placeholder {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listening-indicator {
+  font-size: 1.2rem;
+  color: #667eea;
+  font-weight: 600;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.transcription-display {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.transcription-display h3 {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.transcription-content {
+  max-height: 150px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 4px;
+  padding: 1rem;
+  scroll-behavior: smooth;
+}
+
+.transcription-content p {
+  margin: 0;
+  color: #1a1a1a;
+  line-height: 1.6;
+  font-size: 1.05rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+/* Scrollbar styling */
+.transcription-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transcription-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.transcription-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.transcription-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Claim JSON Display */
+.claim-json-display {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.claim-json-display h3 {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.claim-json-content {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin: 0;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: json-fade-in 0.3s ease-in;
+}
+
+@keyframes json-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar styling for JSON display */
+.claim-json-display::-webkit-scrollbar,
+.claim-json-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.claim-json-display::-webkit-scrollbar-track,
+.claim-json-content::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 4px;
+}
+
+.claim-json-display::-webkit-scrollbar-thumb,
+.claim-json-content::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.claim-json-display::-webkit-scrollbar-thumb:hover,
+.claim-json-content::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+.claim-fields-display {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.claim-fields-display h3 {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.claim-fields-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.claim-fields-section {
+  background: white;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.claim-fields-section-title {
+  font-size: 0.9rem;
+  color: #667eea;
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.claim-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.3s ease;
+}
+
+.claim-field:last-child {
+  border-bottom: none;
+}
+
+.claim-field-updated {
+  background-color: #fff3cd;
+  padding: 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 4px;
+  animation: highlight-fade 2s ease-out;
+}
+
+@keyframes highlight-fade {
+  0% {
+    background-color: #fff3cd;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.claim-field-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+.claim-field-value {
+  color: #1a1a1a;
+  font-size: 0.95rem;
+  text-align: right;
+  word-break: break-word;
+}
+
+.claim-field-empty .claim-field-value {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+.claim-field-placeholder {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+/* Responsive design for claim fields */
+@media (max-width: 768px) {
+  .claim-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .claim-field-value {
+    text-align: left;
+  }
+}
+
+.claim-fields pre {
+  background: white;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 0;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+}
+
+.btn-stop-voice-claim {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: block;
+  margin: 0 auto;
+}
+
+.btn-stop-voice-claim:hover {
+  background: #c82333;
+}
+
+/* Phase indicator */
+.phase-indicator {
+  text-align: center;
+  margin: 1.5rem 0;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 8px;
+}
+
+.phase-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #667eea;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Error screen */
+.voice-claim-error {
+  text-align: center;
+  width: 100%;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8d7da;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.error-actions button {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.error-actions button:hover {
+  background: #5568d3;
+}
+
+.error-actions button:last-child {
+  background: #6c757d;
+}
+
+.error-actions button:last-child:hover {
+  background: #5a6268;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .voice-claim-container {
+    padding: 1rem;
+  }
+
+  .voice-claim-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .voice-claim-subtitle {
+    font-size: 1rem;
+  }
+
+  .voice-claim-content {
+    padding: 1.5rem;
+  }
+
+  .btn-start-voice-claim {
+    padding: 1.25rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+  }
+
+  .error-actions button {
+    width: 100%;
+  }
+}
+
+/* Accessibility */
+.voice-claim-container *:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.voice-claim-container button:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 3px;
+}
+
+/* Waveform animation styles */
+.waveform-animation {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waveform-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+/* Confirmation UI styles */
+.confirmation-ui {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.confirmation-header h2 {
+  font-size: 1.75rem;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.confirmation-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.confirmation-content {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.confirmation-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.confirmation-section:last-child {
+  margin-bottom: 0;
+}
+
+.confirmation-section-title {
+  font-size: 1.1rem;
+  color: #667eea;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.confirmation-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.confirmation-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.confirmation-field:last-child {
+  border-bottom: none;
+}
+
+.confirmation-field-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  margin-right: 1.5rem;
+  min-width: 180px;
+}
+
+.confirmation-field-value {
+  color: #1a1a1a;
+  font-size: 0.95rem;
+  text-align: right;
+  word-break: break-word;
+  flex: 1;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-confirmation-edit {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-confirmation-edit:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.btn-confirmation-edit:active {
+  transform: translateY(0);
+}
+
+.btn-confirmation-submit {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-confirmation-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+}
+
+.btn-confirmation-submit:active {
+  transform: translateY(0);
+}
+
+/* Error Display styles */
+.error-display {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-display-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: error-shake 0.5s ease-in-out;
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.error-display-content {
+  margin-bottom: 2rem;
+}
+
+.error-display-title {
+  font-size: 1.5rem;
+  color: #dc3545;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.error-display-message {
+  font-size: 1.05rem;
+  color: #495057;
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+  padding: 1rem;
+  background: #f8d7da;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+}
+
+.error-display-help {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.error-display-help p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: #856404;
+}
+
+.error-display-help ol {
+  margin: 0.5rem 0 0 1.5rem;
+  padding: 0;
+  color: #856404;
+}
+
+.error-display-help li {
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+.error-display-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-error-retry {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-error-retry:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+}
+
+.btn-error-retry:active {
+  transform: translateY(0);
+}
+
+.btn-error-fallback {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-error-fallback:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.btn-error-fallback:active {
+  transform: translateY(0);
+}
+
+/* Responsive design for confirmation UI */
+@media (max-width: 768px) {
+  .confirmation-content {
+    padding: 1.5rem;
+  }
+
+  .confirmation-section {
+    padding: 1rem;
+  }
+
+  .confirmation-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .confirmation-field-label {
+    min-width: auto;
+    margin-right: 0;
+  }
+
+  .confirmation-field-value {
+    text-align: left;
+  }
+
+  .confirmation-actions {
+    flex-direction: column;
+  }
+
+  .confirmation-actions button {
+    width: 100%;
+  }
+
+  .error-display {
+    padding: 1rem;
+  }
+
+  .error-display-actions {
+    flex-direction: column;
+  }
+
+  .error-display-actions button {
+    width: 100%;
+  }
+}
+
+/* Print styles */
+@media print {
+  .voice-claim-container {
+    box-shadow: none;
+  }
+
+  .btn-start-voice-claim,
+  .btn-stop-voice-claim,
+  .error-actions,
+  .confirmation-actions {
+    display: none;
+  }
+
+  .confirmation-content {
+    box-shadow: none;
+  }
+}
+
+/* Event Debugger Layout */
+.voice-claim-container.with-debugger {
+  max-width: 1200px;
+}
+
+.voice-claim-content.with-debugger {
+  flex-direction: row;
+  gap: 20px;
+  align-items: stretch;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.voice-claim-main {
+  flex: 1;
+  min-width: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-claim-debugger {
+  width: 350px;
+  min-width: 350px;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.debugger-header {
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-clear-events {
+  padding: 6px 12px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.btn-clear-events:hover {
+  background: #d32f2f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .voice-claim-content.with-debugger {
+    flex-direction: column;
+  }
+
+  .voice-claim-debugger {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    max-height: 400px;
+  }
+}
+
+/* Payload Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.payload-modal {
+  max-width: 900px;
+}
+
+.modal-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+.modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.payload-description {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.payload-json {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 0;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #1a1a1a;
+  white-space: pre;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Scrollbar styling for payload JSON */
+.payload-json::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.payload-json::-webkit-scrollbar-track {
+  background: #e9ecef;
+  border-radius: 4px;
+}
+
+.payload-json::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+  border-radius: 4px;
+}
+
+.payload-json::-webkit-scrollbar-thumb:hover {
+  background: #6c757d;
+}
+
+.modal-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: #f8f9fa;
+}
+
+.btn-modal-close {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-modal-close:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.btn-modal-close:active {
+  transform: translateY(0);
+}
+
+/* Fix scrolling in voice claim container */
+.voice-claim-container {
+  max-height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-claim-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.voice-claim-main {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.voice-claim-active {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+/* Ensure transcription and claim fields are scrollable */
+.transcription-content {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.claim-fields-grid {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Scrollbar styling for claim fields */
+.claim-fields-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.claim-fields-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.claim-fields-grid::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.claim-fields-grid::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+  .modal-content {
+    max-height: 95vh;
+    margin: 10px;
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .payload-json {
+    font-size: 0.8rem;
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+  }
+}

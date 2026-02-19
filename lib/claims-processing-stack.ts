@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import { RemovalPolicy, Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -145,6 +145,32 @@ export class ClaimsProcessingStack extends Stack {
         settlementService.settlementMetricsWidget,
         vendorService.vendorMetricsWidget,
       ],
+    });
+
+    // Export FNOL API details for Voice FNOL Stack
+    new CfnOutput(this, "FnolApiEndpoint", {
+      value: claimsService.fnolApi.url + "fnol",
+      description: "FNOL API endpoint URL",
+      exportName: `${this.stackName}-FnolApiEndpoint`,
+    });
+
+    new CfnOutput(this, "FnolApiId", {
+      value: claimsService.fnolApi.restApiId,
+      description: "FNOL API Gateway REST API ID",
+      exportName: `${this.stackName}-FnolApiId`,
+    });
+
+    // Export Customer API details for Voice FNOL Stack
+    new CfnOutput(this, "CustomerApiEndpoint", {
+      value: customerService.customerApi.url,
+      description: "Customer API endpoint URL",
+      exportName: `${this.stackName}-CustomerApiEndpoint`,
+    });
+
+    new CfnOutput(this, "CustomerApiId", {
+      value: customerService.customerApi.restApiId,
+      description: "Customer API Gateway REST API ID",
+      exportName: `${this.stackName}-CustomerApiId`,
     });
   }
 }

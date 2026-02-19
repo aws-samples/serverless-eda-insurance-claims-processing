@@ -1,0 +1,57 @@
+# Voice-Enabled FNOL Agent Service Dependencies
+
+# AgentCore Runtime SDK (REQUIRED for AgentCore deployment)
+bedrock-agentcore>=0.1.0       # Amazon Bedrock AgentCore Runtime SDK with WebSocket support
+
+# OpenTelemetry for Observability (REQUIRED for CloudWatch monitoring)
+aws-opentelemetry-distro>=0.1.0  # AWS Distro for OpenTelemetry (ADOT)
+
+# Core Agent Framework
+strands-agents-tools>=0.2.19
+strands-agents>=0.2.19
+strands-agents[otel]>=0.2.19    # Strands BidiAgent with OpenTelemetry instrumentation
+strands-agents[bidi-all]>=0.2.19
+prompt-toolkit>=3.0.0          # Terminal interaction library (required by Strands)
+
+# Web Framework (Note: BedrockAgentCoreApp provides FastAPI integration)
+fastapi>=0.104.0               # Modern web framework with WebSocket support
+uvicorn[standard]>=0.24.0      # ASGI server for FastAPI with WebSocket support
+websockets>=12.0               # WebSocket protocol implementation
+
+# Data Validation and Serialization
+pydantic>=2.5.0                # Data validation using Python type hints
+pydantic-settings>=2.1.0       # Settings management with Pydantic
+
+# HTTP Client
+httpx>=0.25.0                  # Async HTTP client for FNOL API calls
+
+# AWS SDK
+boto3>=1.34.0                  # AWS SDK for Python (Bedrock, SigV4 auth)
+botocore>=1.34.0               # Low-level AWS service access
+aws-sdk-bedrock-runtime>=0.1.0 # AWS SDK for Bedrock Runtime (required by Strands BidiNovaSonicModel)
+
+# Audio Processing (required by Strands BidiAgent even for WebSocket streaming)
+numpy>=1.26.0                  # Numerical computing for audio data manipulation
+soundfile>=0.12.0              # Audio file I/O (PCM encoding/decoding)
+pyaudio>=0.2.14                # Audio I/O library (required by Strands BidiAudioIO)
+
+# Logging and Monitoring
+python-json-logger>=2.0.7      # JSON structured logging
+aws-xray-sdk>=2.12.0           # AWS X-Ray tracing for observability
+
+# Testing Frameworks
+pytest>=7.4.0                  # Testing framework
+pytest-asyncio>=0.21.0         # Async test support for FastAPI
+pytest-cov>=4.1.0              # Code coverage reporting
+pytest-mock>=3.12.0            # Mocking support for tests
+hypothesis>=6.92.0             # Property-based testing framework
+
+# Development Tools
+black>=23.12.0                 # Code formatter
+flake8>=6.1.0                  # Linting tool
+mypy>=1.7.0                    # Static type checker
+isort>=5.13.0                  # Import sorting
+
+# Additional Utilities
+python-dateutil>=2.8.2         # Date/time parsing utilities
+pytz>=2023.3                   # Timezone support

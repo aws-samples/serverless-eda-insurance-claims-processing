@@ -45,6 +45,11 @@ class UpdateArea extends React.Component {
 
     if (data.value["detail-type"] === "Fraud.Not.Detected" || data.value["detail-type"] === "Claim.Accepted") {
       this.updateParent("nextStep", true);
+      
+      // Dispatch custom event for voice claim component to end session
+      if (data.value["detail-type"] === "Claim.Accepted") {
+        window.dispatchEvent(new CustomEvent('claimAccepted'));
+      }
     }
     
     if (data.value["detail-type"] === "Customer.Accepted") {

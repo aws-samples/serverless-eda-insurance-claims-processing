@@ -1,0 +1,100 @@
+# Voice-Enabled FNOL Agent Service - Docker Ignore File
+# Exclude files and directories that should not be included in the container image
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Tests
+app/tests/
+infra/tests/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+
+# Infrastructure as Code
+infra/
+*.ts
+*.js
+*.d.ts
+tsconfig.json
+jest.config.js
+cdk.json
+cdk.context.json
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Logs
+*.log
+logs/
+
+# Environment files (secrets should not be in image)
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Package manager files
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Docker files (no need to include in image)
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# CDK output
+cdk.out/
