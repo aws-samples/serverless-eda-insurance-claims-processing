@@ -34,6 +34,13 @@ The backend infrastructure is set up at the root folder of the repository. Code 
 - **Settlement Service**: Spring Boot application on ECS Fargate (x86_64)
 - **Vendor Service**: Node.js Express application on EKS Spot cluster (x86_64)
 
+### Voice AI Services
+- **Amazon Bedrock AgentCore Runtime**: Serverless voice agent deployment
+- **Amazon Nova 2 Sonic**: Speech-to-speech foundation model (amazon.nova-2-sonic-v1:0)
+- **Strands Agents SDK**: Conversational AI framework
+- **FastAPI**: WebSocket server for real-time audio streaming
+- **Python**: 3.13 (voice agent runtime)
+
 ### Recent Upgrades (January 2026)
 
 **Critical Updates:**
@@ -84,69 +91,6 @@ This overall architecture consists of below domains. Visit each one of them for 
 
 > :information_source: **M1/M2/M3 Mac Users**
 > The application now includes explicit Docker platform specifications for x86_64 architecture. Docker will automatically build images for the correct platform regardless of your host architecture. Ensure Docker Desktop is running before deployment.
-
-### Fake Image Recognition APIs
-
-> :warning: DO NOT MISS THIS SETUP BEFORE DEPLOYING THE STACK
-
-Ideally, when this application runs in production, it depends on inference endpoints to detect car color and car damages. This can be achieved by using Amazon Rekognition Custom Label. You can send a JPEG/PNG image to the endpoint (using API Gateway) and Rekognition Custom Label. The APIs in this sample expect a response as below:
-
-- Car color prediction API response:
-
-```json
-{
-  "Predictions": [
-    {
-      "Name": "red",
-      "Confidence": 97.56799774169922
-    }
-  ]
-}
-```
-
-- Car damage prediction API response:
-
-```json
-{
-  "Predictions": [
-    {
-      "Name": "bumper_dent",
-      "Confidence": 99.53099822998047
-    }
-  ]
-}
-```
-
-However, for that to happen, one should train Rekognition, use custom labels, and create an API endpoint which makes calls to Rekognition, after which you can use the inference endpoint with a higher confidence score. This setup will incur some cost. So, for simplicity, this sample application fakes the color detection and damage detection API responses.
-
-You can use [Webhook](https://webhook.site/) or any other API faker of your choice to create fake APIs. Shown below is an example where you can replace your webhook URL respective to each use case (color or damage). Here is the how `/lib/config.ts` should look like:
-
-```javascript
-// lib/config.ts
-const config = {
-  // Green Color Car
-  // Return: { "Predictions": [{ "Name": "green", "Confidence": 95.76799774169922 }] }
-  COLOR_DETECT_API:
-    "https://webhook.site/0055038f-a393-4f81-b149-4376ebe4bf93/",
-
-  // Red Color Car
-  // Return: { "Predictions": [{ "Name": "red", "Confidence": 97.56799774169922 }] }
-  // COLOR_DETECT_API: "https://webhook.site/fb720eb9-e701-4376-9ffc-3f30f7691632/",
-
-  // No Damage
-  // Return: { "Predictions": [{ "Name": "unknown", "Confidence": 99.98300170898438 }] }
-  DAMAGE_DETECT_API:
-    "https://webhook.site/b02ce4de-739a-4cb8-bae1-c904b4516aa5/",
-
-  // Bumper Dent
-  // Return: { "Predictions": [{ "Name": "bumper_dent", "Confidence": 84.26200103759766 }] }
-  // DAMAGE_DETECT_API: "https://webhook.site/06c91685-8d2d-4330-a4bf-95ebbc07d318/",
-};
-```
-
-> :Warning: Note that webhook url expires in 7 days of creation. The urls that are present in the repository when you cloned the app might have expired by the time you use. Create your version of webhook URL
-
-Once you have updated the `config.ts` file with fake API endpoints, you can save the file and then continue with deploying the backend.
 
 ### Deploy CDK stack (Backend)
 
@@ -329,7 +273,9 @@ You should see `Document.Processed` event payload on right half of the page:
 }
 ```
 
-Above event has the extracted attributes from the driver's license image that you uploaded. Document service internally uses Amazon Textract to extract information from DL. However, you will see another event right after above event detecting fraud.
+Above event has the extracted attributes from the driver's license image that you uploaded. The Document Service uses Amazon Textract to extract structured information from driver's license documents. For vehicle images, the service uses Amazon Nova 2 Lite multimodal model to analyze car color and detect damage.
+
+However, you will see another event right after above event detecting fraud.
 
 ### Fraud Processing
 
@@ -360,28 +306,7 @@ This resulted in a `fraud.detected` event as below:
 
 In order to fix the above discrepancy, choose the second DL and upload. Now you should not see any more event related to fraud.
 
-A similar fraud detection logic is application for car images. If you have provided color `Green` in the form but COLOR_DETECT_API is set to return the car color as Red, then it is identified as a document fraud:
-
-```json
-{
-  "version": "0",
-  "id": "a3e94d7a-6460-8456-749e-85b160b8c291",
-  "detail-type": "Fraud.Detected",
-  "source": "fraud.service",
-  "account": "123456789",
-  "time": "2023-01-09T23:43:24Z",
-  "region": "us-east-2",
-  "resources": [],
-  "detail": {
-    "customerId": "43fed912-e5af-4c6a-a251-4f3c8195153e",
-    "documentType": "CAR",
-    "fraudType": "SIGNUP.CAR",
-    "fraudReason": "Color of vehicle doesn't match the color on the policy."
-  }
-}
-```
-
-Fraud detection is possible because, document processing service has processed the car image using Amazon Rekognition Custom Label to figure out the color of the car image that was uploaded. The document processed event is sent back to client too. It looks like:
+Fraud detection is possible because the Document Processing Service has analyzed the car image using Amazon Nova 2 Lite multimodal model to determine the color of the vehicle. The document processed event is sent back to client too. It looks like:
 
 ```json
 {
@@ -414,8 +339,6 @@ Fraud detection is possible because, document processing service has processed t
   }
 }
 ```
-
-In order to complete the process of signup successfully, make sure that COLOR_DETECT_API returns same color of the car as mentioned in the form and click on `Upload`.
 
 ### File a Claim (First Notice of Loss or FNOL)
 
@@ -478,7 +401,7 @@ Now you can see `claimsId` in addition to `customerId`.
 There should be an option to upload car image with damage.
 ![damage](images/damage.png)
 
-At this point if you COLOR_DETECT_API returns red color, then you will again see a fraud detection event as your policy has registered a green car:
+At this point if you document processing returns red color, then you will again see a fraud detection event as your policy has registered a green car:
 
 ```json
 {
@@ -499,7 +422,101 @@ At this point if you COLOR_DETECT_API returns red color, then you will again see
 }
 ```
 
-If COLOR_DETECT_API returns green color and DAMAGE_DETECT_API returns any kind of damage, you can upload the damaged green car image to complete the FNOL process.
+### File a Claim Using Voice Agent (Alternative Method)
+
+Instead of filling out the claim form manually, you can use the voice-enabled AI agent for a more natural, conversational experience:
+
+1. On the claim submission page, click the "Start Voice Claim" button
+2. Allow microphone access when prompted by your browser
+3. The agent will first retrieve your customer information automatically from the system
+4. Speak naturally to describe your accident - the agent will ask follow-up questions as needed
+5. The agent will collect incident details: date/time, location, damage description, and other required information
+6. Review the collected information displayed as JSON on the screen (updates in real-time as you speak)
+7. Confirm submission when the agent asks for your approval
+8. The agent will say: "Your claim has been submitted and a decision will be taken soon"
+9. Wait for processing (typically 1-3 seconds) - you'll see a spinner with "Processing Your Claim..."
+10. When the claim is accepted, the voice session automatically ends after a brief delay
+11. You'll automatically advance to the next step (Upload Damaged Car Image)
+
+**Benefits of Voice Agent**:
+- Natural conversation instead of form filling
+- Automatically retrieves your policy and driver's license information
+- No need to remember or look up details you've already provided
+- Real-time validation and feedback during the conversation
+- Faster submission for users who prefer speaking over typing
+
+**Note**: If you prefer the traditional form-based approach or encounter any issues with the voice agent, you can always use the manual claim form instead.
+
+## Voice AI Agent for FNOL Claims
+
+The application includes a voice-enabled First Notice of Loss (FNOL) agent that allows customers to submit insurance claims through natural voice conversation using Amazon Bedrock AgentCore Runtime and Amazon Nova 2 Sonic.
+
+### Architecture
+
+[View Detailed Architecture Diagram](lib/services/voice-fnol-agent/architecture.md) - Comprehensive ASCII diagram showing complete event flow
+
+### Key Features
+
+- **Speech-to-Speech Conversation**: Natural voice interaction powered by Amazon Nova 2 Sonic model
+- **Real-time Audio Streaming**: Bidirectional audio streaming with barge-in support for interruptions
+- **Customer Data Retrieval**: Automatically retrieves customer, policy, and driver's license information to eliminate redundant questions
+- **Event-Driven Integration**: Seamlessly integrates with the existing event-driven architecture via EventBridge and IoT Core
+- **Automatic Progression**: Advances user to next step automatically when claim is accepted
+- **Session Management**: Automatically ends voice session upon claim acceptance
+- **Real-time Updates**: Displays collected claim data as JSON that updates during conversation
+- **Security**: AWS SigV4 authentication, IAM policies, and per-user MQTT topics
+
+### Agent Tools
+
+The voice agent uses 6 specialized tools:
+- **get_customer_info**: Retrieves customer, policy, and driver's license data from Customer API
+- **submit_to_fnol_api**: Submits complete claim to FNOL API with AWS SigV4 authentication
+- **safety_check**: Assesses user safety before proceeding with claim collection
+- **extract_claim_info**: Extracts structured data from natural conversation
+- **validate_fields**: Validates required fields are present before submission
+- **Other utility tools**: For conversation management and validation
+
+### Technology Stack
+
+- **Amazon Bedrock AgentCore Runtime**: Serverless deployment and scaling for voice agent
+- **Amazon Nova 2 Sonic**: State-of-the-art speech-to-speech foundation model
+- **Strands Agents SDK**: Framework for building conversational AI agents
+- **AWS IoT Core**: Real-time MQTT messaging for claim status updates
+- **Amazon EventBridge**: Event routing and orchestration
+- **Docker**: Containerized agent deployment (ARM64 architecture)
+
+### How It Works
+
+1. **User Initiates**: Customer clicks "Start Voice Claim" button in React frontend
+2. **WebSocket Connection**: Establishes secure WebSocket connection with SigV4 authentication
+3. **Customer Data Retrieval**: Agent calls Customer API to retrieve existing customer, policy, and driver's license information
+4. **Voice Conversation**: Agent conducts natural voice conversation, asking only incident-specific questions (location, description, etc.)
+5. **Claim Submission**: Agent submits complete claim to FNOL API with AWS SigV4 authentication
+6. **Async Processing**: Backend validates claim asynchronously (1-3 seconds) via EventBridge → SQS → Claims Processing Lambda
+7. **Real-time Notification**: IoT Core delivers `Claim.Accepted` or `Claim.Rejected` event to frontend via MQTT
+8. **Auto-Advancement**: On acceptance, voice session ends automatically and user advances to next step (Upload Damaged Car)
+
+### User Experience
+
+- **Compact UI**: Streamlined interface that fits without scrolling
+- **Real-time Feedback**: Displays transcription and collected claim data as JSON during conversation
+- **Processing State**: Shows spinner with "Processing Your Claim..." message while backend validates
+- **Timeout Handling**: 30-second timeout with helpful error message if processing takes too long
+- **Graceful Errors**: Clear error messages for network issues, rejections, or permission problems
+
+### Documentation
+
+- [Event Flow Analysis](lib/services/voice-fnol-agent/EVENT_FLOW_ANALYSIS.md) - Detailed event flow and integration patterns
+- [Integration Summary](lib/services/voice-fnol-agent/INTEGRATION_SUMMARY.md) - Implementation details and changes
+- [Voice FNOL Service](lib/services/voice-fnol-agent/README.md) - Service-specific documentation
+
+### Benefits
+
+- **Improved Accessibility**: Voice interface for customers who prefer speaking over typing
+- **Faster Submission**: Natural conversation is often faster than form filling
+- **Reduced Errors**: Agent validates data in real-time during conversation
+- **Better Experience**: Conversational interface feels more natural and supportive
+- **Seamless Integration**: Reuses existing event-driven architecture without duplication
 
 ### Settlement
 As soon as the correct image of the damage car is uploaded and processed, you should see a `Settlement.Finalized` event coming back from the Settlement service.
