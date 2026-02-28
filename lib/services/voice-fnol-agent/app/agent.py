@@ -145,9 +145,7 @@ Focus your questions on the incident details that only the customer can provide:
 - Whether the insured person was driving
 - Whether a police report was filed
 - If police report filed, whether they have the report or receipt
-
-OPTIONAL HELPFUL DETAILS:
-- Other party's name and insurance information (if applicable)
+- If another party is involved in the accident, then Other party's name and insurance information.
 
 CONVERSATION EXAMPLES:
 
