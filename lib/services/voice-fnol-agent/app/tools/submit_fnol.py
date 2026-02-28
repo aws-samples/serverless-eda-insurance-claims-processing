@@ -163,7 +163,7 @@ async def submit_to_fnol_api(
     policy: dict,
     personalInformation: dict,
     policeReport: dict,
-    otherParty: dict
+    otherParty: dict = {}
 ) -> dict:
     """
     Submit claim to existing FNOL API endpoint.
@@ -177,7 +177,7 @@ async def submit_to_fnol_api(
         policy: Policy information (id)
         personalInformation: Personal info (customerId, driversLicenseNumber, isInsurerDriver, licensePlateNumber, numberOfPassengers)
         policeReport: Police report info (isFiled, reportOrReceiptAvailable)
-        otherParty: Other party info (insuranceId, insuranceCompany, firstName, lastName)
+        otherParty (optional): Other party info (insuranceId, insuranceCompany, firstName, lastName)
     
     Returns:
         Dictionary containing:
