@@ -10,16 +10,19 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@eventcatalog/types": "0.4.2",
-    "@types/node": "22.10.5",
-    "@types/react": "18.3.18",
-    "autoprefixer": "10.4.20",
-    "cross-env": "^7.0.3",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17",
+    "@types/node": "^22.0.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@eventcatalog/core": "2.13.2"
+    "@astrojs/react": "^4.4.2",
+    "@eventcatalog/core": "3.20.4",
+    "@radix-ui/react-context-menu": "^2.2.16",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@tailwindcss/vite": "^4.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }

@@ -67,6 +67,9 @@
       "AnalyzedFieldAndValues": {
         "type": "object",
         "properties": {
+          "vehicle_type": {
+            "$ref": "#/components/schemas/VehicleType"
+          },
           "color": {
             "$ref": "#/components/schemas/Color"
           },
@@ -147,6 +150,20 @@
           },
           "Name": {
             "type": "string"
+          }
+        }
+      },
+      "VehicleType": {
+        "type": "object",
+        "description": "Vehicle type identified by Amazon Bedrock Nova 2 Lite (present for CAR document type)",
+        "properties": {
+          "Confidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "Name": {
+            "type": "string",
+            "description": "Vehicle type name e.g. sedan, suv, coupe, van, truck"
           }
         }
       },

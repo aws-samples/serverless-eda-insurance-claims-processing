@@ -1,0 +1,28 @@
+---
+id: DocumentProcessed
+name: DocumentProcessed
+version: 1.0.0
+summary: |
+  Event represents when the customer document is successfully processed.
+producers:
+    - Documents Service
+consumers:
+    - Fraud Service
+    - Notifications Service
+owners:
+    - dhiraj
+    - mythili
+---
+
+### Details
+
+The Documents Service triggers `Document.Processed` upon completing the processing of a customer document. Two document types are processed:
+
+- **DRIVERS_LICENSE** — analyzed using Amazon Textract to extract identity fields (name, DOB, document number, etc.)
+- **CAR** — analyzed using Amazon Bedrock Nova 2 Lite to identify vehicle type, color, and damage level
+
+The Fraud Service consumes this event to analyze the document for potential fraud. The Notifications Service also utilizes this event to update the customer regarding the status of their request.
+
+<NodeGraph title="Consumer / Producer Diagram" />
+
+<Schema />

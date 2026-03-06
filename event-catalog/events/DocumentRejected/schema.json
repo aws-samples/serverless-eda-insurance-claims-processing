@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "version": "1.0.0",
-    "title": "Fraud.Detected"
+    "title": "Document.Rejected"
   },
   "paths": {},
   "components": {
@@ -10,11 +10,11 @@
       "AWSEvent": {
         "type": "object",
         "required": ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"],
-        "x-amazon-events-detail-type": "Fraud.Detected",
-        "x-amazon-events-source": "fraud.service",
+        "x-amazon-events-detail-type": "Document.Rejected",
+        "x-amazon-events-source": "document.service",
         "properties": {
           "detail": {
-            "$ref": "#/components/schemas/Fraud.Detected"
+            "$ref": "#/components/schemas/Document.Rejected"
           },
           "account": {
             "type": "string"
@@ -31,7 +31,7 @@
           "resources": {
             "type": "array",
             "items": {
-              "type": "object"
+              "type": "string"
             }
           },
           "source": {
@@ -46,25 +46,20 @@
           }
         }
       },
-      "Fraud.Detected": {
+      "Document.Rejected": {
         "type": "object",
-        "required": ["documentType", "customerId", "fraudType", "fraudReason"],
+        "required": ["customerId", "documentType"],
         "properties": {
           "customerId": {
             "type": "string"
           },
           "documentType": {
-            "type": "string"
-          },
-          "fraudReason": {
-            "type": "string"
-          },
-          "fraudType": {
-            "type": "string"
-          },
-          "recordId": {
             "type": "string",
-            "description": "The claim or record ID associated with the fraud check (present for insured asset fraud checks)"
+            "description": "The type of document that was rejected e.g. CAR, DRIVERS_LICENSE"
+          },
+          "reason": {
+            "type": "string",
+            "description": "The reason the document could not be processed"
           }
         }
       }

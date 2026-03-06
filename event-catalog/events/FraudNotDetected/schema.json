@@ -63,7 +63,8 @@
             "type": "string"
           },
           "recordId": {
-            "type": "string"
+            "type": "string",
+            "description": "The claim or record ID associated with the fraud check (present for insured asset fraud checks)"
           }
         }
       },

@@ -1,0 +1,24 @@
+---
+id: DocumentRejected
+name: DocumentRejected
+version: 1.0.0
+summary: |
+  Event represents when an uploaded document cannot be classified or processed.
+producers:
+    - Documents Service
+consumers:
+    - Notifications Service
+owners:
+    - dhiraj
+    - mythili
+---
+
+### Details
+
+The Documents Service emits `Document.Rejected` when the document processing Step Function cannot classify an uploaded image as either a car or a driver's license. This occurs when Amazon Rekognition does not detect the expected labels in the uploaded file, causing the workflow to transition to a failed state.
+
+This event is reserved for future use — the current implementation transitions to a Step Functions `Fail` state rather than emitting this event explicitly. When implemented, the Notifications Service will consume it to inform the customer that their document upload was not accepted.
+
+<NodeGraph title="Consumer / Producer Diagram" />
+
+<Schema />

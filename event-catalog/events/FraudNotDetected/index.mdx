@@ -1,0 +1,30 @@
+---
+id: FraudNotDetected
+name: FraudNotDetected
+version: 1.0.0
+summary: |
+  Event represents when the fraud is not detected.
+producers:
+    - Fraud Service
+consumers:
+    - Notifications Service
+    - Claims Service
+    - Customer Service
+    - Settlement Service
+owners:
+    - dhiraj
+    - mythili
+---
+
+### Details
+
+The Fraud Service emits `Fraud.Not.Detected` when no fraud is found in the analyzed document. Multiple services consume this event with different filter conditions:
+
+- **Customer Service** — updates the customer record when a driver's license passes fraud checks (`documentType: DRIVERS_LICENSE`), and updates the customer's car policy record when a signup car image passes (`documentType: CAR, fraudType: SIGNUP.CAR`)
+- **Claims Service** — marks the claim as validated when a claims car image passes (`documentType: CAR, fraudType: CLAIMS`)
+- **Settlement Service** — triggers settlement processing when a claims car image passes (`fraudType: CLAIMS`)
+- **Notifications Service** — notifies the customer of the outcome for all fraud check results
+
+<NodeGraph title="Consumer / Producer Diagram" />
+
+<Schema />
