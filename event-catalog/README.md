@@ -1,64 +1,170 @@
-# Event Catalog - Insurance Claim Processing Application
-This section contains the code to generate the event catalog for Insurance Claim Processing Application that streamlines event exploration and visualization via search options and filters. EventCatalog allows you to:
-- Document Events, Schemas, Code Examples, and additional details.
-- Visual representation of connections between upstream and downstream services using the Events.
-- Support for documentation versioning and changelogs.
-- Assign ownership of events and services to specific teams, enabling clear identification of domain ownership within your organization.
+# Event Catalog - Insurance Claims Processing Application
 
+This section contains the EventCatalog for the Insurance Claims Processing Application. It documents all events, services, and domains in the event-driven architecture, providing visual exploration of how services connect through EventBridge.
 
-## Build Event Catalog
-* Clone the repository
-* From project root, run the following commands
+EventCatalog lets you:
+- Document events, schemas, and service relationships
+- Visualize producer/consumer connections between services
+- Track event ownership across teams and domains
+- Browse and search your event-driven architecture
 
-    `cd event-catalog`
-    
-    `npm install`
+## Prerequisites
 
-* Followed by:
+- Node.js 18+
+- npm
 
-    `npm run build`
+## Getting Started
 
-This will output two directories,
+From the repository root:
 
-* **out** - Your EventCatalog as Static HTML (recommended to use)
-* **.next** - If you wish to deploy to NextJS (NextJS outputs this by default, recommended to use the out directory)
+```bash
+cd event-catalog
+npm install
+```
+
+## Development Mode
+
+Run the local dev server to see live updates as you edit:
+
+```bash
+npm run dev
+```
+
+Your catalog will be available at **http://localhost:3000**. The dev server hot-reloads as you make changes — no rebuild needed.
+
+## Build
+
+To produce a deploy-ready static site:
+
+```bash
+npm run build
+```
+
+The output is written to the `dist/` directory. To preview the built site locally before deploying:
+
+```bash
+npm run preview
+```
+
+> Note: `npm run preview` serves the last build. Any edits made after building won't appear until you run `npm run build` again.
 
 ## Deployment
-EventCatalog exports your catalog to static HTML which means you can deploy your application anywhere you want!
-The below section provide the steps for deploying static htnml into AWS Amplify. 
-Refer this [link](https://www.eventcatalog.dev/docs/guides/deployment) for more hosting options 
 
-## Host event-catalog app using AWS Amplify 
-1. Build zip file -
-From the project root, run the following commands. This will bundle the html output into `event-catalog.zip` file 
-  
-   `cd event-catalog/out`
-   
-   `zip -r event-catalog.zip *` 
-   
-2. Download `event-catalog.zip` file into local directory
-3. AWS Amplify Hosting - Deploy `event-catalog.zip` using Manual deploy option. Refer this [Amplify Drag and drop manual deploy](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html) documention for detailed steps.
-4. After the successful deployment, launch the application to visualize events for Insurance Claim Application.
+EventCatalog builds to static HTML by default, so you can host it anywhere — S3, Amplify, Netlify, Vercel, etc.
 
-![Event Catalog for Insurance Claim Application](./event-catalog-ui.png)
+Refer to the [EventCatalog hosting docs](https://www.eventcatalog.dev/docs/development/deployment/hosting-options) for all options.
 
-## Updating Event Catalog 
-### 1. Adding new Events
-You will find all events within the /events directory. To add a new event you will need to create a new folder with your `event` name and an `index.md` file inside that folder.
-Fill in the details of your event and run the Catalog. You will see all your events and will be able to navigate around and explore them!
+### Deploy to AWS Amplify
 
-    `/events/{Event Name}/index.md`
+The catalog is hosted on the `docs` branch of the existing `reactclaims` Amplify app:
 
-### 2. Adding new Service
-You will find all events within the /services directory. To add a new service you will need to create a new folder with your `service` name and an `index.md` file inside that folder.
-Fill in the details of your service and run the Catalog. You will see all your services and will be able to navigate around and explore them!
+**https://docs.d3fq5cldkpgo9v.amplifyapp.com**
 
-    `/services/{Service Name}/index.md`
+To redeploy after changes:
 
-### 3. Adding new Domains
-You will find all domains within the /domains directory. To add a new domain you will need to create a new folder within the `domains` folder in your Catalog and then you will need to create a an `index.md` file inside that folder.
-Fill in the details of your domain and run the Catalog. You will see all your domains and will be able to navigate around and explore them!
-    
-    `/domains/{Domain Name}/index.md`
+```bash
+# 1. Build
+npm run build
 
-For more details on the configuration refer [event-catalog](https://www.eventcatalog.dev/docs/configuration) documentation. 
+# 2. Zip the output
+cd dist && zip -r event-catalog-deploy.zip . && cd ..
+
+# 3. Upload and deploy via AWS CLI
+python3 -c "
+import subprocess, json, urllib.request
+
+result = subprocess.run(
+    ['aws', 'amplify', 'create-deployment', '--app-id', 'd3fq5cldkpgo9v', '--branch-name', 'docs'],
+    capture_output=True, text=True
+)
+data = json.loads(result.stdout)
+job_id, upload_url = data['jobId'], data['zipUploadUrl']
+
+with open('dist/event-catalog-deploy.zip', 'rb') as f:
+    req = urllib.request.Request(upload_url, data=f.read(), method='PUT')
+    req.add_header('Content-Type', 'application/zip')
+    urllib.request.urlopen(req)
+
+subprocess.run(['aws', 'amplify', 'start-deployment',
+    '--app-id', 'd3fq5cldkpgo9v', '--branch-name', 'docs', '--job-id', job_id])
+print(f'Deployed job {job_id}')
+"
+```
+
+## Updating the Catalog
+
+All content files use `.mdx` format and require `id` and `version` in their frontmatter.
+
+### Adding a new Event
+
+Create a folder under `/events` with an `index.mdx` and optionally a `schema.json`:
+
+```
+/events/{EventName}/index.mdx
+/events/{EventName}/schema.json
+```
+
+Minimal `index.mdx`:
+
+```mdx
+---
+id: MyEvent
+name: MyEvent
+version: 1.0.0
+summary: |
+  Brief description of the event.
+producers:
+    - My Service
+consumers:
+    - Other Service
+owners:
+    - your-alias
+---
+
+### Details
+
+Description of when and why this event is emitted.
+
+<NodeGraph />
+<Schema />
+```
+
+### Adding a new Service
+
+```
+/services/{ServiceName}/index.mdx
+```
+
+```mdx
+---
+id: MyService
+name: My Service
+version: 1.0.0
+summary: |
+  What this service does.
+owners:
+    - your-alias
+---
+```
+
+### Adding a new Domain
+
+```
+/domains/{DomainName}/index.mdx
+```
+
+```mdx
+---
+id: MyDomain
+name: My Domain
+version: 1.0.0
+summary: |
+  What this domain covers.
+owners:
+    - your-alias
+---
+```
+
+For full configuration options see the [EventCatalog docs](https://www.eventcatalog.dev/docs).
+
+![Event Catalog for Insurance Claims Application](./event-catalog-ui.png)

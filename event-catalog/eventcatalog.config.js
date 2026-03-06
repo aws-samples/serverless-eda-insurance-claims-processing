@@ -1,9 +1,10 @@
-module.exports = {
+export default {
+  cId: '8c6e3f37-da35-457d-a310-5899722f9037',
   title: 'EventCatalog - Insurance Claims Processing Application',
   tagline: 'Discover, Explore and Document your Event Driven Architectures',
   organizationName: 'Amazon Web Services',
   projectName: 'Event Catalog',
-  editUrl: 'https://github.com/mythilias/serverless-eda-insurance-claims-processing/tree/event-catalog-new/event-catalog',
+  editUrl: 'https://github.com/aws-samples/serverless-eda-insurance-claims-processing/tree/main/event-catalog',
   trailingSlash: true,
   primaryCTA: {
     label: 'Explore Events',
@@ -13,21 +14,6 @@ module.exports = {
     alt: 'EventCatalog Logo',
     src: 'logo.svg',
   },
-  headerLinks: [
-    { label: 'Events', href: '/events'},
-    { label: 'Services', href: '/services' },
-    { label: 'Domains', href: '/domains'},
-    { label: 'Users', href: '/users'},
-    { label: 'Visualiser', href: '/visualiser' },
-    { label: '3D Node Graph', href: '/overview' },
-  ],
-  footerLinks: [
-    { label: 'Events', href: '/events' },
-    { label: 'Services', href: '/services' },
-    { label: 'Visualiser', href: '/visualiser' },
-    { label: '3D Node Graph', href: '/overview' },
-    { label: 'GitHub', href: 'https://github.com/mythilias/serverless-eda-insurance-claims-processing/tree/event-catalog-new/event-catalog' }
-  ],
   users: [
     {
       id: 'dhiraj',
