@@ -54,12 +54,42 @@ EventCatalog builds to static HTML by default, so you can host it anywhere — S
 
 Refer to the [EventCatalog hosting docs](https://www.eventcatalog.dev/docs/development/deployment/hosting-options) for all options.
 
-### Deploy to AWS Amplify (manual)
+### Deploy to AWS Amplify
 
-1. Build the catalog: `npm run build`
-2. Zip the output: `cd dist && zip -r ../event-catalog.zip .`
-3. In the AWS Amplify console, choose **Manual deploy** and upload `event-catalog.zip`
-4. See [Amplify manual deploy docs](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html) for detailed steps
+The catalog is hosted on the `docs` branch of the existing `reactclaims` Amplify app:
+
+**https://docs.d3fq5cldkpgo9v.amplifyapp.com**
+
+To redeploy after changes:
+
+```bash
+# 1. Build
+npm run build
+
+# 2. Zip the output
+cd dist && zip -r event-catalog-deploy.zip . && cd ..
+
+# 3. Upload and deploy via AWS CLI
+python3 -c "
+import subprocess, json, urllib.request
+
+result = subprocess.run(
+    ['aws', 'amplify', 'create-deployment', '--app-id', 'd3fq5cldkpgo9v', '--branch-name', 'docs'],
+    capture_output=True, text=True
+)
+data = json.loads(result.stdout)
+job_id, upload_url = data['jobId'], data['zipUploadUrl']
+
+with open('dist/event-catalog-deploy.zip', 'rb') as f:
+    req = urllib.request.Request(upload_url, data=f.read(), method='PUT')
+    req.add_header('Content-Type', 'application/zip')
+    urllib.request.urlopen(req)
+
+subprocess.run(['aws', 'amplify', 'start-deployment',
+    '--app-id', 'd3fq5cldkpgo9v', '--branch-name', 'docs', '--job-id', job_id])
+print(f'Deployed job {job_id}')
+"
+```
 
 ## Updating the Catalog
 

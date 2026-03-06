@@ -11,7 +11,7 @@ import { API, Auth } from "aws-amplify";
 import StepWizard from "react-step-wizard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
-import { faNewspaper, faRightFromBracket, faCarBurst } from '@fortawesome/free-solid-svg-icons';
+import { faNewspaper, faRightFromBracket, faCarBurst, faBook } from '@fortawesome/free-solid-svg-icons';
 import {
   Divider,
   Grid,
@@ -99,17 +99,20 @@ class App extends React.Component {
           templateRows="1fr"
         >
           <Card columnStart="1" columnEnd="-1" backgroundColor='hsl(130, 33%, 37%)'>
-            <Flex width="100%" alignItems="center" alignContent="center">
+            <Flex width="100%" alignItems="center" alignContent="center" wrap="nowrap">
               <Heading width='80%' level={3} color='hsl(130, 60%, 95%)'>
                 <Flex><FontAwesomeIcon icon={faCarBurst} size="lg" />Insurance claim form</Flex>
               </Heading>
-              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing/" target="_blank">
+              <Link shrink="0" color='hsl(130, 60%, 95%)' href="https://docs.d3fq5cldkpgo9v.amplifyapp.com" target="_blank">
+                <Flex><FontAwesomeIcon icon={faBook} size="lg" />Event Catalog</Flex>
+              </Link>
+              <Link shrink="0" color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing/" target="_blank">
                 <Flex><FontAwesomeIcon icon={faGithub} size="lg" />GitHub</Flex>
               </Link>
-              <Link color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing#blogs" target="_blank">
+              <Link shrink="0" color='hsl(130, 60%, 95%)' href="https://github.com/aws-samples/serverless-eda-insurance-claims-processing#blogs" target="_blank">
                 <Flex><FontAwesomeIcon icon={faNewspaper} size="lg" />Blogs</Flex>
               </Link>
-              <Button backgroundColor="lightgrey" color="black" onClick={this.signOut}>
+              <Button shrink="0" backgroundColor="lightgrey" color="black" onClick={this.signOut}>
                 <Flex alignItems="center">
                   <FontAwesomeIcon icon={faRightFromBracket} size="lg" />Sign Out
                 </Flex>
