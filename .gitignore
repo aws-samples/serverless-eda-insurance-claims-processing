@@ -67,3 +67,5 @@ lib/services/voice-fnol-agent/serve-test.sh
 lib/services/voice-fnol-agent/test-local.html
 lib/services/voice-fnol-agent/watch-logs.sh
 event-catalog/.eventcatalog-core
+
+blogs/
