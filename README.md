@@ -77,6 +77,7 @@ This overall architecture consists of below domains. Visit each one of them for 
 - [Fraud](lib/services/fraud/README.md)
 - [Settlement](lib/services/settlement/README.md)
 - [Notifications](lib/services/notifications/README.md)
+- [Voice FNOL Agent](lib/services/voice-fnol-agent/README.md) — [Skill Guide](agent-skills/VOICE_AGENT_SKILL.md)
 
 ## Setup
 

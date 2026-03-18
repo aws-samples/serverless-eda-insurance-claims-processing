@@ -238,6 +238,7 @@ export class CustomerService extends Construct {
         environment: {
           CUSTOMER_TABLE_NAME: this.customerTable.tableName,
           POLICY_TABLE_NAME: this.policyTable.tableName,
+          ALLOWED_HEADER_ROLE_ARN: 'VoiceFnolAgentRole',
         },
       }
     );
