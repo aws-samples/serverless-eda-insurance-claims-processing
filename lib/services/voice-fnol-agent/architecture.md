@@ -1,5 +1,11 @@
 # Voice AI Agent Architecture Diagram
 
+## Architecture
+
+![Architecture](../../../images/voice_fnol_architecture.png)
+
+## User flow
+
 ```
                               ┌──────────────────┐
                               │  React Frontend  │
