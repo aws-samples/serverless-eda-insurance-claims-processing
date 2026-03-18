@@ -7,7 +7,8 @@ This code repository contains a sample application for Insurance Claims Processi
 ## Blogs
 - [Building a modern, event-driven application for insurance claims processing – Part 1](https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-1/)
 - [Building a modern, event-driven application for insurance claims processing – Part 2](https://aws.amazon.com/blogs/industries/building-a-modern-event-driven-application-for-insurance-claims-processing-part-2/)
-- [Extending a serverless, event-driven architecture to existing container workloads](https://aws.amazon.com/blogs/compute/extending-a-serverless-event-driven-architecture-to-existing-container-workloads/)
+- [Extending a serverless, event-driven architecture to existing container workloads - Part 3](https://aws.amazon.com/blogs/compute/extending-a-serverless-event-driven-architecture-to-existing-container-workloads/)
+- [Extending an event-driven insurance claims application with voice AI agents - Part 4](https://mahadhir.substack.com/p/extending-an-event-driven-insurance)
 
 ## Structure
 
