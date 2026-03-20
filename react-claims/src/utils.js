@@ -30,67 +30,37 @@ export function getAgentRuntimeId() {
 }
 
 /**
- * Generate a presigned WebSocket URL for AgentCore Runtime
+ * Generate WebSocket connection parameters for AgentCore Runtime with JWT authentication.
+ *
+ * Browser WebSocket API cannot set custom headers, so AgentCore accepts the bearer token
+ * via the Sec-WebSocket-Protocol header using base64url encoding.
+ * See: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-websocket.html
+ *
  * @param {string} url - Base WebSocket URL
- * @returns {Promise<string>} Presigned WebSocket URL with SigV4 authentication
+ * @returns {Promise<{url: string, protocols: string[]}>} URL and subprotocols for WebSocket constructor
  */
 export async function generatePresignedWebSocketUrl(url) {
-  const { SignatureV4 } = await import('@aws-sdk/signature-v4');
-  const { Sha256 } = await import('@aws-crypto/sha256-js');
-  const { HttpRequest } = await import('@aws-sdk/protocol-http');
   const { Auth } = await import('aws-amplify');
-  
-  // Get credentials
-  const credentials = await Auth.currentCredentials();
-  if (!credentials?.authenticated) {
+
+  const session = await Auth.currentSession();
+  if (!session) {
     throw new Error('Not authenticated');
   }
-  
-  // Parse URL and encode path
-  const urlObj = new URL(url);
-  const encodedPath = urlObj.pathname.split('/').map(segment => {
-    if (segment === '' || segment === 'runtimes' || segment === 'ws') return segment;
-    return encodeURIComponent(segment);
-  }).join('/');
-  
-  // Generate session ID
+
+  const token = session.getIdToken().getJwtToken();
+
+  // Base64url-encode the JWT token for Sec-WebSocket-Protocol header
+  const base64url = btoa(token)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  // Generate session ID and pass as query parameter
   const sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-  
-  // Get Cognito Identity ID for custom header
-  const cognitoIdentityId = credentials.identityId;
-  
-  // Create request with session ID and custom header (as query parameter)
-  const request = new HttpRequest({
-    method: 'GET',
-    protocol: 'https:',
-    hostname: urlObj.hostname,
-    path: encodedPath,
-    query: {
-      'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': sessionId,
-      'X-Amzn-Bedrock-AgentCore-Runtime-Custom-CognitoIdentityId': cognitoIdentityId
-    },
-    headers: { host: urlObj.hostname }
-  });
-  
-  // Sign request
-  const signer = new SignatureV4({
-    credentials: {
-      accessKeyId: credentials.accessKeyId,
-      secretAccessKey: credentials.secretAccessKey,
-      sessionToken: credentials.sessionToken
-    },
-    region: credentials.region || 'us-east-1',
-    service: 'bedrock-agentcore',
-    sha256: Sha256,
-    applyChecksum: false,
-    uriEscapePath: true
-  });
-  
-  const signedRequest = await signer.presign(request, { expiresIn: 300 });
-  
-  // Build full URL with query parameters
-  const queryParams = new URLSearchParams(signedRequest.query || {});
-  const signedUrl = `wss://${signedRequest.hostname}${signedRequest.path}?${queryParams.toString()}`;
-  
-  return signedUrl;
+  const wsUrl = `${url}?X-Amzn-Bedrock-AgentCore-Runtime-Session-Id=${encodeURIComponent(sessionId)}`;
+
+  return {
+    url: wsUrl,
+    protocols: [`base64UrlBearerAuthorization.${base64url}`, 'base64UrlBearerAuthorization'],
+  };
 }

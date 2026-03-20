@@ -71,7 +71,7 @@ NagSuppressions.addStackSuppressions(claimsStack, [
   },
   {
     id: "AwsSolutions-COG4",
-    reason: "OPTIONS call for CORS does not require authentication",
+    reason: "OPTIONS call for CORS does not require Cognito authorizer",
   },
   {
     id: "AwsSolutions-SQS3",

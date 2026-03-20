@@ -84,6 +84,7 @@ class ClaimForm extends React.Component {
       },
       other_firstName: { value: "John", hasError: false, errorMessage: "" },
       other_lastName: { value: "Doe", hasError: false, errorMessage: "" },
+      isSubmitting: false,
     };
 
     this.submitClaim = this.submitClaim.bind(this);
@@ -108,6 +109,8 @@ class ClaimForm extends React.Component {
   }
 
   async submitClaim() {
+    this.setState({ isSubmitting: true });
+
     const body = {
       incident: {
         occurrenceDateTime: this.state.occurrenceDateTime.value,
@@ -154,7 +157,11 @@ class ClaimForm extends React.Component {
       headers: {}, // OPTIONAL
     };
 
-    await API.post(apiName, path, myInit);
+    try {
+      await API.post(apiName, path, myInit);
+    } finally {
+      this.setState({ isSubmitting: false });
+    }
   }
 
   render() {
@@ -264,7 +271,12 @@ class ClaimForm extends React.Component {
             onChange={this.handleInputChange}
           />
         </Flex>
-        <Button variation="primary" onClick={this.submitClaim}>
+        <Button
+          variation="primary"
+          onClick={this.submitClaim}
+          isLoading={this.state.isSubmitting}
+          loadingText="Submitting Claim..."
+        >
           Submit Claim
         </Button>
       </Flex>

@@ -36,7 +36,7 @@ export interface VoiceFnolStackProps extends StackProps {
   /**
    * Enable CloudWatch Transaction Search for observability
    * This is a one-time setup per AWS account
-   * 
+   *
    * @default true
    */
   enableTransactionSearch?: boolean;
@@ -84,11 +84,20 @@ export class VoiceFnolStack extends Stack {
     super(scope, id, props);
 
     // Create the Voice FNOL Service
+    // Read Amplify-managed Cognito config from environment variables
+    const userPoolId = this.node.tryGetContext("cognitoUserPoolId");
+    const userPoolClientId = this.node.tryGetContext("cognitoUserPoolClientId");
+    if (!userPoolId || !userPoolClientId) {
+      throw new Error("cognitoUserPoolId and cognitoUserPoolClientId must be set in cdk.json context");
+    }
+
     this.voiceFnolService = new VoiceFnolService(this, "VoiceFnolService", {
       fnolApiEndpoint: props.fnolApiEndpoint,
       fnolApiId: props.fnolApiId,
       customerApiEndpoint: props.customerApiEndpoint,
       customerApiId: props.customerApiId,
+      userPoolId,
+      userPoolClientId,
       enableTransactionSearch: props.enableTransactionSearch,
       traceSamplingPercentage: props.traceSamplingPercentage,
     });

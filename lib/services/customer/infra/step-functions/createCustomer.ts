@@ -226,10 +226,10 @@ function createSaveCustomerStep(
                   "S.$": "$.uuid.uuid",
                 },
                 SK: {
-                  S: "COGNITO_IDENTITY_ID",
+                  S: "USER_SUB",
                 },
-                cognitoIdentityId: {
-                  "S.$": "$.cognitoIdentityId",
+                sub: {
+                  "S.$": "$.sub",
                 },
               },
             },
@@ -297,7 +297,7 @@ function createAcceptCustomerChoice(
       entries: [
         {
           detail: TaskInput.fromObject({
-            "cognitoIdentityId.$": "$.cognitoIdentityId",
+            "sub.$": "$.sub",
             message: "Address or Identity Validation Failed",
           }),
           eventBus: props.eventBus,
@@ -428,7 +428,7 @@ function createParseDataState(scope: Construct): Pass {
       "PK.$": "$.id",
       "SK.$": "$.detail-type",
       "data.$": "$.detail.data",
-      "cognitoIdentityId.$": "$.detail.cognitoIdentityId",
+      "sub.$": "$.detail.sub",
     },
   });
 }

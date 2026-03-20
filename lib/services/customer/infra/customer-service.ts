@@ -4,6 +4,7 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
+  CognitoUserPoolsAuthorizer,
   EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
@@ -28,6 +29,7 @@ import {
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { IUserPool } from "aws-cdk-lib/aws-cognito";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import {
@@ -55,6 +57,7 @@ function addDefaultGatewayResponse(api: RestApi) {
 interface CustomerServiceProps {
   bus: EventBus;
   documentsBucket: Bucket;
+  userPool: IUserPool;
 }
 
 export class CustomerService extends Construct {
@@ -238,13 +241,17 @@ export class CustomerService extends Construct {
         environment: {
           CUSTOMER_TABLE_NAME: this.customerTable.tableName,
           POLICY_TABLE_NAME: this.policyTable.tableName,
-          ALLOWED_HEADER_ROLE_ARN: 'VoiceFnolAgentRole',
+
         },
       }
     );
 
     this.customerTable.grantReadData(getCustomerFunction);
     this.policyTable.grantReadData(getCustomerFunction);
+
+    const signupAuthorizer = new CognitoUserPoolsAuthorizer(this, "SignupCognitoAuthorizer", {
+      cognitoUserPools: [props.userPool],
+    });
 
     const signupApi = new RestApi(this, "SignupApi", {
       endpointConfiguration: {
@@ -263,11 +270,15 @@ export class CustomerService extends Construct {
     signupResource.addMethod(
       "POST",
       new LambdaIntegration(signupLambdaFunction),
-      { authorizationType: AuthorizationType.IAM }
+      { authorizationType: AuthorizationType.COGNITO, authorizer: signupAuthorizer }
     );
 
     addDefaultGatewayResponse(signupApi);
     addWebAcl(this, signupApi.deploymentStage.stageArn, "SignupApiWebACL");
+
+    const customerAuthorizer = new CognitoUserPoolsAuthorizer(scope, "CustomerCognitoAuthorizer", {
+      cognitoUserPools: [props.userPool],
+    });
 
     const customerApi = new RestApi(scope, "CustomerApi", {
       endpointConfiguration: {
@@ -286,7 +297,7 @@ export class CustomerService extends Construct {
     customerResource.addMethod(
       "GET",
       new LambdaIntegration(getCustomerFunction),
-      { authorizationType: AuthorizationType.IAM }
+      { authorizationType: AuthorizationType.COGNITO, authorizer: customerAuthorizer }
     );
 
     addDefaultGatewayResponse(customerApi);

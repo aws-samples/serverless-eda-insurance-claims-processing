@@ -5,7 +5,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { Amplify } from "aws-amplify";
+import { Amplify, Auth } from "aws-amplify";
 import awsExports from "./aws-exports";
 import "@aws-amplify/ui-react/styles.css";
 import { getEndpointUrl } from "./utils";
@@ -18,22 +18,34 @@ Amplify.configure({
       {
         name: "SignupAPI",
         endpoint: getEndpointUrl("SignupApiEndpoint"),
-      },
-      {
-        name: "IOTApi",
-        endpoint: getEndpointUrl("IOTApiEndpoint"),
+        custom_header: async () => {
+          const session = await Auth.currentSession();
+          return { Authorization: session.getIdToken().getJwtToken() };
+        },
       },
       {
         name: "CustomerApi",
         endpoint: getEndpointUrl("CustomerApiEndpoint"),
+        custom_header: async () => {
+          const session = await Auth.currentSession();
+          return { Authorization: session.getIdToken().getJwtToken() };
+        },
       },
       {
         name: "FnolApi",
         endpoint: getEndpointUrl("FnolApiEndpoint"),
+        custom_header: async () => {
+          const session = await Auth.currentSession();
+          return { Authorization: session.getIdToken().getJwtToken() };
+        },
       },
       {
         name: "CleanupApi",
         endpoint: getEndpointUrl("CleanupApiEndpoint"),
+        custom_header: async () => {
+          const session = await Auth.currentSession();
+          return { Authorization: session.getIdToken().getJwtToken() };
+        },
       },
     ],
   },

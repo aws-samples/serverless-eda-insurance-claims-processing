@@ -4,6 +4,7 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
+  CognitoUserPoolsAuthorizer,
   EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
@@ -11,6 +12,7 @@ import {
   ResponseType,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
+import { IUserPool } from "aws-cdk-lib/aws-cognito";
 import { Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -34,6 +36,7 @@ interface CleanupServiceProps {
   claimsTableName: string;
   settlementTableName: string,
   documentsBucketName: string;
+  userPool: IUserPool;
 }
 
 export class CleanupService extends Construct {
@@ -76,6 +79,10 @@ export class CleanupService extends Construct {
       })
     );
 
+    const cleanupAuthorizer = new CognitoUserPoolsAuthorizer(scope, "CleanupCognitoAuthorizer", {
+      cognitoUserPools: [props.userPool],
+    });
+
     const cleanupApi = new RestApi(scope, "CleanupApi", {
       endpointConfiguration: {
         types: [EndpointType.REGIONAL],
@@ -95,7 +102,7 @@ export class CleanupService extends Construct {
     clearAllDataResource.addMethod(
       "DELETE",
       new LambdaIntegration(this.cleanupLambdaFunction),
-      { authorizationType: AuthorizationType.IAM }
+      { authorizationType: AuthorizationType.COGNITO, authorizer: cleanupAuthorizer }
     );
 
     addDefaultGatewayResponse(cleanupApi);

@@ -47,6 +47,7 @@ class SignupForm extends React.Component {
       vehicle_vin: this.initial_value,
       vehicle_year: this.initial_value,
       signedUp: false,
+      isSubmitting: false,
     };
 
     this.updateParent = props.updateState;
@@ -138,6 +139,8 @@ class SignupForm extends React.Component {
   async submitForm() {
     if (!this.validateInput()) return;
 
+    this.setState({ isSubmitting: true });
+
     const apiName = "SignupAPI";
     const path = "signup";
     const myInit = {
@@ -169,7 +172,11 @@ class SignupForm extends React.Component {
       headers: {}, // OPTIONAL
     };
 
-    await API.post(apiName, path, myInit);
+    try {
+      await API.post(apiName, path, myInit);
+    } finally {
+      this.setState({ isSubmitting: false });
+    }
   }
 
   async showClaimsForm() {
@@ -329,6 +336,8 @@ class SignupForm extends React.Component {
             <Button
               variation="primary"
               onClick={this.submitForm}
+              isLoading={this.state.isSubmitting}
+              loadingText="Submitting..."
             >
               Submit
             </Button>

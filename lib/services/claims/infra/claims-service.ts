@@ -4,6 +4,7 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
+  CognitoUserPoolsAuthorizer,
   EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
@@ -25,6 +26,7 @@ import {
 import { EventSourceMapping, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { IUserPool } from "aws-cdk-lib/aws-cognito";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
@@ -46,6 +48,7 @@ interface ClaimsServiceProps {
   // Initial iteration is to make modular constructs work. Will define context boundaries in subsequent iterations
   policyTable: Table;
   customerTable: Table;
+  userPool: IUserPool;
 }
 
 export class ClaimsService extends Construct {
@@ -111,6 +114,10 @@ export class ClaimsService extends Construct {
     firstNoticeOfLossLambda.addToRolePolicy(lambdaToPutEventsPolicy);
 
     // Create Claims FNOL POST API
+    const fnolAuthorizer = new CognitoUserPoolsAuthorizer(this, "FnolCognitoAuthorizer", {
+      cognitoUserPools: [props.userPool],
+    });
+
     this.fnolApi = new RestApi(this, "FnolApi", {
       endpointConfiguration: {
         types: [EndpointType.REGIONAL],
@@ -129,7 +136,7 @@ export class ClaimsService extends Construct {
     fnolResource.addMethod(
       "POST",
       new LambdaIntegration(firstNoticeOfLossLambda),
-      { authorizationType: AuthorizationType.IAM }
+      { authorizationType: AuthorizationType.COGNITO, authorizer: fnolAuthorizer }
     );
 
     addDefaultGatewayResponse(this.fnolApi);

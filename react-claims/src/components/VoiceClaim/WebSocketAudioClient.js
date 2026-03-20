@@ -47,16 +47,13 @@ export class WebSocketAudioClient {
     return new Promise(async (resolve, reject) => {
       try {
         const { generatePresignedWebSocketUrl } = await import('../../utils');
-        
-        // Generate presigned URL with SigV4 authentication
-        const authenticatedUrl = await generatePresignedWebSocketUrl(url);
-        
-        console.log('Connecting to Strands BidiAgent WebSocket...');
-        
-        this.ws = new WebSocket(authenticatedUrl);
+
+        // Generate WebSocket URL and auth subprotocols (JWT via Sec-WebSocket-Protocol)
+        const { url: authenticatedUrl, protocols } = await generatePresignedWebSocketUrl(url);
+
+        this.ws = new WebSocket(authenticatedUrl, protocols);
 
         this.ws.onopen = () => {
-          console.log('WebSocket connected successfully');
           this.isConnecting = false;
           
           if (this.connectionStatusCallback) {
@@ -86,7 +83,6 @@ export class WebSocketAudioClient {
         };
 
         this.ws.onclose = (event) => {
-          console.log('WebSocket closed:', event.code, event.reason);
           this.isConnecting = false;
           this.ws = null;
           
@@ -115,8 +111,7 @@ export class WebSocketAudioClient {
     if (typeof event.data === 'string') {
       try {
         const data = JSON.parse(event.data);
-        console.log('Received Strands event:', data.type);
-        
+
         // Track event for debugging UI
         this.trackEvent(data, 'in');
         
@@ -137,28 +132,22 @@ export class WebSocketAudioClient {
             break;
             
           case 'bidi_interruption':
-            // User interrupted agent's speech
-            console.log('Interruption detected:', data.reason);
             if (this.phaseChangeCallback) {
               this.phaseChangeCallback('interrupted', data);
             }
             break;
             
           case 'tool_use_stream':
-            // Agent is using a tool
             if (data.current_tool_use && this.toolUseCallback) {
-              console.log('🔧 Tool:', data.current_tool_use.name);
               this.toolUseCallback(data.current_tool_use);
             }
             break;
             
           case 'tool_result':
-            // Tool execution result
             if (data.tool_result) {
-              const content = data.tool_result.content?.[0]?.text || 
+              const content = data.tool_result.content?.[0]?.text ||
                             JSON.stringify(data.tool_result.content);
-              console.log('✅ Tool Result:', content);
-              
+
               // Check if this is a claim submission result
               try {
                 const result = JSON.parse(content);
@@ -172,29 +161,21 @@ export class WebSocketAudioClient {
             break;
             
           case 'bidi_response_start':
-            // Agent started generating response
-            console.log('Agent started responding');
             if (this.phaseChangeCallback) {
               this.phaseChangeCallback('responding', data);
             }
             break;
             
           case 'bidi_response_complete':
-            // Agent finished generating response
-            console.log('Agent finished responding');
             if (this.phaseChangeCallback) {
               this.phaseChangeCallback('listening', data);
             }
             break;
             
           case 'bidi_connection_start':
-            // Connection established
-            console.log('Strands connection established');
             break;
-            
+
           case 'bidi_connection_close':
-            // Connection closed
-            console.log('Strands connection closed:', data.reason);
             break;
             
           case 'bidi_error':
@@ -206,7 +187,7 @@ export class WebSocketAudioClient {
             break;
             
           default:
-            console.warn('Unknown Strands event type:', data.type);
+            break;
         }
       } catch (error) {
         console.error('Failed to parse Strands message:', error, event.data);
@@ -264,7 +245,6 @@ export class WebSocketAudioClient {
       };
       
       this.ws.send(JSON.stringify(payload));
-      console.log('Sent text input:', text);
     } else {
       console.warn('WebSocket is not connected, cannot send text');
       if (this.errorCallback) {
@@ -433,8 +413,6 @@ export class WebSocketAudioClient {
    * Disconnect WebSocket and cleanup
    */
   disconnect() {
-    console.log('Disconnecting WebSocket...');
-    
     if (this.ws) {
       this.ws.close(1000, 'Client disconnecting');
       this.ws = null;
