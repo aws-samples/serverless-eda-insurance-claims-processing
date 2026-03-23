@@ -14,7 +14,7 @@ import { getWebSocketEndpoint } from "./utils";
  * 1. Voice-enabled claim submission (new feature)
  * 2. Traditional form-based claim submission (existing)
  * 
- * After voice claim submission, the component waits for IoT Core events
+ * After voice claim submission, the component waits for AppSync Events
  * (handled by Updates.js) to determine if claim was accepted or rejected.
  * On acceptance, the wizard automatically advances to the next step.
  * 
@@ -60,7 +60,6 @@ const ClaimWithVoice = ({ customer, updateState }) => {
    * to confirm the claim was accepted.
    */
   const handleVoiceClaimSubmitted = (claimRef) => {
-    console.log('Voice claim submitted with reference:', claimRef);
     // Don't change mode - stay in voice mode and show waiting state
     // The VoiceClaimComponent will handle the waiting UI
   };
@@ -70,7 +69,6 @@ const ClaimWithVoice = ({ customer, updateState }) => {
    * This is called by Updates.js via updateState when Claim.Accepted event arrives
    */
   const handleNextStep = () => {
-    console.log('Claim accepted - advancing to next step');
     if (updateState) {
       updateState('nextStep', true);
     }
@@ -88,17 +86,10 @@ const ClaimWithVoice = ({ customer, updateState }) => {
    */
   const handleFormClaimSubmitted = () => {
     // Form submission already triggers nextStep via its own logic
-    console.log('Form claim submitted');
   };
 
   // Show choice screen
   if (mode === 'choice') {
-    // console.log('Rendering choice screen');
-    // console.log('WebSocket URL:', webSocketUrl);
-    // console.log('Auth Token:', authToken ? 'Present' : 'Not present');
-    // console.log('Customer ID:', customerId);
-    // console.log('Policy ID:', policyId);
-    
     return (
       <Flex
         direction="column"
@@ -119,20 +110,16 @@ const ClaimWithVoice = ({ customer, updateState }) => {
             backgroundColor="var(--amplify-colors-background-secondary)"
             borderRadius="12px"
             style={{ maxWidth: '300px', cursor: 'pointer' }}
-            onClick={() => {
-              console.log('Voice claim card clicked');
-              setMode('voice');
-            }}
+            onClick={() => setMode('voice')}
           >
             <div style={{ fontSize: '3rem' }}>🎤</div>
             <Heading level={4}>Voice Claim</Heading>
             <Text textAlign="center">
               Tell us about your accident in your own words. We'll guide you through the process.
             </Text>
-            <Button 
-              variation="primary" 
+            <Button
+              variation="primary"
               onClick={(e) => {
-                console.log('Voice claim button clicked');
                 e.stopPropagation();
                 setMode('voice');
               }}
@@ -168,9 +155,6 @@ const ClaimWithVoice = ({ customer, updateState }) => {
 
   // Show voice claim component
   if (mode === 'voice') {
-    console.log('Rendering voice claim component');
-    console.log('Props:', { webSocketUrl, authToken: authToken ? 'Present' : 'Not present', customerId, policyId });
-    
     return (
       <Flex direction="column" gap="1rem">
         <Button 

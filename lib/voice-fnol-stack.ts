@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import { Stack, StackProps, CfnOutput } from "aws-cdk-lib";
+import { CfnUserPoolGroup } from "aws-cdk-lib/aws-cognito";
 import { Construct } from "constructs";
 import { VoiceFnolService } from "./services/voice-fnol-agent/infra/voice-fnol-service";
 
@@ -36,7 +37,7 @@ export interface VoiceFnolStackProps extends StackProps {
   /**
    * Enable CloudWatch Transaction Search for observability
    * This is a one-time setup per AWS account
-   * 
+   *
    * @default true
    */
   enableTransactionSearch?: boolean;
@@ -84,11 +85,29 @@ export class VoiceFnolStack extends Stack {
     super(scope, id, props);
 
     // Create the Voice FNOL Service
+    // Read Amplify-managed Cognito config from environment variables
+    const userPoolId = this.node.tryGetContext("cognitoUserPoolId");
+    const userPoolClientId = this.node.tryGetContext("cognitoUserPoolClientId");
+    if (!userPoolId || !userPoolClientId) {
+      throw new Error("cognitoUserPoolId and cognitoUserPoolClientId must be set in cdk.json context");
+    }
+
+    // Create the AgentUsers group in the Amplify-managed User Pool.
+    // Users added to this group receive the cognito:groups claim in their
+    // access tokens, which AgentCore's customJwtAuthorizer validates via customClaims.
+    new CfnUserPoolGroup(this, "AgentUsersGroup", {
+      userPoolId,
+      groupName: "AgentUsers",
+      description: "Users permitted to invoke the voice FNOL agent",
+    });
+
     this.voiceFnolService = new VoiceFnolService(this, "VoiceFnolService", {
       fnolApiEndpoint: props.fnolApiEndpoint,
       fnolApiId: props.fnolApiId,
       customerApiEndpoint: props.customerApiEndpoint,
       customerApiId: props.customerApiId,
+      userPoolId,
+      userPoolClientId,
       enableTransactionSearch: props.enableTransactionSearch,
       traceSamplingPercentage: props.traceSamplingPercentage,
     });

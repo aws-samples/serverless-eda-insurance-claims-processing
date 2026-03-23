@@ -5,6 +5,7 @@ import { RemovalPolicy, Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { Construct } from "constructs";
 import { CleanupService } from "./cleanup/infra/cleanup-service";
 import { ClaimsProcessingCWDashboard } from "./observability/cw-dashboard/infra/ClaimsProcessingCWDashboard";
@@ -29,6 +30,13 @@ export class ClaimsProcessingStack extends Stack {
     const stackName = Stack.of(this).stackName;
     const region = Stack.of(this).region;
 
+    // Reference existing Amplify-managed Cognito User Pool for JWT authorization
+    const userPoolId = this.node.tryGetContext("cognitoUserPoolId");
+    if (!userPoolId) {
+      throw new Error("cognitoUserPoolId must be set in cdk.json context");
+    }
+    const userPool = UserPool.fromUserPoolId(this, "UserPool", userPoolId);
+
     const bus = new EventBus(this, "CustomBus", {
       eventBusName: `${stackName}-ClaimsProcessingBus`,
     });
@@ -49,6 +57,7 @@ export class ClaimsProcessingStack extends Stack {
     const customerService = new CustomerService(this, "CustomerService", {
       bus,
       documentsBucket: documentService.documentsBucket,
+      userPool,
     });
     const customerTable = customerService.customerTable;
     const policyTable = customerService.policyTable;
@@ -58,6 +67,7 @@ export class ClaimsProcessingStack extends Stack {
       customerTable,
       policyTable,
       documentsBucket: documentService.documentsBucket,
+      userPool,
     });
     const claimsTable = claimsService.claimsTable;
 
@@ -79,6 +89,7 @@ export class ClaimsProcessingStack extends Stack {
     new NotificationsService(this, "NotificationsService", {
       bus,
       customerTable,
+      userPoolId,
       eventPattern: {
         detailType: [
           CustomerEvents.CUSTOMER_ACCEPTED,
@@ -100,6 +111,7 @@ export class ClaimsProcessingStack extends Stack {
       claimsTableName: claimsTable.tableName,
       settlementTableName: settlementService.table.tableName,
       documentsBucketName: documentService.documentsBucket.bucketName,
+      userPool,
     });
 
     customerTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);

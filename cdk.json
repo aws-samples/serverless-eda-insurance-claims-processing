@@ -30,6 +30,8 @@
     "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
     "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": true,
     "@aws-cdk/core:target-partitions": ["aws", "aws-cn"],
-    "@aws-cdk/customresources:installLatestAwsSdkDefault": false
+    "@aws-cdk/customresources:installLatestAwsSdkDefault": false,
+    "cognitoUserPoolId": "us-east-1_6yYTcLxed",
+    "cognitoUserPoolClientId": "51f7ae4hchm29dgj0ho6rdt2k1"
   }
 }

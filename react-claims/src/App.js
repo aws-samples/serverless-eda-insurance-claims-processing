@@ -5,7 +5,6 @@ import SignupForm from "./Signup";
 import UpdateArea from "./Updates";
 import UploadFile from "./UploadFile";
 import React from "react";
-import ClaimForm from "./Claim";
 import ClaimWithVoice from "./ClaimWithVoice";
 import { API, Auth } from "aws-amplify";
 import StepWizard from "react-step-wizard";
@@ -56,7 +55,9 @@ class App extends React.Component {
         ...this.state,
         stepCompleted: this.state.stepCompleted + 1
       });
-      this.wizard.nextStep();
+      if (this.wizard) {
+        this.wizard.nextStep();
+      }
     }
   }
 

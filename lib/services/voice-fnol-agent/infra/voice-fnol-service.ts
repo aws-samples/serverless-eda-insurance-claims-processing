@@ -35,9 +35,19 @@ interface VoiceFnolServiceProps {
   customerApiId: string;
 
   /**
+   * The Cognito User Pool ID for JWT authorization
+   */
+  userPoolId: string;
+
+  /**
+   * The Cognito User Pool Client ID for JWT authorization
+   */
+  userPoolClientId: string;
+
+  /**
    * Enable CloudWatch Transaction Search for observability
    * This is a one-time setup per AWS account
-   * 
+   *
    * @default true
    */
   enableTransactionSearch?: boolean;
@@ -196,29 +206,8 @@ export class VoiceFnolService extends Construct {
       })
     );
 
-    // Grant access to existing Claims Service FNOL API endpoint
-    this.agentRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["execute-api:Invoke"],
-        resources: [
-          // Allow POST to /fnol endpoint
-          `arn:aws:execute-api:${region}:${account}:${props.fnolApiId}/*/POST/fnol`,
-        ],
-      })
-    );
-
-    // Grant access to Customer API endpoint for retrieving customer data
-    this.agentRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["execute-api:Invoke"],
-        resources: [
-          // Allow GET to /customer endpoint
-          `arn:aws:execute-api:${region}:${account}:${props.customerApiId}/*/GET/customer`,
-        ],
-      })
-    );
+    // Note: execute-api:Invoke policies removed — agent now uses JWT Bearer auth
+    // for API Gateway calls (Cognito User Pool authorizer), not IAM SigV4.
 
     // Build and push Docker image to ECR
     // CDK will automatically:
@@ -296,12 +285,37 @@ export class VoiceFnolService extends Construct {
 
       // Protocol configuration for WebSocket
       protocolConfiguration: "HTTP",
-      
-      // Request Header Configuration - Allow Cognito Identity ID to be passed through
+
+      // Forward the Authorization header to the container so the agent can
+      // extract the JWT and pass it to downstream APIs (Customer API, FNOL API).
       requestHeaderConfiguration: {
-        requestHeaderAllowlist: [
-          "X-Amzn-Bedrock-AgentCore-Runtime-Custom-CognitoIdentityId"
-        ]
+        requestHeaderAllowlist: ["Authorization"],
+      },
+
+      // JWT authorization — AgentCore validates the token before passing to the agent.
+      // Uses access tokens (not ID tokens): access tokens carry client_id and
+      // cognito:groups claims, enabling both client validation and group-based
+      // access control without a separate resource server or custom scopes.
+      authorizerConfiguration: {
+        customJwtAuthorizer: {
+          discoveryUrl: `https://cognito-idp.${region}.amazonaws.com/${props.userPoolId}/.well-known/openid-configuration`,
+          // allowedClients validates client_id — present in access tokens only
+          allowedClients: [props.userPoolClientId],
+          // Enforce group membership at the gateway before the container starts.
+          // cognito:groups is a string list — use STRING_LIST type with CONTAINS operator.
+          customClaims: [
+            {
+              inboundTokenClaimName: "cognito:groups",
+              inboundTokenClaimValueType: "STRING_ARRAY",
+              authorizingClaimMatchValue: {
+                claimMatchOperator: "CONTAINS",
+                claimMatchValue: {
+                  matchValueString: "AgentUsers",
+                },
+              },
+            },
+          ],
+        },
       }
     });
 

@@ -3,9 +3,7 @@
 
 import React from "react";
 import { Button, Flex, ScrollView, Heading } from "@aws-amplify/ui-react";
-import { PubSub, Auth, API, Amplify } from "aws-amplify";
-import { AWSIoTProvider } from "@aws-amplify/pubsub";
-import awsmobile from "./aws-exports";
+import { Auth } from "aws-amplify";
 import { getEndpointUrl } from "./utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faCheck } from '@fortawesome/free-solid-svg-icons';
@@ -45,13 +43,13 @@ class UpdateArea extends React.Component {
 
     if (data.value["detail-type"] === "Fraud.Not.Detected" || data.value["detail-type"] === "Claim.Accepted") {
       this.updateParent("nextStep", true);
-      
+
       // Dispatch custom event for voice claim component to end session
       if (data.value["detail-type"] === "Claim.Accepted") {
         window.dispatchEvent(new CustomEvent('claimAccepted'));
       }
     }
-    
+
     if (data.value["detail-type"] === "Customer.Accepted") {
       this.updateParent("nextStep", true);
       if (respData.driversLicenseImageUrl) {
@@ -91,13 +89,13 @@ class UpdateArea extends React.Component {
 
           <Flex
             width="100"
-            direction="row" 
+            direction="row"
             justifyContent="center"
             alignItems="stretch"
             alignContent="center"
             wrap="nowrap"
             gap="5rem">
-              <Button onClick={this.resetMessages}>Clear</Button>                
+              <Button onClick={this.resetMessages}>Clear</Button>
               <Heading width='100%' level={4}>
                 Events received from backend services asynchronously
               </Heading>
@@ -114,47 +112,80 @@ class UpdateArea extends React.Component {
 
 export default UpdateArea;
 
-function createSubscription(nextFunc, isRetry) {
-  var pubSubEndpoint = getEndpointUrl("iotendpointaddress");
+function createSubscription(nextFunc) {
+  const realtimeDomain = getEndpointUrl("AppSyncEventsRealtimeEndpoint");
 
-  Auth.currentCredentials().then(async (res) => {
-    PubSub.removePluggable("AWSIoTProvider");
-    Amplify.addPluggable(
-      new AWSIoTProvider({
-        aws_pubsub_region: awsmobile.aws_project_region,
-        aws_pubsub_endpoint: `wss://${pubSubEndpoint}/mqtt`,
-      })
-    );
+  if (!realtimeDomain) {
+    console.error("AppSync Events realtime endpoint not found in CDK outputs");
+    return;
+  }
 
-    await updateCustomer();
+  // Auth host must be the HTTP domain, not the realtime domain
+  const httpDomain = realtimeDomain.replace("appsync-realtime-api", "appsync-api");
 
-    PubSub.subscribe(res.identityId).subscribe({
-      next: async (data) => {
-        await nextFunc(data);
-      },
-      error: async (error) => {
-        if (error.error.errorCode === 8 && !isRetry) {
-          await updateCustomer();
-          createSubscription(nextFunc, true);
-        } else {
-          console.error(error);
+  Auth.currentSession().then(async (session) => {
+    const token = session.getIdToken().getJwtToken();
+    const sub = session.getIdToken().payload.sub;
+
+    const header = btoa(JSON.stringify({
+      Authorization: token,
+      host: httpDomain,
+    })).replace(/=/g, '');
+    const payload = btoa(JSON.stringify({})).replace(/=/g, '');
+
+    const url = `wss://${realtimeDomain}/event/realtime?header=${encodeURIComponent(header)}&payload=${encodeURIComponent(payload)}`;
+
+    const ws = new WebSocket(url, ["aws-appsync-event-ws", `header-${header}`]);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "connection_init" }));
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+
+      if (message.type === "connection_ack") {
+        console.log("AppSync Events connection established");
+        ws.send(JSON.stringify({
+          type: "subscribe",
+          id: crypto.randomUUID(),
+          channel: `/notifications/${sub}`,
+          authorization: {
+            Authorization: token,
+            host: httpDomain,
+          },
+        }));
+      } else if (message.type === "subscribe_success") {
+        console.log("AppSync Events subscribed successfully");
+      } else if (message.type === "subscribe_error") {
+        console.error("AppSync Events subscription error:", message);
+      } else if (message.type === "data") {
+        try {
+          const eventData = JSON.parse(message.event);
+          nextFunc({ value: eventData });
+        } catch (e) {
+          console.error("Failed to parse event data:", e);
         }
-      },
-      complete: () => {},
-    });
+      } else if (message.type === "ka") {
+        // Keepalive from server — do NOT respond
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("AppSync Events WebSocket error:", error);
+    };
+
+    ws.onclose = (event) => {
+      console.log("AppSync Events WebSocket closed:", event.code, event.reason);
+      // Reconnect with fresh token on unexpected close
+      if (event.code !== 1000) {
+        setTimeout(() => createSubscription(nextFunc), 3000);
+      }
+    };
+  }).catch((error) => {
+    console.error("Failed to get auth session for AppSync Events:", error);
+    setTimeout(() => createSubscription(nextFunc), 5000);
   });
-}
-
-async function updateCustomer() {
-  const apiName = "IOTApi";
-  const path = "iotPolicy";
-  const myInit = {
-    body: {},
-    headers: {},
-  };
-
-  const resp = await API.put(apiName, path, myInit);
-  return resp;
 }
 
 class Notifications extends React.Component {
@@ -215,7 +246,7 @@ class Notifications extends React.Component {
         break;
       case "Vendor.Finalized":
         information = detail.vendorMessage;
-        break;                
+        break;
       default:
         break;
     }
@@ -238,7 +269,7 @@ class Notifications extends React.Component {
         break;
       case "Claim.Rejected":
         errorMessage = detail.message;
-        break;                
+        break;
       default:
         break;
     }
@@ -256,7 +287,7 @@ class Notifications extends React.Component {
         let iconStyleValue, contentStyleValue, iconValue, contentArrowStyleValue, errorMessage, information;
 
         if(
-          (message["detail-type"].endsWith(".Detected") && !message["detail-type"].endsWith("Not.Detected")) || 
+          (message["detail-type"].endsWith(".Detected") && !message["detail-type"].endsWith("Not.Detected")) ||
           message["detail-type"].endsWith(".Rejected")
         ) {
           iconStyleValue = { background: 'rgb(233, 30, 99)', color: '#fff' };
@@ -278,9 +309,9 @@ class Notifications extends React.Component {
           day: '2-digit'
         });
 
-        const time = new Date(message.time).toLocaleTimeString('en-US', { 
-          hour: "2-digit", 
-          minute: "2-digit" 
+        const time = new Date(message.time).toLocaleTimeString('en-US', {
+          hour: "2-digit",
+          minute: "2-digit"
         });
         const dateTime = `${date} ${time}`;
 
