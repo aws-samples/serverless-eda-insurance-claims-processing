@@ -47,7 +47,7 @@ export async function generatePresignedWebSocketUrl(url) {
     throw new Error('Not authenticated');
   }
 
-  const token = session.getIdToken().getJwtToken();
+  const token = session.getAccessToken().getJwtToken();
 
   // Base64url-encode the JWT token for Sec-WebSocket-Protocol header
   const base64url = btoa(token)

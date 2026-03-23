@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import { Stack, StackProps, CfnOutput } from "aws-cdk-lib";
+import { CfnUserPoolGroup } from "aws-cdk-lib/aws-cognito";
 import { Construct } from "constructs";
 import { VoiceFnolService } from "./services/voice-fnol-agent/infra/voice-fnol-service";
 
@@ -90,6 +91,15 @@ export class VoiceFnolStack extends Stack {
     if (!userPoolId || !userPoolClientId) {
       throw new Error("cognitoUserPoolId and cognitoUserPoolClientId must be set in cdk.json context");
     }
+
+    // Create the AgentUsers group in the Amplify-managed User Pool.
+    // Users added to this group receive the cognito:groups claim in their
+    // access tokens, which AgentCore's customJwtAuthorizer validates via customClaims.
+    new CfnUserPoolGroup(this, "AgentUsersGroup", {
+      userPoolId,
+      groupName: "AgentUsers",
+      description: "Users permitted to invoke the voice FNOL agent",
+    });
 
     this.voiceFnolService = new VoiceFnolService(this, "VoiceFnolService", {
       fnolApiEndpoint: props.fnolApiEndpoint,

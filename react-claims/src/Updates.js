@@ -130,8 +130,8 @@ function createSubscription(nextFunc) {
     const header = btoa(JSON.stringify({
       Authorization: token,
       host: httpDomain,
-    }));
-    const payload = btoa(JSON.stringify({}));
+    })).replace(/=/g, '');
+    const payload = btoa(JSON.stringify({})).replace(/=/g, '');
 
     const url = `wss://${realtimeDomain}/event/realtime?header=${encodeURIComponent(header)}&payload=${encodeURIComponent(payload)}`;
 
