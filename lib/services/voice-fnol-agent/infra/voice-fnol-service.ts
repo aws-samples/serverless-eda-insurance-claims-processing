@@ -293,16 +293,15 @@ export class VoiceFnolService extends Construct {
       },
 
       // JWT authorization — AgentCore validates the token before passing to the agent.
-      // Uses access tokens (not ID tokens): access tokens carry client_id and
-      // cognito:groups claims, enabling both client validation and group-based
-      // access control without a separate resource server or custom scopes.
+      // Uses access tokens: access tokens carry client_id and cognito:groups claims.
+      // Downstream API calls use a Lambda authorizer that accepts both ID and access tokens.
       authorizerConfiguration: {
         customJwtAuthorizer: {
           discoveryUrl: `https://cognito-idp.${region}.amazonaws.com/${props.userPoolId}/.well-known/openid-configuration`,
-          // allowedClients validates client_id — present in access tokens only
+          // allowedClients validates client_id — present in access tokens.
           allowedClients: [props.userPoolClientId],
           // Enforce group membership at the gateway before the container starts.
-          // cognito:groups is a string list — use STRING_LIST type with CONTAINS operator.
+          // cognito:groups is present in both ID and access tokens.
           customClaims: [
             {
               inboundTokenClaimName: "cognito:groups",

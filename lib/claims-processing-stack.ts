@@ -4,6 +4,8 @@
 import { RemovalPolicy, Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { CloudWatchLogGroup, SqsQueue } from "aws-cdk-lib/aws-events-targets";
+import { Architecture, Runtime } from "aws-cdk-lib/aws-lambda";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { Construct } from "constructs";
@@ -45,6 +47,24 @@ export class ClaimsProcessingStack extends Stack {
       sourceArn: bus.eventBusArn
     });
 
+    const userPoolClientId = this.node.tryGetContext("cognitoUserPoolClientId");
+
+    const cognitoAuthorizerFn = new NodejsFunction(this, "CognitoJwtAuthorizerFunction", {
+      runtime: Runtime.NODEJS_22_X,
+      architecture: Architecture.ARM_64,
+      memorySize: 256,
+      logGroup: new LogGroup(this, "CognitoJwtAuthorizerLogGroup", {
+        retention: RetentionDays.ONE_WEEK,
+        removalPolicy: RemovalPolicy.DESTROY,
+      }),
+      handler: "handler",
+      entry: `${__dirname}/authorizer/handlers/authorizer.js`,
+      environment: {
+        USER_POOL_ID: userPool.userPoolId,
+        USER_POOL_CLIENT_ID: userPoolClientId,
+      },
+    });
+
     const documentService = new DocumentService(this, "DocumentService", {
       bus,
     });
@@ -57,7 +77,7 @@ export class ClaimsProcessingStack extends Stack {
     const customerService = new CustomerService(this, "CustomerService", {
       bus,
       documentsBucket: documentService.documentsBucket,
-      userPool,
+      cognitoAuthorizerFn,
     });
     const customerTable = customerService.customerTable;
     const policyTable = customerService.policyTable;
@@ -67,7 +87,7 @@ export class ClaimsProcessingStack extends Stack {
       customerTable,
       policyTable,
       documentsBucket: documentService.documentsBucket,
-      userPool,
+      cognitoAuthorizerFn,
     });
     const claimsTable = claimsService.claimsTable;
 
@@ -111,7 +131,7 @@ export class ClaimsProcessingStack extends Stack {
       claimsTableName: claimsTable.tableName,
       settlementTableName: settlementService.table.tableName,
       documentsBucketName: documentService.documentsBucket.bucketName,
-      userPool,
+      cognitoAuthorizerFn,
     });
 
     customerTable.grantReadWriteData(cleanupService.cleanupLambdaFunction);

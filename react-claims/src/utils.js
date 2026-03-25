@@ -47,6 +47,9 @@ export async function generatePresignedWebSocketUrl(url) {
     throw new Error('Not authenticated');
   }
 
+  // Use access token: carries client_id and cognito:groups, required by AgentCore
+  // customJwtAuthorizer (allowedClients). Downstream APIs use a Lambda authorizer
+  // that accepts both ID and access tokens.
   const token = session.getAccessToken().getJwtToken();
 
   // Base64url-encode the JWT token for Sec-WebSocket-Protocol header

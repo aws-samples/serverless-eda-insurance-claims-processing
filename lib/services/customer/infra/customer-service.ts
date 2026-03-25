@@ -1,10 +1,10 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { RemovalPolicy } from "aws-cdk-lib";
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
-  CognitoUserPoolsAuthorizer,
+  TokenAuthorizer,
   EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
@@ -29,7 +29,6 @@ import {
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { IUserPool } from "aws-cdk-lib/aws-cognito";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import {
@@ -52,12 +51,24 @@ function addDefaultGatewayResponse(api: RestApi) {
       "application/json": '{"message":$context.error.messageString}',
     },
   });
+  // Lambda TokenAuthorizer: missing token throws → 401 UNAUTHORIZED; Deny policy → 403 ACCESS_DENIED
+  // Both need CORS headers — browser blocks the response otherwise
+  api.addGatewayResponse("unauthorized-response", {
+    type: ResponseType.UNAUTHORIZED,
+    responseHeaders: { "Access-Control-Allow-Origin": "'*'" },
+    templates: { "application/json": '{"message":$context.error.messageString}' },
+  });
+  api.addGatewayResponse("access-denied-response", {
+    type: ResponseType.ACCESS_DENIED,
+    responseHeaders: { "Access-Control-Allow-Origin": "'*'" },
+    templates: { "application/json": '{"message":$context.error.messageString}' },
+  });
 }
 
 interface CustomerServiceProps {
   bus: EventBus;
   documentsBucket: Bucket;
-  userPool: IUserPool;
+  cognitoAuthorizerFn: NodejsFunction;
 }
 
 export class CustomerService extends Construct {
@@ -249,8 +260,9 @@ export class CustomerService extends Construct {
     this.customerTable.grantReadData(getCustomerFunction);
     this.policyTable.grantReadData(getCustomerFunction);
 
-    const signupAuthorizer = new CognitoUserPoolsAuthorizer(this, "SignupCognitoAuthorizer", {
-      cognitoUserPools: [props.userPool],
+    const signupAuthorizer = new TokenAuthorizer(this, "SignupTokenAuthorizer", {
+      handler: props.cognitoAuthorizerFn,
+      resultsCacheTtl: Duration.minutes(5),
     });
 
     const signupApi = new RestApi(this, "SignupApi", {
@@ -270,14 +282,15 @@ export class CustomerService extends Construct {
     signupResource.addMethod(
       "POST",
       new LambdaIntegration(signupLambdaFunction),
-      { authorizationType: AuthorizationType.COGNITO, authorizer: signupAuthorizer }
+      { authorizationType: AuthorizationType.CUSTOM, authorizer: signupAuthorizer }
     );
 
     addDefaultGatewayResponse(signupApi);
     addWebAcl(this, signupApi.deploymentStage.stageArn, "SignupApiWebACL");
 
-    const customerAuthorizer = new CognitoUserPoolsAuthorizer(scope, "CustomerCognitoAuthorizer", {
-      cognitoUserPools: [props.userPool],
+    const customerAuthorizer = new TokenAuthorizer(scope, "CustomerTokenAuthorizer", {
+      handler: props.cognitoAuthorizerFn,
+      resultsCacheTtl: Duration.minutes(5),
     });
 
     const customerApi = new RestApi(scope, "CustomerApi", {
@@ -297,7 +310,7 @@ export class CustomerService extends Construct {
     customerResource.addMethod(
       "GET",
       new LambdaIntegration(getCustomerFunction),
-      { authorizationType: AuthorizationType.COGNITO, authorizer: customerAuthorizer }
+      { authorizationType: AuthorizationType.CUSTOM, authorizer: customerAuthorizer }
     );
 
     addDefaultGatewayResponse(customerApi);

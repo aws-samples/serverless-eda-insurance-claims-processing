@@ -4,7 +4,7 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
-  CognitoUserPoolsAuthorizer,
+  TokenAuthorizer,
   EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
@@ -12,6 +12,7 @@ import {
   ResponseType,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
+import { Duration } from "aws-cdk-lib";
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
@@ -26,7 +27,6 @@ import {
 import { EventSourceMapping, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { IUserPool } from "aws-cdk-lib/aws-cognito";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
@@ -48,7 +48,7 @@ interface ClaimsServiceProps {
   // Initial iteration is to make modular constructs work. Will define context boundaries in subsequent iterations
   policyTable: Table;
   customerTable: Table;
-  userPool: IUserPool;
+  cognitoAuthorizerFn: NodejsFunction;
 }
 
 export class ClaimsService extends Construct {
@@ -85,6 +85,18 @@ export class ClaimsService extends Construct {
           "application/json": '{"message":$context.error.messageString}',
         },
       });
+      // Lambda TokenAuthorizer: missing token throws → 401 UNAUTHORIZED; Deny policy → 403 ACCESS_DENIED
+      // Both need CORS headers — browser blocks the response otherwise
+      api.addGatewayResponse("unauthorized-response", {
+        type: ResponseType.UNAUTHORIZED,
+        responseHeaders: { "Access-Control-Allow-Origin": "'*'" },
+        templates: { "application/json": '{"message":$context.error.messageString}' },
+      });
+      api.addGatewayResponse("access-denied-response", {
+        type: ResponseType.ACCESS_DENIED,
+        responseHeaders: { "Access-Control-Allow-Origin": "'*'" },
+        templates: { "application/json": '{"message":$context.error.messageString}' },
+      });
     };
 
     const lambdaToPutEventsPolicy = new PolicyStatement({
@@ -114,8 +126,9 @@ export class ClaimsService extends Construct {
     firstNoticeOfLossLambda.addToRolePolicy(lambdaToPutEventsPolicy);
 
     // Create Claims FNOL POST API
-    const fnolAuthorizer = new CognitoUserPoolsAuthorizer(this, "FnolCognitoAuthorizer", {
-      cognitoUserPools: [props.userPool],
+    const fnolAuthorizer = new TokenAuthorizer(this, "FnolTokenAuthorizer", {
+      handler: props.cognitoAuthorizerFn,
+      resultsCacheTtl: Duration.minutes(5),
     });
 
     this.fnolApi = new RestApi(this, "FnolApi", {
@@ -136,7 +149,7 @@ export class ClaimsService extends Construct {
     fnolResource.addMethod(
       "POST",
       new LambdaIntegration(firstNoticeOfLossLambda),
-      { authorizationType: AuthorizationType.COGNITO, authorizer: fnolAuthorizer }
+      { authorizationType: AuthorizationType.CUSTOM, authorizer: fnolAuthorizer }
     );
 
     addDefaultGatewayResponse(this.fnolApi);

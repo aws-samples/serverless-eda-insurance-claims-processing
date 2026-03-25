@@ -1,10 +1,10 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { RemovalPolicy } from "aws-cdk-lib";
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import {
   AuthorizationType,
-  CognitoUserPoolsAuthorizer,
+  TokenAuthorizer,
   EndpointType,
   LambdaIntegration,
   LogGroupLogDestination,
@@ -12,7 +12,6 @@ import {
   ResponseType,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
-import { IUserPool } from "aws-cdk-lib/aws-cognito";
 import { Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -28,6 +27,18 @@ function addDefaultGatewayResponse(api: RestApi) {
       "application/json": '{"message":$context.error.messageString}',
     },
   });
+  // Lambda TokenAuthorizer: missing token throws → 401 UNAUTHORIZED; Deny policy → 403 ACCESS_DENIED
+  // Both need CORS headers — browser blocks the response otherwise
+  api.addGatewayResponse("unauthorized-response", {
+    type: ResponseType.UNAUTHORIZED,
+    responseHeaders: { "Access-Control-Allow-Origin": "'*'" },
+    templates: { "application/json": '{"message":$context.error.messageString}' },
+  });
+  api.addGatewayResponse("access-denied-response", {
+    type: ResponseType.ACCESS_DENIED,
+    responseHeaders: { "Access-Control-Allow-Origin": "'*'" },
+    templates: { "application/json": '{"message":$context.error.messageString}' },
+  });
 }
 
 interface CleanupServiceProps {
@@ -36,7 +47,7 @@ interface CleanupServiceProps {
   claimsTableName: string;
   settlementTableName: string,
   documentsBucketName: string;
-  userPool: IUserPool;
+  cognitoAuthorizerFn: NodejsFunction;
 }
 
 export class CleanupService extends Construct {
@@ -79,8 +90,9 @@ export class CleanupService extends Construct {
       })
     );
 
-    const cleanupAuthorizer = new CognitoUserPoolsAuthorizer(scope, "CleanupCognitoAuthorizer", {
-      cognitoUserPools: [props.userPool],
+    const cleanupAuthorizer = new TokenAuthorizer(scope, "CleanupTokenAuthorizer", {
+      handler: props.cognitoAuthorizerFn,
+      resultsCacheTtl: Duration.minutes(5),
     });
 
     const cleanupApi = new RestApi(scope, "CleanupApi", {
@@ -102,7 +114,7 @@ export class CleanupService extends Construct {
     clearAllDataResource.addMethod(
       "DELETE",
       new LambdaIntegration(this.cleanupLambdaFunction),
-      { authorizationType: AuthorizationType.COGNITO, authorizer: cleanupAuthorizer }
+      { authorizationType: AuthorizationType.CUSTOM, authorizer: cleanupAuthorizer }
     );
 
     addDefaultGatewayResponse(cleanupApi);
