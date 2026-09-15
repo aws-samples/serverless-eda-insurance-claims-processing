@@ -24,6 +24,7 @@ import { NotificationsService } from "./services/notifications/infra/notificatio
 import { SettlementEvents, SettlementService } from "./services/settlement/infra/settlement-service";
 import { CfnDiscoverer } from "aws-cdk-lib/aws-eventschemas";
 import { VendorEvents, VendorService } from "./services/vendor/infra/vendor-service";
+import { FrontendHostingService } from "./services/frontend/infra/frontend-hosting-service";
 
 export class ClaimsProcessingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -50,7 +51,7 @@ export class ClaimsProcessingStack extends Stack {
     const userPoolClientId = this.node.tryGetContext("cognitoUserPoolClientId");
 
     const cognitoAuthorizerFn = new NodejsFunction(this, "CognitoJwtAuthorizerFunction", {
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
       memorySize: 256,
       logGroup: new LogGroup(this, "CognitoJwtAuthorizerLogGroup", {
@@ -178,6 +179,9 @@ export class ClaimsProcessingStack extends Stack {
         vendorService.vendorMetricsWidget,
       ],
     });
+
+    // Frontend hosting: private S3 + CloudFront (OAC) for the Next.js static export
+    new FrontendHostingService(this, "FrontendHostingService");
 
     // Export FNOL API details for Voice FNOL Stack
     new CfnOutput(this, "FnolApiEndpoint", {

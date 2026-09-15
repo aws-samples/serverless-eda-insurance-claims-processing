@@ -17,7 +17,7 @@ import { IConstruct } from "constructs";
 import { EventBus } from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
 import * as path from "path";
-import { KubectlV34Layer } from "@aws-cdk/lambda-layer-kubectl-v34";
+import { KubectlV36Layer } from "@aws-cdk/lambda-layer-kubectl-v36";
 import { EventbridgeToSqs } from "@aws-solutions-constructs/aws-eventbridge-sqs";
 import { SettlementEvents } from "../../settlement/infra/settlement-service";
 import { GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
@@ -116,8 +116,8 @@ export class VendorService extends Construct {
 
     const cluster = new eks.Cluster(this, "vendor-cluster", {
       clusterName: "vendor",
-      version: eks.KubernetesVersion.V1_34,
-      kubectlLayer: new KubectlV34Layer(this, "kubectl"),
+      version: eks.KubernetesVersion.V1_36,
+      kubectlLayer: new KubectlV36Layer(this, "kubectl"),
       defaultCapacity: 0, // Disable default capacity, use nodegroup with AL2023 instead
       outputMastersRoleArn:true,
       vpc: vpc,
@@ -142,21 +142,22 @@ export class VendorService extends Construct {
       value: `aws eks update-kubeconfig --region ${region} --name ${cluster.clusterName} --role-arn ${devRole.roleArn}` 
     });
 
-    // Add on-demand nodegroup with AL2023 (required for K8s 1.34)
+    // Add on-demand nodegroup with AL2023 (required for K8s 1.36)
     cluster.addNodegroupCapacity("on-demand-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large")],
-      minSize: 2,
+      minSize: 1,
       maxSize: 2,
-      desiredSize: 2,
+      desiredSize: 1,
       capacityType: eks.CapacityType.ON_DEMAND,
       amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
     });
 
-    // Add spot nodegroup with AL2023 (required for K8s 1.34)
+    // Add spot nodegroup with AL2023 (required for K8s 1.36)
     cluster.addNodegroupCapacity("spot-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large"), new ec2.InstanceType("m5a.large")],
-      minSize: 2,
+      minSize: 1,
       maxSize: 2,
+      desiredSize: 1,
       capacityType: eks.CapacityType.SPOT,
       amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
     });

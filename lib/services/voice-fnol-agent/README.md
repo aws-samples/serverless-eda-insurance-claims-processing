@@ -104,7 +104,7 @@ lib/services/voice-fnol-agent/
 3. **Set environment variables**:
    ```bash
    export AWS_REGION=us-east-1
-   export NOVA_SONIC_MODEL_ID=amazon.nova-sonic-v2:0
+   export NOVA_SONIC_MODEL_ID=amazon.nova-2-sonic-v1:0
    export FNOL_API_ENDPOINT=https://your-claims-api-endpoint.com/fnol
    export LOG_LEVEL=INFO
    ```
@@ -143,7 +143,7 @@ lib/services/voice-fnol-agent/
    ```bash
    docker run -p 8080:8080 \
      -e AWS_REGION=us-east-1 \
-     -e NOVA_SONIC_MODEL_ID=amazon.nova-sonic-v2:0 \
+     -e NOVA_SONIC_MODEL_ID=amazon.nova-2-sonic-v1:0 \
      -e FNOL_API_ENDPOINT=https://your-claims-api-endpoint.com/fnol \
      -e LOG_LEVEL=INFO \
      voice-fnol-agent:latest
@@ -298,7 +298,7 @@ open htmlcov/index.html
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `AWS_REGION` | AWS region for Bedrock | `us-east-1` | Yes |
-| `NOVA_SONIC_MODEL_ID` | Nova Sonic model identifier | `amazon.nova-sonic-v2:0` | Yes |
+| `NOVA_SONIC_MODEL_ID` | Nova Sonic model identifier | `amazon.nova-2-sonic-v1:0` | Yes |
 | `FNOL_API_ENDPOINT` | Claims Service FNOL API URL | - | Yes |
 | `LOG_LEVEL` | Logging level | `INFO` | No |
 | `SESSION_TTL_MINUTES` | Context session timeout | `30` | No |

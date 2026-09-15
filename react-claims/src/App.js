@@ -6,7 +6,9 @@ import UpdateArea from "./Updates";
 import UploadFile from "./UploadFile";
 import React from "react";
 import ClaimWithVoice from "./ClaimWithVoice";
-import { API, Auth } from "aws-amplify";
+import { signOut, getCurrentUser } from "aws-amplify/auth";
+import { apiClient } from "./lib/apiClient";
+import { getEndpointUrl, imageUrl } from "./utils";
 import StepWizard from "react-step-wizard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -19,7 +21,6 @@ import {
   Button,
   Flex,
   Heading,
-  withAuthenticator
 } from "@aws-amplify/ui-react";
 
 import dl_AZ from "./DL/dl_AZ.jpg";
@@ -63,14 +64,10 @@ class App extends React.Component {
 
   getCustomer() {
     return new Promise((resolve, reject) => {
-      const apiName = "CustomerApi";
-      const path = "customer";
-      const myInit = {
-        headers: {},
-      };
-      API.get(apiName, path, myInit)
+      const baseURL = getEndpointUrl("CustomerApiEndpoint");
+      apiClient.get("customer", { baseURL })
         .then((response) => {
-          resolve(response);
+          resolve(response.data);
         })
         .catch((error) => {
           reject(error);
@@ -79,7 +76,7 @@ class App extends React.Component {
   }
 
   signOut() {
-    Auth.signOut();
+    signOut();
   }
 
   checkBtnVisibility() {
@@ -140,7 +137,7 @@ class App extends React.Component {
                 <UploadFile
                   updateState={this.updateState}
                   s3URL={this.state.driversLicenseImageUrl}
-                  images={[{ path: dl_AZ }, { path: dl_MA }, { path: dl_OH }]}
+                  images={[{ path: imageUrl(dl_AZ) }, { path: imageUrl(dl_MA) }, { path: imageUrl(dl_OH) }]}
                   title="Upload Drivers License"
                 />
                 <br />
@@ -153,7 +150,7 @@ class App extends React.Component {
               <>
                 <UploadFile
                   s3URL={this.state.carImageUrl}
-                  images={[{ path: red_car }, { path: green_car }]}
+                  images={[{ path: imageUrl(red_car) }, { path: imageUrl(green_car) }]}
                   title="Upload Vehicle Image"
                 />
                 <br />
@@ -180,9 +177,9 @@ class App extends React.Component {
                   updateState={this.updateState}
                   s3URL={this.state.uploadCarDamageUrl}
                   images={[
-                    { path: damaged_car_1 },
-                    { path: damaged_car_2 },
-                    { path: red_car },
+                    { path: imageUrl(damaged_car_1) },
+                    { path: imageUrl(damaged_car_2) },
+                    { path: imageUrl(red_car) },
                   ]}
                   title="Upload Vehicle Image"
                 />
@@ -213,4 +210,4 @@ class App extends React.Component {
   }
 }
 
-export default withAuthenticator(App);
+export default App;

@@ -3,7 +3,8 @@
 
 import React from "react";
 import { Button, Loader, Flex } from "@aws-amplify/ui-react";
-import { API } from "aws-amplify";
+import { apiClient } from "./lib/apiClient";
+import { getEndpointUrl } from "./utils";
 
 class ClearData extends React.Component {
   reset;
@@ -23,16 +24,12 @@ class ClearData extends React.Component {
   async clearAllData() {
     this.toggleState();
 
-    return new Promise((resolve, reject) => {
-      const apiName = "CleanupApi";
-      const path = "clearAllData";
-      const myInit = {
-        headers: {},
-      };
+    const baseURL = getEndpointUrl("CleanupApiEndpoint");
 
-      API.del(apiName, path, myInit)
+    return new Promise((resolve, reject) => {
+      apiClient.delete("clearAllData", { baseURL })
         .then((response) => {
-          resolve(response);
+          resolve(response.data);
         })
         .catch((error) => {
           reject(error);

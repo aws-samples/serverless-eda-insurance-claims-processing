@@ -45,7 +45,7 @@ export class FraudService extends Construct {
       this,
       "FraudDetectorLambda",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "FraudDetectorLambdaLogGroup", {
           retention: RetentionDays.ONE_WEEK,

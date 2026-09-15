@@ -110,7 +110,7 @@ export class ClaimsService extends Construct {
 
     // Create FNOL Lambda function
     const firstNoticeOfLossLambda = new NodejsFunction(this, "FNOLLambda", {
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       memorySize: 512,
       logGroup: new LogGroup(this, "FNOLLambdaLogGroup", {
         retention: RetentionDays.ONE_WEEK,
@@ -171,7 +171,7 @@ export class ClaimsService extends Construct {
       this,
       "ClaimsLambdaFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "ClaimsLambdaLogGroup", {
           retention: RetentionDays.ONE_WEEK,

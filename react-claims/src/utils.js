@@ -1,7 +1,29 @@
 var cdk_outputs_file = require("./cdk-outputs.json");
 
+/**
+ * Normalize an imported image to a URL string.
+ *
+ * CRA (webpack file-loader) resolved `import img from "./x.jpg"` to a string.
+ * Next.js resolves it to a StaticImageData object `{ src, height, width }`.
+ * This helper returns the URL string in both cases so `fetch()` and
+ * `<img src>` work regardless of bundler.
+ */
+export function imageUrl(img) {
+  if (!img) return "";
+  return typeof img === "string" ? img : img.src ?? "";
+}
+
 export function getEndpointUrl(searchBy) {
   const stackOutput = cdk_outputs_file[Object.keys(cdk_outputs_file)[0]];
+
+  // Prefer an exact (case-insensitive) key match — avoids ambiguity when
+  // several outputs share a substring (e.g. "FnolApiEndpoint" vs
+  // "ClaimsServiceFnolApiEndpoint97813EB4").
+  const exact = Object.keys(stackOutput).find(
+    (key) => key.toLowerCase() === searchBy.toLowerCase()
+  );
+  if (exact) return stackOutput[exact];
+
   const result = Object.keys(stackOutput).filter((key) =>
     key.toLowerCase().includes(searchBy.toLowerCase())
   );
@@ -40,17 +62,17 @@ export function getAgentRuntimeId() {
  * @returns {Promise<{url: string, protocols: string[]}>} URL and subprotocols for WebSocket constructor
  */
 export async function generatePresignedWebSocketUrl(url) {
-  const { Auth } = await import('aws-amplify');
+  const { fetchAuthSession } = await import('aws-amplify/auth');
 
-  const session = await Auth.currentSession();
-  if (!session) {
+  const session = await fetchAuthSession();
+  if (!session.tokens) {
     throw new Error('Not authenticated');
   }
 
   // Use access token: carries client_id and cognito:groups, required by AgentCore
   // customJwtAuthorizer (allowedClients). Downstream APIs use a Lambda authorizer
   // that accepts both ID and access tokens.
-  const token = session.getAccessToken().getJwtToken();
+  const token = session.tokens.accessToken?.toString();
 
   // Base64url-encode the JWT token for Sec-WebSocket-Protocol header
   const base64url = btoa(token)

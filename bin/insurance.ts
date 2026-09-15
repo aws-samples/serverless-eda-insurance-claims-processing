@@ -3,7 +3,7 @@
 
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
-import { Aspects, Fn } from "aws-cdk-lib";
+import { Aspects, Fn, Tags } from "aws-cdk-lib";
 import { ClaimsProcessingStack } from "../lib/claims-processing-stack";
 import { VoiceFnolStack } from "../lib/voice-fnol-stack";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
@@ -21,6 +21,9 @@ const claimsStack = new ClaimsProcessingStack(app, "ClaimsProcessingStack", {
   },
 });
 
+// Prevent SpringClean from removing these resources
+Tags.of(claimsStack).add("auto-delete", "no");
+
 // Create Voice FNOL Stack with dependency on Claims Stack
 const voiceFnolStack = new VoiceFnolStack(app, "VoiceFnolStack", {
   fnolApiEndpoint: Fn.importValue("ClaimsProcessingStack-FnolApiEndpoint"),
@@ -33,13 +36,32 @@ const voiceFnolStack = new VoiceFnolStack(app, "VoiceFnolStack", {
   },
 });
 
+// Prevent SpringClean from removing these resources
+Tags.of(voiceFnolStack).add("auto-delete", "no");
+
 // Explicit dependency: Voice FNOL Stack depends on Claims Processing Stack
-voiceFnolStack.addDependency(claimsStack);
+voiceFnolStack.addStackDependency(claimsStack);
 
 NagSuppressions.addStackSuppressions(claimsStack, [
   {
     id: "AwsSolutions-S1",
     reason: "Server access logging not required for demo.",
+  },
+  {
+    id: "AwsSolutions-CFR1",
+    reason: "Geo restrictions not required for demo frontend.",
+  },
+  {
+    id: "AwsSolutions-CFR2",
+    reason: "WAF integration not required for demo frontend.",
+  },
+  {
+    id: "AwsSolutions-CFR3",
+    reason: "CloudFront access logging not required for demo.",
+  },
+  {
+    id: "AwsSolutions-CFR4",
+    reason: "Default CloudFront viewer certificate uses TLS; custom cert/min-protocol out of scope for demo.",
   },
   {
     id: "AwsSolutions-IAM4",

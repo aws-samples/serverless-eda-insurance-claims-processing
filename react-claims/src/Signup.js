@@ -3,7 +3,9 @@
 
 import React from "react";
 import { Button, TextField, Flex } from "@aws-amplify/ui-react";
-import { API, Auth } from "aws-amplify";
+import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
+import { apiClient } from "./lib/apiClient";
+import { getEndpointUrl } from "./utils";
 import ClearData from "./ClearData";
 
 class SignupForm extends React.Component {
@@ -83,13 +85,42 @@ class SignupForm extends React.Component {
   }
 
   async componentDidMount() {
-    const user = await Auth.currentAuthenticatedUser();
-    const customer = await this.getCustomer();
+    let user = null;
+    let customer = null;
+
+    try {
+      user = await getCurrentUser();
+    } catch (e) {
+      console.error("getCurrentUser failed:", e);
+    }
+
+    // A new user has no customer record yet, and a backend/data-layer outage
+    // makes this reject — in both cases fall back to null so the hardcoded
+    // defaults below still populate the form.
+    try {
+      customer = await this.getCustomer();
+    } catch (e) {
+      console.error("getCustomer failed; using defaults:", e);
+      customer = null;
+    }
+
+    // This pool signs in by USERNAME (not email), so `signInDetails.loginId`
+    // is the username (e.g. "mahadhir"), NOT an email address — sending that
+    // to the backend's identity.email field fails email-format validation and
+    // the customer gets rejected ("Address or Identity Validation Failed").
+    // Fetch the actual `email` user attribute instead.
+    let email = "";
+    try {
+      const attributes = await fetchUserAttributes();
+      email = attributes.email ?? "";
+    } catch (e) {
+      console.error("fetchUserAttributes failed:", e);
+    }
 
     await this.updateParent("customer", customer);
 
     this.setState({
-      email: { value: user.attributes.email },
+      email: { value: email },
       first_name: this.getValue(customer, "firstname", "Connor"),
       last_name: this.getValue(customer, "lastname", "Sample"),
       ssn: this.getValue(customer, "ssn", "000000000"),
@@ -141,39 +172,35 @@ class SignupForm extends React.Component {
 
     this.setState({ isSubmitting: true });
 
-    const apiName = "SignupAPI";
-    const path = "signup";
-    const myInit = {
-      body: {
-        firstname: this.state.first_name.value,
-        lastname: this.state.last_name.value,
-        identity: {
-          email: this.state.email.value,
-          ssn: this.state.ssn.value,
+    const baseURL = getEndpointUrl("SignupApiEndpoint");
+    const body = {
+      firstname: this.state.first_name.value,
+      lastname: this.state.last_name.value,
+      identity: {
+        email: this.state.email.value,
+        ssn: this.state.ssn.value,
+      },
+      address: {
+        street: this.state.address_street.value,
+        city: this.state.address_city.value,
+        state: this.state.address_state.value,
+        zip: this.state.address_zip.value,
+      },
+      cars: [
+        {
+          make: this.state.vehicle_make.value,
+          model: this.state.vehicle_model.value,
+          color: this.state.vehicle_color.value,
+          type: this.state.vehicle_type.value,
+          year: this.state.vehicle_year.value,
+          mileage: this.state.vehicle_milage.value,
+          vin: this.state.vehicle_vin.value,
         },
-        address: {
-          street: this.state.address_street.value,
-          city: this.state.address_city.value,
-          state: this.state.address_state.value,
-          zip: this.state.address_zip.value,
-        },
-        cars: [
-          {
-            make: this.state.vehicle_make.value,
-            model: this.state.vehicle_model.value,
-            color: this.state.vehicle_color.value,
-            type: this.state.vehicle_type.value,
-            year: this.state.vehicle_year.value,
-            mileage: this.state.vehicle_milage.value,
-            vin: this.state.vehicle_vin.value,
-          },
-        ],
-      }, // replace this with attributes you need
-      headers: {}, // OPTIONAL
+      ],
     };
 
     try {
-      await API.post(apiName, path, myInit);
+      await apiClient.post("signup", body, { baseURL });
     } finally {
       this.setState({ isSubmitting: false });
     }

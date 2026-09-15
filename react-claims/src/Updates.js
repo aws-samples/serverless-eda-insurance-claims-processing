@@ -3,7 +3,7 @@
 
 import React from "react";
 import { Button, Flex, ScrollView, Heading } from "@aws-amplify/ui-react";
-import { Auth } from "aws-amplify";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { getEndpointUrl } from "./utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faCheck } from '@fortawesome/free-solid-svg-icons';
@@ -22,8 +22,10 @@ class UpdateArea extends React.Component {
 
     this.updateParent = props.updateState;
     this.componentDidMount = this.componentDidMount.bind(this);
+    this.componentWillUnmount = this.componentWillUnmount.bind(this);
     this.updateMessages = this.updateMessages.bind(this);
     this.resetMessages = this.resetMessages.bind(this);
+    this.subscriptionController = null;
   }
 
   async resetMessages() {
@@ -69,7 +71,14 @@ class UpdateArea extends React.Component {
   }
 
   async componentDidMount() {
-    createSubscription(this.updateMessages);
+    this.subscriptionController = createSubscription(this.updateMessages);
+  }
+
+  componentWillUnmount() {
+    if (this.subscriptionController) {
+      this.subscriptionController.close();
+      this.subscriptionController = null;
+    }
   }
 
   render() {
@@ -112,20 +121,42 @@ class UpdateArea extends React.Component {
 
 export default UpdateArea;
 
+/**
+ * Opens the AppSync Events WebSocket subscription.
+ *
+ * Returns a controller with `close()` to tear the connection down cleanly —
+ * required because React 18 StrictMode (on by default in Next.js dev mode)
+ * mounts every component twice (mount → unmount → remount) to surface missing
+ * cleanup. Without a way to close the first connection, both the original and
+ * the remounted subscription stay open and each deliver every event,
+ * producing duplicate notifications. `close()` also cancels any pending
+ * reconnect timer and marks the controller "closed" so an in-flight
+ * fetchAuthSession()/reconnect from before unmount does not open a new socket
+ * after the component is gone.
+ */
 function createSubscription(nextFunc) {
+  const controller = { closed: false, ws: null, retryTimer: null };
+
   const realtimeDomain = getEndpointUrl("AppSyncEventsRealtimeEndpoint");
 
   if (!realtimeDomain) {
     console.error("AppSync Events realtime endpoint not found in CDK outputs");
-    return;
+    return controller;
   }
 
   // Auth host must be the HTTP domain, not the realtime domain
   const httpDomain = realtimeDomain.replace("appsync-realtime-api", "appsync-api");
 
-  Auth.currentSession().then(async (session) => {
-    const token = session.getIdToken().getJwtToken();
-    const sub = session.getIdToken().payload.sub;
+  fetchAuthSession().then(async (session) => {
+    if (controller.closed) return;
+
+    const token = session.tokens?.idToken?.toString();
+    const sub = session.tokens?.idToken?.payload?.sub;
+
+    if (!token || !sub) {
+      console.error("Failed to get auth tokens for AppSync Events");
+      return;
+    }
 
     const header = btoa(JSON.stringify({
       Authorization: token,
@@ -136,6 +167,13 @@ function createSubscription(nextFunc) {
     const url = `wss://${realtimeDomain}/event/realtime?header=${encodeURIComponent(header)}&payload=${encodeURIComponent(payload)}`;
 
     const ws = new WebSocket(url, ["aws-appsync-event-ws", `header-${header}`]);
+    controller.ws = ws;
+
+    if (controller.closed) {
+      // close() ran while we were awaiting fetchAuthSession — don't proceed.
+      ws.close(1000);
+      return;
+    }
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: "connection_init" }));
@@ -177,15 +215,37 @@ function createSubscription(nextFunc) {
 
     ws.onclose = (event) => {
       console.log("AppSync Events WebSocket closed:", event.code, event.reason);
-      // Reconnect with fresh token on unexpected close
-      if (event.code !== 1000) {
-        setTimeout(() => createSubscription(nextFunc), 3000);
+      // Reconnect with fresh token on unexpected close — but not if we were
+      // closed deliberately (code 1000, e.g. via controller.close()).
+      if (event.code !== 1000 && !controller.closed) {
+        controller.retryTimer = setTimeout(() => {
+          const next = createSubscription(nextFunc);
+          controller.ws = next.ws;
+          controller.retryTimer = next.retryTimer;
+        }, 3000);
       }
     };
   }).catch((error) => {
     console.error("Failed to get auth session for AppSync Events:", error);
-    setTimeout(() => createSubscription(nextFunc), 5000);
+    if (!controller.closed) {
+      controller.retryTimer = setTimeout(() => {
+        const next = createSubscription(nextFunc);
+        controller.ws = next.ws;
+        controller.retryTimer = next.retryTimer;
+      }, 5000);
+    }
   });
+
+  controller.close = () => {
+    controller.closed = true;
+    if (controller.retryTimer) clearTimeout(controller.retryTimer);
+    if (controller.ws && controller.ws.readyState <= 1) {
+      // readyState 0 = CONNECTING, 1 = OPEN
+      controller.ws.close(1000);
+    }
+  };
+
+  return controller;
 }
 
 class Notifications extends React.Component {
