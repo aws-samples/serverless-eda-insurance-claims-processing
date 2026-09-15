@@ -23,14 +23,14 @@ The backend infrastructure is set up at the root folder of the repository. Code 
 ## Technology Stack
 
 ### Current Versions
-- **Node.js**: 22.x (all Lambda functions)
+- **Node.js**: 24.x (all Lambda functions)
 - **AWS CDK**: 2.269.x (aws-cdk-lib)
 - **AWS SDK v3**: 3.1131.0
 - **React**: 18.3.1
 - **Next.js**: 15.x (frontend framework)
 - **AWS Amplify**: 6.x (frontend — auth only, `aws-amplify/auth`)
-- **Spring Boot**: 3.3.13 (Settlement Service)
-- **EKS**: Kubernetes 1.34 with AL2023 AMI (Vendor Service)
+- **Spring Boot**: 3.5.3 (Settlement Service)
+- **EKS**: Kubernetes 1.36 with AL2023 AMI (Vendor Service)
 - **KEDA**: 2.16.1 (EKS autoscaling)
 
 ### Container Services
@@ -58,8 +58,12 @@ The backend infrastructure is set up at the root folder of the repository. Code 
 - Real-time notifications continue to use the raw AppSync Events WebSocket (no Amplify PubSub)
 - Frontend now hosted via **CDK-managed private S3 + CloudFront (OAC)** instead of Amplify CLI hosting — deploys in the same `cdk deploy`
 
-**SpringClean protection:**
-- Both stacks are tagged `auto-delete: no` at the CDK App level so SpringClean skips their resources
+**Runtime and Infrastructure Upgrades:**
+- Lambda runtime bumped from `NODEJS_22_X` to `NODEJS_24_X` across all functions
+- EKS upgraded from Kubernetes 1.34 to 1.36 with `KubectlV36Layer`
+- Spring Boot upgraded from 3.3.13 to 3.5.3 with AWS SDK BOM 2.34.0 and Spring Cloud AWS 3.3.1
+- Java upgraded from 17 to 21 for Settlement service
+- Strands Agents SDK migrated from 0.x to 1.x (real API migration, not just version bump)
 
 ### Recent Upgrades (January 2026)
 
@@ -103,11 +107,10 @@ This overall architecture consists of below domains. Visit each one of them for 
 
 ### Prerequisites
 
-- Install [NodeJS v22](https://nodejs.org/en/download/) (Node.js 18 reached EOL in April 2025)
+- Install [NodeJS v24](https://nodejs.org/en/download/) (Node.js 18 reached EOL in April 2025)
 - [Set up AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
 - [Set up AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)
-- [Install Amplify CLI](https://docs.amplify.aws/cli/start/install/)
 - Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 > :information_source: **M1/M2/M3 Mac Users**
@@ -166,7 +169,6 @@ in CI), set `NEXT_PUBLIC_USER_POOL_ID` / `NEXT_PUBLIC_USER_POOL_CLIENT_ID` in
 To work on the frontend locally, run `npm run dev` from the `react-claims`
 directory. This hosts the app at http://localhost:3000/ with hot reload.
 
-To publish front end changes in the future, call `npm run amplify publish` from <root>/react-claims directory.
 
 ## How to use the application
 
@@ -363,7 +365,7 @@ Click on `File a new claim` and scroll down to the new claim form.
 
 ![new_claim](images/new_claim.png)
 
-Fill in all the fields. Please note that the event date should be in future from today after the policy creation date. So if you are testing this step right after registration, select the next day for the occurrence date.
+Fill in all the fields. Note that the occurrence date must fall within the policy's active window (from policy creation date to 6 months later) and cannot be in the future. The form defaults the occurrence date to 5 days before today, so a straight submission should work without editing the date — adjust it only if you need to test a rejection.
 
 ![claim_form](images/claim_form.png)
 
@@ -650,7 +652,7 @@ Event driven architectures like this Insurance claims processing application use
 - Solution: Delete and recreate stack, or implement shared VPC architecture to avoid resource conflicts
 
 **React App Compilation Errors**
-- Application uses AWS Amplify v5.3.20 (stable)
+- Application uses AWS Amplify v6.x (auth only)
 - If encountering import errors, verify package.json has correct Amplify versions
 - Run `npm install` in react-claims directory to ensure dependencies are correct
 
@@ -669,6 +671,12 @@ Event driven architectures like this Insurance claims processing application use
 In order to clean up the infrastructure follow below sections:
 
 ### Delete Amplify resources.
+
+> :information_source: This section only applies if you still have the **old Amplify CLI project**
+> from before the Next.js migration (a separate `amplify-reactclaims-*` CloudFormation stack).
+> The current frontend is deployed via CDK (see `FrontendHostingService` in `ClaimsProcessingStack`)
+> and is deleted automatically by `npm run destroy` / `cdk destroy ClaimsProcessingStack` below —
+> no separate Amplify cleanup step is needed for it.
 
 cd to `/react-claims` run following commands
 

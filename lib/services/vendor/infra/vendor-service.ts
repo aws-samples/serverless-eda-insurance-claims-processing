@@ -145,9 +145,9 @@ export class VendorService extends Construct {
     // Add on-demand nodegroup with AL2023 (required for K8s 1.36)
     cluster.addNodegroupCapacity("on-demand-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large")],
-      minSize: 2,
+      minSize: 1,
       maxSize: 2,
-      desiredSize: 2,
+      desiredSize: 1,
       capacityType: eks.CapacityType.ON_DEMAND,
       amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
     });
@@ -155,8 +155,9 @@ export class VendorService extends Construct {
     // Add spot nodegroup with AL2023 (required for K8s 1.36)
     cluster.addNodegroupCapacity("spot-ng", {
       instanceTypes: [new ec2.InstanceType("m5.large"), new ec2.InstanceType("m5a.large")],
-      minSize: 2,
+      minSize: 1,
       maxSize: 2,
+      desiredSize: 1,
       capacityType: eks.CapacityType.SPOT,
       amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
     });

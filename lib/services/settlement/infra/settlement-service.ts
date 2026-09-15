@@ -107,6 +107,7 @@ export class SettlementService extends Construct {
         listenerPort: 8080,
         minHealthyPercent: 100, // Keep all tasks running during deployments
         maxHealthyPercent: 200, // Allow double capacity during deployments
+        circuitBreaker: { rollback: true }, // Fail fast and roll back if tasks can't start, instead of waiting up to 3 hours
       });
 
     this.table.grantReadWriteData(loadBalancedFargateService.taskDefinition.taskRole);
