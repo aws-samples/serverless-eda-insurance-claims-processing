@@ -80,7 +80,6 @@ export class CustomerService extends Construct {
   constructor(scope: Construct, id: string, props: CustomerServiceProps) {
     super(scope, id);
 
-    console.log(props.bus.eventBusName);
     const bus = props.bus;
 
     const apiGWLogGroupDest = new LogGroupLogDestination(
@@ -122,7 +121,7 @@ export class CustomerService extends Construct {
       this,
       "SignupLambdaFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "SignupLambdaLogGroup", {
           retention: RetentionDays.ONE_WEEK,
@@ -152,7 +151,7 @@ export class CustomerService extends Construct {
       this,
       "CustomerUpdateLambdaFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "CustomerUpdateLambdaLogGroup", {
           retention: RetentionDays.ONE_WEEK,
@@ -172,7 +171,7 @@ export class CustomerService extends Construct {
     this.customerTable.grantWriteData(customerUpdateLambdaFunction);
 
     const validatorFunction = new NodejsFunction(scope, "ValidatorFunction", {
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       memorySize: 512,
       logGroup: new LogGroup(this, "ValidatorFunctionLogGroup", {
         retention: RetentionDays.ONE_WEEK,
@@ -186,7 +185,7 @@ export class CustomerService extends Construct {
       scope,
       "PutPolicyRequestsFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "PutPolicyRequestsFunctionLogGroup", {
           retention: RetentionDays.ONE_WEEK,
@@ -201,7 +200,7 @@ export class CustomerService extends Construct {
       scope,
       "PreSignedURLGenerator",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "PreSignedURLGeneratorLogGroup", {
           retention: RetentionDays.ONE_WEEK,
@@ -241,7 +240,7 @@ export class CustomerService extends Construct {
       scope,
       "GetCustomerFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "GetCustomerFunctionLogGroup", {
           retention: RetentionDays.ONE_WEEK,

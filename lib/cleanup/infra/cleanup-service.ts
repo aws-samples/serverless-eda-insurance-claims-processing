@@ -65,7 +65,7 @@ export class CleanupService extends Construct {
       scope,
       "ClearAllDataFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "ClearAllDataLogGroup", {
           retention: RetentionDays.ONE_WEEK,

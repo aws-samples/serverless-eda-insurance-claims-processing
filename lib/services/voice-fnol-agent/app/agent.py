@@ -1,7 +1,7 @@
 """
 Voice FNOL Agent Configuration
 
-This module configures the BidiNovaSonicModel for bidirectional audio streaming
+This module configures the BedrockNovaSonicModel for bidirectional audio streaming
 with Amazon Nova Sonic v2 and initializes the BidiAgent with tools and system prompt.
 The agent handles voice-based FNOL claim submission with safety-first conversation flow.
 
@@ -12,8 +12,8 @@ import os
 import logging
 from typing import Optional
 
-from strands.experimental.bidi.models.nova_sonic import BidiNovaSonicModel
-from strands.experimental.bidi.agent import BidiAgent
+from strands.experimental.bidi import BidiAgent
+from strands.experimental.bidi.models import BedrockNovaSonicModel
 from strands_tools import current_time
 
 # Import all tools
@@ -30,9 +30,9 @@ from app.context import get_conversation_context, save_conversation_context
 logger = logging.getLogger(__name__)
 
 
-def create_nova_sonic_model() -> BidiNovaSonicModel:
+def create_nova_sonic_model() -> BedrockNovaSonicModel:
     """
-    Initialize and configure the BidiNovaSonicModel for voice interaction.
+    Initialize and configure the BedrockNovaSonicModel for voice interaction.
     
     The model is configured with:
     - Input audio: 16kHz sample rate, PCM encoding
@@ -40,7 +40,7 @@ def create_nova_sonic_model() -> BidiNovaSonicModel:
     - Voice: Matthew (professional, empathetic male voice)
     
     Returns:
-        BidiNovaSonicModel: Configured model instance
+        BedrockNovaSonicModel: Configured model instance
         
     Raises:
         ValueError: If required environment variables are missing
@@ -66,20 +66,19 @@ def create_nova_sonic_model() -> BidiNovaSonicModel:
     )
     
     try:
-        # Initialize BidiNovaSonicModel with audio configuration
-        model = BidiNovaSonicModel(
+        # Initialize BedrockNovaSonicModel (Strands 1.x API, verified against the
+        # installed package: region + audio + model_id via **model_config. AudioConfig
+        # uses flat input_rate/output_rate/format/voice keys; there is no top-level
+        # voice arg — voice lives inside `audio`.)
+        model = BedrockNovaSonicModel(
+            region=region,
             model_id=model_id,
-            client_config={
-                "region": region
+            audio={
+                "input_rate": 16000,   # 16kHz input from user
+                "output_rate": 24000,  # 24kHz output to user
+                "format": "pcm",       # PCM encoding for both
+                "voice": "tiffany",    # Professional, empathetic voice
             },
-            provider_config={
-                "audio": {
-                    "input_rate": 16000,   # 16kHz input from user
-                    "output_rate": 24000,  # 24kHz output to user
-                    "format": "pcm",       # PCM encoding for both
-                    "voice": "tiffany"     # Professional, empathetic voice
-                }
-            }
         )
         
         logger.info("Nova Sonic model initialized successfully")
@@ -91,7 +90,7 @@ def create_nova_sonic_model() -> BidiNovaSonicModel:
         raise RuntimeError(error_msg) from e
 
 
-def get_model() -> BidiNovaSonicModel:
+def get_model() -> BedrockNovaSonicModel:
     """
     Get or create the Nova Sonic model instance.
     
@@ -99,7 +98,7 @@ def get_model() -> BidiNovaSonicModel:
     creating it on first call and reusing it for subsequent calls.
     
     Returns:
-        BidiNovaSonicModel: The configured model instance
+        BedrockNovaSonicModel: The configured model instance
     """
     global _model_instance
     
@@ -110,7 +109,7 @@ def get_model() -> BidiNovaSonicModel:
 
 
 # Module-level model instance (lazy initialization)
-_model_instance: Optional[BidiNovaSonicModel] = None
+_model_instance: Optional[BedrockNovaSonicModel] = None
 
 
 # Comprehensive system prompt emphasizing safety-first approach
@@ -146,6 +145,10 @@ Focus your questions on the incident details that only the customer can provide:
 - Whether a police report was filed
 - If police report filed, whether they have the report or receipt
 - If another party is involved in the accident, then Other party's name and insurance information.
+
+DATE AND TIME RESOLUTION (CRITICAL):
+Call the current_time tool at the start of the conversation to establish today's actual date. Never rely on your own assumption of the current date or year.
+When the customer describes the accident date using relative terms (e.g., "yesterday", "last Sunday", "this morning", "a couple hours ago"), resolve it against the real current date and time from current_time, not any date you might otherwise assume. The accident date must always fall on or before today's actual date, and must use the current calendar year unless the customer explicitly states a different year. Never default to a stale or example year.
 
 CONVERSATION EXAMPLES:
 
@@ -192,7 +195,7 @@ def create_agent() -> BidiAgent:
     Create and configure the BidiAgent with Nova Sonic model, tools, and system prompt.
     
     The agent is configured with:
-    - BidiNovaSonicModel for voice interaction with automatic interruption handling
+    - BedrockNovaSonicModel for voice interaction with automatic interruption handling
     - Safety assessment, claim extraction, validation, and submission tools
     - Comprehensive system prompt emphasizing safety-first approach
     - Conversation context management

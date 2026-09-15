@@ -34,7 +34,7 @@ export default function createMetricsQueueWithLambdaSubscription(
     scope,
     "CreateMetricsFunction",
     {
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       logGroup: new LogGroup(scope, "CreateMetricsLogGroup", {
         retention: RetentionDays.ONE_WEEK,
         removalPolicy: RemovalPolicy.DESTROY,

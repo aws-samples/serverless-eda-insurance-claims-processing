@@ -42,10 +42,10 @@ const ClaimWithVoice = ({ customer, updateState }) => {
   React.useEffect(() => {
     const loadAuthToken = async () => {
       try {
-        const { Auth } = await import('aws-amplify');
-        const session = await Auth.currentSession();
-        const token = session.getIdToken().getJwtToken();
-        setAuthToken(token);
+        const { fetchAuthSession } = await import('aws-amplify/auth');
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+        setAuthToken(token ?? null);
       } catch (error) {
         console.error('Failed to get auth token:', error);
       }

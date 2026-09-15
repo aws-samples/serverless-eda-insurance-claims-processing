@@ -9,7 +9,8 @@ import {
   Button,
 } from "@aws-amplify/ui-react";
 import date from 'date-and-time';
-import { API } from "aws-amplify";
+import { apiClient } from "./lib/apiClient";
+import { getEndpointUrl } from "./utils";
 
 class TF extends React.Component {
   onChange;
@@ -45,11 +46,15 @@ class TF extends React.Component {
 class ClaimForm extends React.Component {
   constructor(props) {
     super(props);
-    const futureDate = date.format(date.addDays(new Date(), 3), 'YYYY-MM-DD');
+    // Default to 5 days in the past — the policy is active from creation date
+    // up to "now", so a future-dated default (the previous behavior: +3 days)
+    // always fell outside the policy window and got rejected on a straight
+    // submit. A recent past date stays inside the window without edits.
+    const defaultIncidentDate = date.format(date.addDays(new Date(), -5), 'YYYY-MM-DD');
 
     this.state = {
       display: props.display,
-      occurrenceDateTime: { value: futureDate, hasError: false, errorMessage: "" },
+      occurrenceDateTime: { value: defaultIncidentDate, hasError: false, errorMessage: "" },
       country: { value: "US", hasError: false, errorMessage: "" },
       state: { value: "AZ", hasError: false, errorMessage: "" },
       city: { value: "Phoenix", hasError: false, errorMessage: "" },
@@ -150,15 +155,13 @@ class ClaimForm extends React.Component {
       },
     };
 
-    const apiName = "FnolApi";
-    const path = "fnol";
-    const myInit = {
-      body: body, // replace this with attributes you need
-      headers: {}, // OPTIONAL
-    };
+    // FnolApiEndpoint output already includes the full ".../prod/fnol" path,
+    // so POST directly to it rather than baseURL + "fnol" (which would risk
+    // ".../fnolfnol" depending on which matching output key resolves first).
+    const fnolUrl = getEndpointUrl("FnolApiEndpoint");
 
     try {
-      await API.post(apiName, path, myInit);
+      await apiClient.post(fnolUrl, body);
     } finally {
       this.setState({ isSubmitting: false });
     }

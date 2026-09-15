@@ -45,7 +45,7 @@ docker run -d \
     -p ${PORT}:${PORT} \
     -e AWS_REGION=us-east-1 \
     -e FNOL_API_ENDPOINT=http://localhost:3000/fnol \
-    -e NOVA_SONIC_MODEL_ID=amazon.nova-sonic-v2:0 \
+    -e NOVA_SONIC_MODEL_ID=amazon.nova-2-sonic-v1:0 \
     -e LOG_LEVEL=INFO \
     ${IMAGE_NAME}:${IMAGE_TAG}
 

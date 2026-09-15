@@ -24,10 +24,11 @@ The backend infrastructure is set up at the root folder of the repository. Code 
 
 ### Current Versions
 - **Node.js**: 22.x (all Lambda functions)
-- **AWS CDK**: 2.235.1
-- **AWS SDK v3**: 3.900.0
+- **AWS CDK**: 2.269.x (aws-cdk-lib)
+- **AWS SDK v3**: 3.1131.0
 - **React**: 18.3.1
-- **AWS Amplify**: 5.3.20 (frontend)
+- **Next.js**: 15.x (frontend framework)
+- **AWS Amplify**: 6.x (frontend — auth only, `aws-amplify/auth`)
 - **Spring Boot**: 3.3.13 (Settlement Service)
 - **EKS**: Kubernetes 1.34 with AL2023 AMI (Vendor Service)
 - **KEDA**: 2.16.1 (EKS autoscaling)
@@ -43,6 +44,23 @@ The backend infrastructure is set up at the root folder of the repository. Code 
 - **FastAPI**: WebSocket server for real-time audio streaming
 - **Python**: 3.13 (voice agent runtime)
 
+### Recent Upgrades (September 2026)
+
+**Dependency Refresh:**
+- `aws-cdk-lib` upgraded to `^2.269.0`; `aws-jwt-verify` to `^5.x`; `constructs` to `^10.8.x`; `cdk-nag` to latest 2.x
+- AWS SDK v3 clients bumped to `^3.1131.0` (`@aws-sdk/util-dynamodb` tracks its own `^3.996.x` line)
+- AWS Lambda Powertools upgraded to `^2.35.0`
+
+**Frontend Migration (Amplify CLI + CRA → Next.js):**
+- Replaced Create React App (`react-scripts`, deprecated) with **Next.js 15** using static export (`output: 'export'`)
+- Migrated **AWS Amplify v5 → v6**, importing only `aws-amplify/auth` (tree-shakeable) for Cognito auth
+- Replaced the Amplify `API` module with an `axios` client that injects the Cognito JWT (`src/lib/apiClient.ts`)
+- Real-time notifications continue to use the raw AppSync Events WebSocket (no Amplify PubSub)
+- Frontend now hosted via **CDK-managed private S3 + CloudFront (OAC)** instead of Amplify CLI hosting — deploys in the same `cdk deploy`
+
+**SpringClean protection:**
+- Both stacks are tagged `auto-delete: no` at the CDK App level so SpringClean skips their resources
+
 ### Recent Upgrades (January 2026)
 
 **Critical Updates:**
@@ -57,9 +75,9 @@ The backend infrastructure is set up at the root folder of the repository. Code 
 - Fixed CDK deployment warnings including Custom Resources SDK installation and ECS deployment configuration
 - Added zero-downtime deployment configuration for Settlement service (minHealthyPercent: 100, maxHealthyPercent: 200)
 
-**Frontend Updates:**
+**Frontend Updates (January 2026):**
 - React upgraded to 18.3.1 with updated testing libraries
-- AWS Amplify remains on v5.3.20 (stable) - v6 migration evaluated and deferred due to high refactoring risk for real-time PubSub/IoT functionality
+- (Superseded by the September 2026 Next.js migration above.)
 
 **Backend Services:**
 - Spring Boot upgraded to 3.3.13 with AWS SDK BOM 2.30.29 and Spring Cloud AWS 3.2.1
@@ -111,48 +129,42 @@ This overall architecture consists of below domains. Visit each one of them for 
 
 Wait until the stack is deployed.
 
-### Deploy Amplify App (Frontend)
+### Deploy Frontend (Next.js on S3 + CloudFront)
 
-> :information_source: **AWS Amplify Version**
-> This application uses AWS Amplify v5.3.20 (stable). Migration to v6 evaluated and deferred - would require refactoring 5 components with 150+ lines of code changes and poses risk to mission-critical real-time PubSub/IoT functionality.
+The frontend is a **Next.js 15 static export** (`output: 'export'`) hosted on a
+private S3 bucket behind CloudFront (Origin Access Control). It is provisioned
+by the `FrontendHostingService` construct inside `ClaimsProcessingStack`, so it
+deploys as part of the same CDK stack — no separate Amplify CLI hosting step.
 
-In order to deploy the frontend:
+**Two-pass bootstrap** (the frontend needs the backend's Cognito + API values,
+and the backend uploads the built frontend):
 
-`cd react-claims`
+1. Deploy the backend once to generate `react-claims/src/cdk-outputs.json` and
+   confirm Cognito config in `react-claims/src/amplifyconfiguration.json`:
 
-then run the following commands:
+   ```bash
+   npm run deploy
+   ```
 
-```bash
-npm install
-npm run amplify init
-```
+2. Build the Next.js static export and re-deploy so CloudFront serves it:
 
-Provide the following values when prompted -
+   ```bash
+   npm run deploy:frontend
+   ```
 
-> Enter a name for the environment <environment name, like dev, sandbox> **claimsdev**  
-> Choose your default editor: Visual Studio Code  
-> Select the authentication method you want to use: **AWS profile**  
-> Please choose the profile you want to use: **default**
+   `deploy:frontend` runs `next build` (producing `react-claims/out`) and then
+   `cdk deploy ClaimsProcessingStack`, which uploads `out/` to S3 and
+   invalidates the CloudFront cache.
 
-Next run this command:
+The CloudFront URL is printed as the `FrontendUrl` stack output.
 
-```bash
-npm run amplify push
-```
+**Cognito configuration**: the app reads the User Pool ID and Client ID from
+`react-claims/src/amplifyconfiguration.json`. To override per environment (e.g.
+in CI), set `NEXT_PUBLIC_USER_POOL_ID` / `NEXT_PUBLIC_USER_POOL_CLIENT_ID` in
+`react-claims/.env.local` (see `.env.local.template`).
 
-> Are you sure you want to continue? **Yes**
-
-After `amplify push` is complete, in the output, there should be a URL for the hosted frontend.
-
-If you need to retrieve this URL in the future, run `amplify status` and the output of that command would have `Amplify hosting urls:` section with the URL to the frontend.
-The url will be of this format:
-`https://<env_name>.<autogenerated_amplify_app_id>.amplifyapp.com`
-
-> Note: It might take a few minutes for the published app to work.
-
-Run `npm run amplify publish` to deploy front end application. After this command completes, use the url it returns to access the application.
-
-To work on the frontend locally, run `npm run start` from <root>/react-claims directory. This will host the frontend app locally at http://localhost:3000/
+To work on the frontend locally, run `npm run dev` from the `react-claims`
+directory. This hosts the app at http://localhost:3000/ with hot reload.
 
 To publish front end changes in the future, call `npm run amplify publish` from <root>/react-claims directory.
 

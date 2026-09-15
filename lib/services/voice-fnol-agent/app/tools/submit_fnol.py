@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
                 "properties": {
                     "occurrenceDateTime": {
                         "type": "string",
-                        "description": "Date and time of accident in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)"
+                        "description": "Date and time of accident in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ). Must use the current real-world year (obtained via the current_time tool), never a stale or assumed year, unless the customer explicitly stated a different year."
                     },
                     "fnolDateTime": {
                         "type": "string",

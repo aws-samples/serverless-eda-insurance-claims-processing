@@ -1,16 +1,16 @@
 # Voice-Enabled FNOL Agent Service Dependencies
 
 # AgentCore Runtime SDK (REQUIRED for AgentCore deployment)
-bedrock-agentcore>=0.1.0       # Amazon Bedrock AgentCore Runtime SDK with WebSocket support
+bedrock-agentcore>=1.23.0      # Amazon Bedrock AgentCore Runtime SDK with WebSocket support
 
 # OpenTelemetry for Observability (REQUIRED for CloudWatch monitoring)
-aws-opentelemetry-distro>=0.1.0  # AWS Distro for OpenTelemetry (ADOT)
+aws-opentelemetry-distro>=0.19.0  # AWS Distro for OpenTelemetry (ADOT)
 
 # Core Agent Framework
-strands-agents-tools>=0.2.19
-strands-agents>=0.2.19
-strands-agents[otel]>=0.2.19    # Strands BidiAgent with OpenTelemetry instrumentation
-strands-agents[bidi-all]>=0.2.19
+strands-agents-tools>=0.8.8
+strands-agents>=1.55.1
+strands-agents[otel]>=1.55.1    # Strands BidiAgent with OpenTelemetry instrumentation
+strands-agents[bidi-all]>=1.55.1
 prompt-toolkit>=3.0.0          # Terminal interaction library (required by Strands)
 
 # Web Framework (Note: BedrockAgentCoreApp provides FastAPI integration)
@@ -28,7 +28,7 @@ httpx>=0.25.0                  # Async HTTP client for FNOL API calls
 # AWS SDK
 boto3>=1.34.0                  # AWS SDK for Python (Bedrock, SigV4 auth)
 botocore>=1.34.0               # Low-level AWS service access
-aws-sdk-bedrock-runtime>=0.1.0 # AWS SDK for Bedrock Runtime (required by Strands BidiNovaSonicModel)
+aws-sdk-bedrock-runtime>=0.11.0 # AWS SDK for Bedrock Runtime (required by Strands BedrockNovaSonicModel)
 
 # Audio Processing (required by Strands BidiAgent even for WebSocket streaming)
 numpy>=1.26.0                  # Numerical computing for audio data manipulation

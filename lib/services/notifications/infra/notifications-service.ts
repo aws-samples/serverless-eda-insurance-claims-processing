@@ -69,7 +69,7 @@ export class NotificationsService extends Construct {
       this,
       "NotificationLambdaFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 512,
         logGroup: new LogGroup(this, "NotificationLambdaLogGroup", {
           retention: RetentionDays.ONE_WEEK,

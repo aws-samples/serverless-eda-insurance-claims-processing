@@ -333,7 +333,7 @@ export class VoiceFnolService extends Construct {
     );
 
     // Ensure Runtime is fully created before creating Endpoint
-    this.agentRuntimeEndpoint.addDependency(this.agentRuntime);
+    this.agentRuntimeEndpoint.addResourceDependency(this.agentRuntime);
 
     // Get the WebSocket endpoint URL
     this.webSocketEndpointUrl = this.agentRuntimeEndpoint.attrAgentRuntimeEndpointArn;

@@ -152,7 +152,7 @@ export class DocumentService extends Construct {
       this,
       "TextractResponseTransformerLambda",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         memorySize: 128,
         logGroup: new LogGroup(this, "TextractResponseTransformerLogGroup", {
           retention: RetentionDays.ONE_WEEK,
@@ -207,7 +207,7 @@ export class DocumentService extends Construct {
       this,
       "analyzeCarImageFunction",
       {
-        runtime: Runtime.NODEJS_22_X,
+        runtime: Runtime.NODEJS_24_X,
         logGroup: new LogGroup(this, "AnalyzeCarImageLogGroup", {
           retention: RetentionDays.ONE_WEEK,
           removalPolicy: RemovalPolicy.DESTROY,
