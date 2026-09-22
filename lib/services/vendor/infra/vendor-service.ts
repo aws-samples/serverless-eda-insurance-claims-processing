@@ -127,7 +127,13 @@ export class VendorService extends Construct {
         eks.ClusterLoggingTypes.AUTHENTICATOR,
         eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
         eks.ClusterLoggingTypes.SCHEDULER,
-      ]
+      ],
+      // The eks.Cluster L2 provisions the cluster via a custom resource
+      // (Custom::AWSCDK-EKS-Cluster), so app-level Tags.of() propagation does
+      // NOT reach the EKS CreateCluster API call (see aws/aws-cdk#19339). The
+      // ClusterProps.tags prop is the supported path that flows into the
+      // create-cluster Config, so the auto-delete tag lands on the cluster.
+      tags: { "auto-delete": "no" },
     });
 
     // Create a dev role which will have read-only access to AWS Console
