@@ -149,7 +149,12 @@ export class VendorService extends Construct {
     });
 
     // Add on-demand nodegroup with AL2023 (required for K8s 1.36)
-    cluster.addNodegroupCapacity("on-demand-ng", {
+    // NOTE: id suffixed "-v2" to force a new CloudFormation logical ID. The
+    // original nodegroups were deleted out-of-band (SpringClean), but CFN still
+    // tracks them as UPDATE_COMPLETE, so a plain redeploy sees no diff and will
+    // NOT recreate them. A new logical ID makes CFN Add the replacement and
+    // Remove the stale phantom, recreating worker capacity cleanly.
+    cluster.addNodegroupCapacity("on-demand-ng-v2", {
       instanceTypes: [new ec2.InstanceType("m5.large")],
       minSize: 1,
       maxSize: 2,
@@ -159,7 +164,8 @@ export class VendorService extends Construct {
     });
 
     // Add spot nodegroup with AL2023 (required for K8s 1.36)
-    cluster.addNodegroupCapacity("spot-ng", {
+    // id suffixed "-v2" for the same out-of-band-deletion recreation reason.
+    cluster.addNodegroupCapacity("spot-ng-v2", {
       instanceTypes: [new ec2.InstanceType("m5.large"), new ec2.InstanceType("m5a.large")],
       minSize: 1,
       maxSize: 2,
