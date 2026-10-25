@@ -14,7 +14,7 @@
     "aws-amplify": "^6.20.0",
     "axios": "^1.20.0",
     "date-and-time": "^3.6.0",
-    "next": "^16.4.0",
+    "next": "^16.4.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-step-wizard": "^5.3.11",
